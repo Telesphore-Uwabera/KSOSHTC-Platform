@@ -77,8 +77,8 @@ export function createServer(options?: { apiOnly?: boolean }) {
 
   // Middleware
   app.use(cors());
-  app.use(express.json());
-  app.use(express.urlencoded({ extended: true }));
+  app.use(express.json({ limit: "100mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "100mb" }));
   app.use(requestLogger);
 
   // Static assets: only paths like /courses/:sector/:file (e.g. /courses/construction/1.pdf) are served here.

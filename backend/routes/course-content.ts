@@ -21,9 +21,10 @@ import {
   assessmentDoc,
   isValidCourseSlug,
 } from "../lib/course-firestore";
-import { submissionsCollection, progressCollection, storage } from "../lib/firestore";
+import { submissionsCollection, progressCollection } from "../lib/firestore";
 import { getCoursesFromPublicFolder, getLessonsFromPublicFolder } from "../lib/seed-courses";
 import type { SubmissionDoc, ProgressDoc } from "@shared/api";
+import { v2 as cloudinary } from "cloudinary";
 
 /** All courses display duration as 3 months. */
 const DISPLAY_DURATION = "3 months";
@@ -112,16 +113,23 @@ export async function uploadCoursePdf(req: Request, res: Response): Promise<void
       res.status(400).json({ error: "File too large (max 50MB)." });
       return;
     }
-    const bucket = storage().bucket();
-    const file = bucket.file(`courses/${courseId}/${safeName}`);
-    await file.save(buf, {
-      metadata: { contentType: "application/pdf" },
+    
+    const uri = `data:application/pdf;base64,${contentBase64}`;
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
     });
-    await file.makePublic().catch((e: any) => console.warn("makePublic failed. Check bucket permissions.", e.message));
-    const pdfUrl = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
+    const result = await cloudinary.uploader.upload(uri, {
+      folder: `ksohtc/courses/${courseId}`,
+      public_id: path.parse(safeName).name,
+      resource_type: "raw",
+    });
+    
+    const pdfUrl = result.secure_url;
     res.status(201).json({ ok: true, filename: safeName, pdfUrl });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
+    const msg = e instanceof Error ? e.message : (typeof e === 'object' ? JSON.stringify(e) : String(e));
     console.error("uploadCoursePdf:", msg);
     res.status(500).json({ error: "Failed to upload PDF.", detail: msg });
   }
@@ -147,13 +155,20 @@ export async function uploadCourseCover(req: Request, res: Response): Promise<vo
       res.status(400).json({ error: "Image too large (max 5MB)." });
       return;
     }
-    const bucket = storage().bucket();
-    const file = bucket.file(`course-covers/${filename}`);
-    await file.save(buf, {
-      metadata: { contentType },
+    
+    const uri = `data:${contentType};base64,${contentBase64}`;
+    cloudinary.config({
+      cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+      api_key: process.env.CLOUDINARY_API_KEY,
+      api_secret: process.env.CLOUDINARY_API_SECRET,
     });
-    await file.makePublic().catch((e: any) => console.warn("makePublic failed. Check bucket permissions.", e.message));
-    const coverImageUrl = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
+    const result = await cloudinary.uploader.upload(uri, {
+      folder: "ksohtc/course-covers",
+      public_id: courseId,
+      resource_type: "image",
+    });
+    
+    const coverImageUrl = result.secure_url;
 
     const ref = courseDoc(courseId);
     const snap = await ref.get();
