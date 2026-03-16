@@ -56,6 +56,12 @@ async function fetchModuleItems(courseId: string, moduleId: string): Promise<Mod
   return data.items ?? [];
 }
 
+async function fetchLegacyQuiz(courseId: string) {
+  const res = await fetch(`${getApiBase()}/api/courses/${courseId}/quiz`);
+  if (!res.ok) return null;
+  return res.json();
+}
+
 async function fetchProgress(userId: string, courseId: string): Promise<ProgressDoc | null> {
   const res = await fetch(`${getApiBase()}/api/progress?userId=${encodeURIComponent(userId)}&courseId=${encodeURIComponent(courseId)}`);
   if (!res.ok) return null;
@@ -119,7 +125,7 @@ function PdfViewerModal({
   const [loading, setLoading] = useState(!!courseId);
 
   useEffect(() => {
-    if (!courseId || !title?.trim()) {
+    if (!courseId || !title?.trim() || initialPdfUrl.startsWith("http")) {
       setLoading(false);
       return;
     }
@@ -131,7 +137,7 @@ function PdfViewerModal({
       })
       .catch(() => {})
       .finally(() => setLoading(false));
-  }, [courseId, title]);
+  }, [courseId, title, initialPdfUrl]);
 
   const pdfUrl = (resolvedUrl ?? initialPdfUrl).trim();
   const src = pdfUrl

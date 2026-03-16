@@ -21,7 +21,7 @@ import {
   assessmentDoc,
   isValidCourseSlug,
 } from "../lib/course-firestore";
-import { submissionsCollection, progressCollection } from "../lib/firestore";
+import { submissionsCollection, progressCollection, storage } from "../lib/firestore";
 import { getCoursesFromPublicFolder, getLessonsFromPublicFolder } from "../lib/seed-courses";
 import type { SubmissionDoc, ProgressDoc } from "@shared/api";
 
@@ -42,17 +42,46 @@ export async function getCoursesFromPublic(_req: Request, res: Response): Promis
   }
 }
 
-/** GET /api/course-content/courses/:courseId/lessons-from-public – list lessons (PDFs) from public/courses folder */
 export async function getLessonsFromPublic(req: Request, res: Response): Promise<void> {
   try {
     const { courseId } = req.params;
-    const publicCoursesPath = path.resolve(process.cwd(), "public", "courses");
-    const lessons = getLessonsFromPublicFolder(publicCoursesPath, courseId);
+    
+    // Fetch all modules for this course
+    const modulesSnap = await modulesRef(courseId).orderBy("order", "asc").get();
+    
+    // For each module, fetch its lessons
+    const lessons: { title: string; pdfUrl: string }[] = [];
+    
+    for (const modDoc of modulesSnap.docs) {
+      const lessonsSnap = await lessonsRef(courseId, modDoc.id).orderBy("order", "asc").get();
+      for (const lesDoc of lessonsSnap.docs) {
+        const data = lesDoc.data() as LessonDoc;
+        // Only include lessons that have a PDF attached
+        if (data.pdfUrl) {
+          lessons.push({
+            title: data.title,
+            pdfUrl: data.pdfUrl,
+          });
+        }
+      }
+    }
+    
+    // If no lessons are found in the database but it's a legacy course, 
+    // fall back to reading from the public folder so existing content doesn't break
+    if (lessons.length === 0 && ALLOWED_COURSE_IDS.includes(courseId)) {
+      const publicCoursesPath = path.resolve(process.cwd(), "public", "courses");
+      const fallbackLessons = getLessonsFromPublicFolder(publicCoursesPath, courseId);
+      if (fallbackLessons.length > 0) {
+        res.json({ lessons: fallbackLessons });
+        return;
+      }
+    }
+
     res.json({ lessons });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("getLessonsFromPublic:", msg);
-    res.status(500).json({ error: "Failed to list lessons from folder." });
+    res.status(500).json({ error: "Failed to list lessons." });
   }
 }
 
@@ -62,8 +91,8 @@ const ALLOWED_COURSE_IDS = ["construction", "industrial-safety", "mining", "safe
 export async function uploadCoursePdf(req: Request, res: Response): Promise<void> {
   try {
     const { courseId } = req.params;
-    if (!ALLOWED_COURSE_IDS.includes(courseId)) {
-      res.status(400).json({ error: "Invalid course. Use construction, industrial-safety, mining, safety-management, or safety-for-all." });
+    if (!courseId) {
+      res.status(400).json({ error: "courseId is required." });
       return;
     }
     const body = req.body as { filename?: string; contentBase64?: string };
@@ -78,19 +107,18 @@ export async function uploadCoursePdf(req: Request, res: Response): Promise<void
       res.status(400).json({ error: "Only PDF files are allowed. Use a .pdf filename." });
       return;
     }
-    const publicCoursesPath = path.resolve(process.cwd(), "public", "courses");
-    const courseDir = path.join(publicCoursesPath, courseId);
-    if (!fs.existsSync(courseDir)) {
-      fs.mkdirSync(courseDir, { recursive: true });
-    }
-    const filePath = path.join(courseDir, safeName);
     const buf = Buffer.from(contentBase64, "base64");
     if (buf.length > 50 * 1024 * 1024) {
       res.status(400).json({ error: "File too large (max 50MB)." });
       return;
     }
-    fs.writeFileSync(filePath, buf);
-    const pdfUrl = `/courses/${courseId}/${encodeURIComponent(safeName)}`;
+    const bucket = storage().bucket();
+    const file = bucket.file(`courses/${courseId}/${safeName}`);
+    await file.save(buf, {
+      metadata: { contentType: "application/pdf" },
+    });
+    await file.makePublic().catch((e: any) => console.warn("makePublic failed. Check bucket permissions.", e.message));
+    const pdfUrl = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
     res.status(201).json({ ok: true, filename: safeName, pdfUrl });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
@@ -113,19 +141,19 @@ export async function uploadCourseCover(req: Request, res: Response): Promise<vo
     }
     const contentType = (body.contentType ?? "image/jpeg").toLowerCase();
     const ext = COVER_IMAGE_TYPES[contentType] ?? "jpg";
-    const coversDir = path.resolve(process.cwd(), "public", "course-covers");
-    if (!fs.existsSync(coversDir)) {
-      fs.mkdirSync(coversDir, { recursive: true });
-    }
     const filename = `${courseId}.${ext}`;
-    const filePath = path.join(coversDir, filename);
     const buf = Buffer.from(contentBase64, "base64");
     if (buf.length > 5 * 1024 * 1024) {
       res.status(400).json({ error: "Image too large (max 5MB)." });
       return;
     }
-    fs.writeFileSync(filePath, buf);
-    const coverImageUrl = `/course-covers/${filename}`;
+    const bucket = storage().bucket();
+    const file = bucket.file(`course-covers/${filename}`);
+    await file.save(buf, {
+      metadata: { contentType },
+    });
+    await file.makePublic().catch((e: any) => console.warn("makePublic failed. Check bucket permissions.", e.message));
+    const coverImageUrl = `https://storage.googleapis.com/${bucket.name}/${file.name}`;
 
     const ref = courseDoc(courseId);
     const snap = await ref.get();
@@ -297,7 +325,7 @@ export async function resolveCoursePdf(req: Request, res: Response): Promise<voi
   try {
     const { courseId } = req.params;
     const title = (req.query.title as string)?.trim();
-    if (!ALLOWED_COURSE_IDS.includes(courseId) || !title) {
+    if (!courseId || !title) {
       res.status(400).json({ error: "courseId and title are required." });
       return;
     }

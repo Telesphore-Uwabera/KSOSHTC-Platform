@@ -5,6 +5,7 @@
  */
 import { initializeApp, getApps, cert, type ServiceAccount } from "firebase-admin/app";
 import { getFirestore, type Firestore } from "firebase-admin/firestore";
+import { getStorage } from "firebase-admin/storage";
 import { readFileSync } from "node:fs";
 import path from "node:path";
 
@@ -65,6 +66,11 @@ export function getDb(): Firestore {
   }
   db = getFirestore();
   return db;
+}
+
+export function storage() {
+  getDb(); // ensure initialized
+  return getStorage();
 }
 
 export const COLLECTIONS = {

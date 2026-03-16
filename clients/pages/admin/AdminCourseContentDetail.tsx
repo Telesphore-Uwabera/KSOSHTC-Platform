@@ -211,6 +211,8 @@ export default function AdminCourseContentDetail() {
   const [editingLesson, setEditingLesson] = useState<LessonDoc | null>(null);
   const [addingLesson, setAddingLesson] = useState<string | null>(null);
   const [addingAssessment, setAddingAssessment] = useState<string | null>(null);
+  const [editingCourseTitle, setEditingCourseTitle] = useState(false);
+  const [newCourseTitle, setNewCourseTitle] = useState("");
 
   const { data: course, isLoading: courseLoading } = useQuery({
     queryKey: ["course-content", "course", courseId],
@@ -282,6 +284,49 @@ export default function AdminCourseContentDetail() {
     },
   });
 
+  const deleteModuleMutation = useMutation({
+    mutationFn: async (moduleId: string) => {
+      if (!window.confirm("Are you sure you want to delete this module and all its contents?")) return;
+      const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete module");
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["course-content", "modules", courseId] }),
+  });
+
+  const deleteLessonMutation = useMutation({
+    mutationFn: async ({ moduleId, lessonId }: { moduleId: string, lessonId: string }) => {
+      if (!window.confirm("Are you sure you want to delete this lesson?")) return;
+      const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete lesson");
+    },
+    onSuccess: (_, { moduleId }) => queryClient.invalidateQueries({ queryKey: ["course-content", "lessons", courseId, moduleId] }),
+  });
+
+  const deleteAssessmentMutation = useMutation({
+    mutationFn: async ({ moduleId, assessmentId }: { moduleId: string, assessmentId: string }) => {
+      if (!window.confirm("Are you sure you want to delete this assessment?")) return;
+      const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/assessments/${assessmentId}`, { method: "DELETE" });
+      if (!res.ok) throw new Error("Failed to delete assessment");
+    },
+    onSuccess: (_, { moduleId }) => queryClient.invalidateQueries({ queryKey: ["course-content", "assessments", courseId, moduleId] }),
+  });
+
+  const updateCourseMutation = useMutation({
+    mutationFn: async (title: string) => {
+      const res = await fetch(`${getCourseContentApi()}/courses/${courseId}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
+      });
+      if (!res.ok) throw new Error("Failed to update course");
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["course-content", "course", courseId] });
+      setEditingCourseTitle(false);
+    },
+  });
+
   if (!courseId || courseLoading) {
     return (
       <div className="flex items-center justify-center py-12">
@@ -313,10 +358,47 @@ export default function AdminCourseContentDetail() {
       </div>
 
       <div className="bg-white rounded-[30px] shadow-sm border border-gray-200 p-6 sm:p-8">
-        <h1 className="text-2xl font-bold text-primary flex items-center gap-2 mb-1">
-          <BookOpen className="w-6 h-6" />
-          {course.title}
-        </h1>
+        <div className="flex items-center gap-3 mb-1">
+          {editingCourseTitle ? (
+            <div className="flex items-center gap-2 w-full max-w-xl">
+              <input
+                type="text"
+                value={newCourseTitle}
+                onChange={(e) => setNewCourseTitle(e.target.value)}
+                className="flex-1 px-3 py-1.5 rounded-lg border border-gray-300 text-lg font-bold"
+                autoFocus
+              />
+              <button
+                onClick={() => updateCourseMutation.mutate(newCourseTitle)}
+                disabled={!newCourseTitle.trim() || updateCourseMutation.isPending}
+                className="bg-primary text-white px-3 py-1.5 rounded-lg font-semibold text-sm disabled:opacity-50"
+              >
+                {updateCourseMutation.isPending ? "Saving..." : "Save"}
+              </button>
+              <button
+                onClick={() => setEditingCourseTitle(false)}
+                className="text-gray-500 hover:text-gray-700 text-sm font-medium"
+              >
+                Cancel
+              </button>
+            </div>
+          ) : (
+            <h1 className="text-2xl font-bold text-primary flex items-center gap-2">
+              <BookOpen className="w-6 h-6" />
+              {course.title}
+              <button
+                onClick={() => {
+                  setNewCourseTitle(course.title);
+                  setEditingCourseTitle(true);
+                }}
+                className="p-1.5 text-gray-400 hover:text-primary rounded-lg transition-colors ml-2"
+                title="Edit Course Title"
+              >
+                <Pencil className="w-4 h-4" />
+              </button>
+            </h1>
+          )}
+        </div>
         <p className="text-gray-600 text-sm mb-4">{course.sector} · {course.duration}</p>
 
         <div className="mb-6 p-4 rounded-xl border border-primary/20 bg-primary/5">
@@ -360,6 +442,9 @@ export default function AdminCourseContentDetail() {
                 addingAssessment={addingAssessment}
                 setAddingAssessment={setAddingAssessment}
                 queryClient={queryClient}
+                deleteModuleMutation={deleteModuleMutation}
+                deleteLessonMutation={deleteLessonMutation}
+                deleteAssessmentMutation={deleteAssessmentMutation}
               />
             ))}
 
@@ -399,6 +484,7 @@ export default function AdminCourseContentDetail() {
 
       {editingLesson && (
         <LessonEditModal
+          courseId={courseId}
           lesson={editingLesson}
           onClose={() => setEditingLesson(null)}
           onSave={(title, youtubeUrl, pdfUrl, contentHtml) =>
@@ -434,6 +520,9 @@ function ModuleBlock({
   addingAssessment,
   setAddingAssessment,
   queryClient,
+  deleteModuleMutation,
+  deleteLessonMutation,
+  deleteAssessmentMutation,
 }: {
   courseId: string;
   module: ModuleDoc;
@@ -450,6 +539,9 @@ function ModuleBlock({
   addingAssessment: string | null;
   setAddingAssessment: (id: string | null) => void;
   queryClient: ReturnType<typeof useQueryClient>;
+  deleteModuleMutation: ReturnType<typeof useMutation>;
+  deleteLessonMutation: ReturnType<typeof useMutation>;
+  deleteAssessmentMutation: ReturnType<typeof useMutation>;
 }) {
   const { data: lessons = [] } = useQuery({
     queryKey: ["course-content", "lessons", courseId, mod.id],
@@ -464,22 +556,74 @@ function ModuleBlock({
 
   const [newLessonTitle, setNewLessonTitle] = useState("");
   const [newLessonYoutube, setNewLessonYoutube] = useState("");
-  const [newLessonPdfUrl, setNewLessonPdfUrl] = useState("");
+  const [newLessonPdfFile, setNewLessonPdfFile] = useState<File | null>(null);
   const [newLessonContent, setNewLessonContent] = useState("");
+  const [uploadingPdf, setUploadingPdf] = useState(false);
+
+  const handleAddLesson = async () => {
+    let pdfUrl: string | undefined;
+    if (newLessonPdfFile) {
+      setUploadingPdf(true);
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => {
+            const b64 = (r.result as string).split(",")[1];
+            if (b64) resolve(b64); else reject(new Error("Failed"));
+          };
+          r.onerror = reject;
+          r.readAsDataURL(newLessonPdfFile);
+        });
+        const res = await fetch(`${getApiBase()}/api/course-content/courses/${courseId}/upload-pdf`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename: newLessonPdfFile.name, contentBase64: base64 }),
+        });
+        if (!res.ok) throw new Error("PDF upload failed");
+        const data = await res.json();
+        pdfUrl = data.pdfUrl;
+      } catch (err) {
+        alert("Failed to upload PDF: " + (err as Error).message);
+        setUploadingPdf(false);
+        return;
+      }
+      setUploadingPdf(false);
+    }
+    
+    addLessonMutation.mutate(
+      { moduleId: mod.id, title: newLessonTitle, youtubeUrl: newLessonYoutube || undefined, pdfUrl, contentHtml: newLessonContent },
+      {
+        onSuccess: () => {
+          setNewLessonTitle("");
+          setNewLessonYoutube("");
+          setNewLessonPdfFile(null);
+          setNewLessonContent("");
+        },
+      }
+    );
+  };
 
   return (
     <div className="rounded-2xl border border-gray-200 overflow-hidden">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex items-center justify-between w-full p-4 text-left hover:bg-gray-50"
-      >
-        <div className="flex items-center gap-3">
+      <div className="flex items-center justify-between w-full p-4 text-left hover:bg-gray-50 group/mod">
+        <button
+          type="button"
+          onClick={onToggle}
+          className="flex-1 flex items-center gap-3 text-left"
+        >
           {expanded ? <ChevronDown className="w-5 h-5 text-gray-500" /> : <ChevronRight className="w-5 h-5 text-gray-500" />}
           <span className="font-semibold text-gray-900">{mod.title}</span>
           <span className="text-sm text-gray-500">{lessons.length} lessons · {assessments.length} assessments</span>
-        </div>
-      </button>
+        </button>
+        <button
+          type="button"
+          onClick={() => deleteModuleMutation.mutate(mod.id)}
+          className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg transition-colors opacity-0 group-hover/mod:opacity-100"
+          title="Delete Module"
+        >
+          <Trash2 className="w-4 h-4" />
+        </button>
+      </div>
       {expanded && (
         <div className="border-t border-gray-100 bg-gray-50/50 p-4 space-y-4">
           <div>
@@ -494,13 +638,22 @@ function ModuleBlock({
                       {!l.pdfUrl && !l.youtubeUrl ? <FileText className="w-4 h-4 text-gray-400 shrink-0" /> : null}
                       <span className="truncate font-medium text-gray-900">{idx + 1}. {l.title}</span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => onEditLesson(l)}
-                      className="inline-flex items-center gap-1 text-primary text-sm font-medium hover:underline shrink-0"
-                    >
-                      <Pencil className="w-3.5 h-3.5" /> Edit
-                    </button>
+                    <div className="flex items-center shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => onEditLesson(l)}
+                        className="inline-flex items-center gap-1 text-primary text-sm font-medium hover:underline"
+                      >
+                        <Pencil className="w-3.5 h-3.5" /> Edit
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => deleteLessonMutation.mutate({ moduleId: mod.id, lessonId: l.id })}
+                        className="inline-flex items-center gap-1 text-red-600 text-sm font-medium hover:underline ml-4"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      </button>
+                    </div>
                   </div>
                   <div className="pl-4 flex items-center gap-2 flex-wrap">
                     {assessments.filter((a) => a.afterLessonId === l.id).map((a) => (
@@ -508,6 +661,11 @@ function ModuleBlock({
                         <ClipboardList className="w-3 h-3" />
                         Break here: {a.title}
                         <Link to={`/admin/course-content/${courseId}/modules/${mod.id}/assessments/${a.id}`} className="font-medium hover:underline">Edit</Link>
+                        <button
+                          type="button"
+                          onClick={() => deleteAssessmentMutation.mutate({ moduleId: mod.id, assessmentId: a.id })}
+                          className="font-medium text-red-600 hover:underline ml-1"
+                        >Delete</button>
                       </span>
                     ))}
                     {addingAssessment === `after-${l.id}` ? (
@@ -551,13 +709,15 @@ function ModuleBlock({
                   placeholder="YouTube URL (optional)"
                   className="w-full px-3 py-2 rounded-lg border border-gray-200"
                 />
-                <input
-                  type="text"
-                  value={newLessonPdfUrl}
-                  onChange={(e) => setNewLessonPdfUrl(e.target.value)}
-                  placeholder="PDF path e.g. /courses/construction/1.1-Health-Safety.pdf"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200"
-                />
+                <div className="space-y-1">
+                  <label className="text-sm font-medium text-gray-700">PDF Document (Optional)</label>
+                  <input
+                    type="file"
+                    accept=".pdf"
+                    onChange={(e) => setNewLessonPdfFile(e.target.files?.[0] ?? null)}
+                    className="w-full text-sm text-gray-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700 file:font-semibold file:cursor-pointer hover:file:bg-gray-200"
+                  />
+                </div>
                 <textarea
                   value={newLessonContent}
                   onChange={(e) => setNewLessonContent(e.target.value)}
@@ -568,23 +728,11 @@ function ModuleBlock({
                 <div className="flex gap-2">
                   <button
                     type="button"
-                    onClick={() => {
-                      addLessonMutation.mutate(
-                        { moduleId: mod.id, title: newLessonTitle, youtubeUrl: newLessonYoutube || undefined, pdfUrl: newLessonPdfUrl || undefined, contentHtml: newLessonContent },
-                        {
-                          onSuccess: () => {
-                            setNewLessonTitle("");
-                            setNewLessonYoutube("");
-                            setNewLessonPdfUrl("");
-                            setNewLessonContent("");
-                          },
-                        }
-                      );
-                    }}
-                    disabled={!newLessonTitle.trim() || addLessonMutation.isPending}
+                    onClick={handleAddLesson}
+                    disabled={!newLessonTitle.trim() || addLessonMutation.isPending || uploadingPdf}
                     className="bg-primary text-white px-4 py-2 rounded-lg font-semibold disabled:opacity-50"
                   >
-                    {addLessonMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add lesson"}
+                    {addLessonMutation.isPending || uploadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add lesson"}
                   </button>
                   <button type="button" onClick={onCloseAddLesson} className="text-gray-500 hover:text-gray-700">
                     Cancel
@@ -612,12 +760,21 @@ function ModuleBlock({
                       <span className="font-medium text-gray-900">{a.title}</span>
                       <span className="text-sm text-gray-500">({a.questions?.length ?? 0} questions)</span>
                     </div>
-                    <Link
-                      to={`/admin/course-content/${courseId}/modules/${mod.id}/assessments/${a.id}`}
-                      className="text-primary text-sm font-medium hover:underline"
-                    >
-                      Edit
-                    </Link>
+                    <div className="flex items-center gap-3">
+                      <Link
+                        to={`/admin/course-content/${courseId}/modules/${mod.id}/assessments/${a.id}`}
+                        className="text-primary text-sm font-medium hover:underline"
+                      >
+                        Edit
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => deleteAssessmentMutation.mutate({ moduleId: mod.id, assessmentId: a.id })}
+                        className="text-red-600 text-sm font-medium hover:underline"
+                      >
+                        Delete
+                      </button>
+                    </div>
                   </li>
                 ))}
               </ul>
@@ -736,11 +893,13 @@ function AddAssessmentForm({
 }
 
 function LessonEditModal({
+  courseId,
   lesson,
   onClose,
   onSave,
   isSaving,
 }: {
+  courseId: string;
   lesson: LessonDoc;
   onClose: () => void;
   onSave: (title: string, youtubeUrl: string, pdfUrl: string, contentHtml: string) => void;
@@ -749,7 +908,41 @@ function LessonEditModal({
   const [title, setTitle] = useState(lesson.title);
   const [youtubeUrl, setYoutubeUrl] = useState(lesson.youtubeUrl ?? "");
   const [pdfUrl, setPdfUrl] = useState(lesson.pdfUrl ?? "");
+  const [pdfFile, setPdfFile] = useState<File | null>(null);
+  const [uploadingPdf, setUploadingPdf] = useState(false);
   const [contentHtml, setContentHtml] = useState(lesson.contentHtml ?? "");
+
+  const handleSave = async () => {
+    let finalPdfUrl = pdfUrl;
+    if (pdfFile) {
+      setUploadingPdf(true);
+      try {
+        const base64 = await new Promise<string>((resolve, reject) => {
+          const r = new FileReader();
+          r.onload = () => {
+            const b64 = (r.result as string).split(",")[1];
+            if (b64) resolve(b64); else reject(new Error("Failed"));
+          };
+          r.onerror = reject;
+          r.readAsDataURL(pdfFile);
+        });
+        const res = await fetch(`${getApiBase()}/api/course-content/courses/${courseId}/upload-pdf`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ filename: pdfFile.name, contentBase64: base64 }),
+        });
+        if (!res.ok) throw new Error("Upload failed");
+        const data = await res.json();
+        finalPdfUrl = data.pdfUrl;
+      } catch (err) {
+        alert("Failed to upload PDF: " + (err as Error).message);
+        setUploadingPdf(false);
+        return;
+      }
+      setUploadingPdf(false);
+    }
+    onSave(title, youtubeUrl, finalPdfUrl, contentHtml);
+  };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={onClose}>
@@ -776,14 +969,25 @@ function LessonEditModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">PDF path (from public/courses, e.g. /courses/construction/name.pdf)</label>
-            <input
-              type="text"
-              value={pdfUrl}
-              onChange={(e) => setPdfUrl(e.target.value)}
-              placeholder="/courses/construction/1.1-Health-Safety.pdf"
-              className="w-full px-4 py-2 rounded-lg border border-gray-200"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">PDF Document (Optional)</label>
+            {pdfUrl && !pdfFile && (
+              <div className="flex items-center gap-2 mb-2 p-2 bg-gray-50 rounded border border-gray-200">
+                <FileText className="w-4 h-4 text-primary" />
+                <span className="text-sm truncate max-w-[300px]" title={pdfUrl}>{pdfUrl.split('/').pop() || "Attached PDF"}</span>
+                <button type="button" onClick={() => setPdfUrl("")} className="text-red-500 hover:text-red-700 ml-auto p-1 text-sm font-medium" title="Remove PDF">
+                  Remove
+                </button>
+              </div>
+            )}
+            {!pdfUrl || pdfFile ? (
+              <input
+                type="file"
+                accept=".pdf"
+                onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
+                className="w-full text-sm text-gray-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700 file:font-semibold file:cursor-pointer hover:file:bg-gray-200"
+              />
+            ) : null}
+            <div className="text-xs text-gray-500 mt-1">Select a new PDF to replace the current one, or remove the existing PDF.</div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Extra content (optional text)</label>
@@ -799,11 +1003,11 @@ function LessonEditModal({
         <div className="flex gap-3 mt-6">
           <button
             type="button"
-            onClick={() => onSave(title, youtubeUrl, pdfUrl, contentHtml)}
-            disabled={isSaving}
+            onClick={handleSave}
+            disabled={isSaving || uploadingPdf}
             className="bg-primary text-white px-6 py-2 rounded-lg font-semibold disabled:opacity-50"
           >
-            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
+            {isSaving || uploadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : "Save"}
           </button>
           <button type="button" onClick={onClose} className="text-gray-600 hover:text-gray-900">
             Cancel
