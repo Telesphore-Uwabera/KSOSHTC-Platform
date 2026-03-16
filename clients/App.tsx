@@ -11,6 +11,7 @@ import { LoadingBar, PageLoaderFallback } from "@/components/PageLoader";
 import { ScrollRevealObserver } from "@/components/ScrollRevealObserver";
 import BackToTop from "@/components/BackToTop";
 import { getApiBase } from "@/lib/apiBase";
+import { BrandedSplashScreen } from "@/components/BrandedSplashScreen";
 
 const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
@@ -131,18 +132,22 @@ function RouteLoader() {
   return showBar ? <LoadingBar /> : null;
 }
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <ScrollToTop />
-        <PrefetchKeyData />
-        <RouteLoader />
-        <ScrollRevealObserver />
-        <Suspense fallback={<PageLoaderFallback />}>
-          <Routes>
+const App = () => {
+  const [showSplash, setShowSplash] = useState(true);
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        {showSplash && <BrandedSplashScreen onComplete={() => setShowSplash(false)} />}
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <ScrollToTop />
+          <PrefetchKeyData />
+          <RouteLoader />
+          <ScrollRevealObserver />
+          <Suspense fallback={<PageLoaderFallback />}>
+            <Routes>
             <Route path="/" element={<Index />} />
             <Route path="/about" element={<About />} />
             <Route path="/programs" element={<Programs />} />
@@ -184,6 +189,7 @@ const App = () => (
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
-);
+  );
+};
 
 createRoot(document.getElementById("root")!).render(<App />);
