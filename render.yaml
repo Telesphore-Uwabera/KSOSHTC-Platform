@@ -17,4 +17,4 @@ services:
       # Set these in Render dashboard (Environment):
       # - GOOGLE_APPLICATION_CREDENTIALS or FIREBASE_SERVICE_ACCOUNT (Firebase)
       # - ADMIN_EMAIL, ADMIN_PASSWORD
-      # - FRONTEND_URL (your Netlify URL, e.g. https://your-app.netlify.app for CORS)
+      # - FRONTEND_URL (your official URL, e.g. https://www.kigalisafetytraining.com for CORS)

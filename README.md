@@ -189,7 +189,7 @@ Routes: `/admin`, `/admin/courses`, `/admin/course-content`, `/admin/learners`, 
    - **`FIREBASE_SERVICE_ACCOUNT`** – Paste the full Firebase service account JSON (single line, no line breaks). Without this, register/login will return **500**. If pasting JSON on Render still causes 500s (quoting/newline issues), use **`FIREBASE_SERVICE_ACCOUNT_BASE64`** instead: run `pnpm run encode:firebase` locally (with `backend/.env` set), copy the printed base64 string, and set that as `FIREBASE_SERVICE_ACCOUNT_BASE64` on Render; remove or leave `FIREBASE_SERVICE_ACCOUNT` empty.
    - **`ADMIN_EMAIL`** – Admin login email.
    - **`ADMIN_PASSWORD`** – Admin login password.
-   - **`FRONTEND_URL`** – Your Netlify URL, e.g. `https://ksohtc.netlify.app` (for CORS).
+   - **`FRONTEND_URL`** – Your official domain, e.g. `https://www.kigalisafetytraining.com` (for CORS).
    - Optional: `RENDER=true`, `NODE_ENV=production`.
 
 **If register or login returns 500:** Add or fix `FIREBASE_SERVICE_ACCOUNT` (or `FIREBASE_SERVICE_ACCOUNT_BASE64`) in Render → Environment, then redeploy.

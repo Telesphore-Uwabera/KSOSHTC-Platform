@@ -1,93 +1,93 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://ksohtc.netlify.app/</loc>
-    <lastmod>2025-03-04</lastmod>
-    <changefreq>weekly</changefreq>
+    <loc>https://www.kigalisafetytraining.com/</loc>
+    <lastmod>2024-03-15</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://ksohtc.netlify.app/about</loc>
-    <lastmod>2025-03-04</lastmod>
+    <loc>https://www.kigalisafetytraining.com/about</loc>
+    <lastmod>2024-03-15</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ksohtc.netlify.app/programs</loc>
-    <lastmod>2025-03-04</lastmod>
+    <loc>https://www.kigalisafetytraining.com/programs</loc>
+    <lastmod>2024-03-15</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ksohtc.netlify.app/industries</loc>
-    <lastmod>2025-03-04</lastmod>
+    <loc>https://www.kigalisafetytraining.com/industries</loc>
+    <lastmod>2024-03-15</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ksohtc.netlify.app/courses</loc>
-    <lastmod>2025-03-04</lastmod>
+    <loc>https://www.kigalisafetytraining.com/courses</loc>
+    <lastmod>2024-03-15</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://ksohtc.netlify.app/courses/construction</loc>
-    <lastmod>2025-03-04</lastmod>
+    <loc>https://www.kigalisafetytraining.com/courses/construction</loc>
+    <lastmod>2024-03-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ksohtc.netlify.app/courses/industrial-safety</loc>
-    <lastmod>2025-03-04</lastmod>
+    <loc>https://www.kigalisafetytraining.com/courses/industrial-safety</loc>
+    <lastmod>2024-03-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ksohtc.netlify.app/courses/mining</loc>
-    <lastmod>2025-03-04</lastmod>
+    <loc>https://www.kigalisafetytraining.com/courses/mining</loc>
+    <lastmod>2024-03-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ksohtc.netlify.app/courses/safety-management</loc>
-    <lastmod>2025-03-04</lastmod>
+    <loc>https://www.kigalisafetytraining.com/courses/safety-management</loc>
+    <lastmod>2024-03-15</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://ksohtc.netlify.app/contact</loc>
-    <lastmod>2025-03-04</lastmod>
+    <loc>https://www.kigalisafetytraining.com/contact</loc>
+    <lastmod>2024-03-15</lastmod>
     <changefreq>monthly</changefreq>
-    <priority>0.8</priority>
+    <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://ksohtc.netlify.app/terms</loc>
-    <lastmod>2025-03-04</lastmod>
+    <loc>https://www.kigalisafetytraining.com/terms</loc>
+    <lastmod>2024-03-15</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
+    <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://ksohtc.netlify.app/privacy</loc>
-    <lastmod>2025-03-04</lastmod>
+    <loc>https://www.kigalisafetytraining.com/privacy</loc>
+    <lastmod>2024-03-15</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
+    <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://ksohtc.netlify.app/cookies</loc>
-    <lastmod>2025-03-04</lastmod>
+    <loc>https://www.kigalisafetytraining.com/cookies</loc>
+    <lastmod>2024-03-15</lastmod>
     <changefreq>yearly</changefreq>
-    <priority>0.4</priority>
+    <priority>0.3</priority>
   </url>
   <url>
-    <loc>https://ksohtc.netlify.app/login</loc>
-    <lastmod>2025-03-04</lastmod>
-    <changefreq>yearly</changefreq>
+    <loc>https://www.kigalisafetytraining.com/login</loc>
+    <lastmod>2024-03-15</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
-    <loc>https://ksohtc.netlify.app/register</loc>
-    <lastmod>2025-03-04</lastmod>
-    <changefreq>yearly</changefreq>
+    <loc>https://www.kigalisafetytraining.com/register</loc>
+    <lastmod>2024-03-15</lastmod>
+    <changefreq>monthly</changefreq>
     <priority>0.5</priority>
   </url>
 </urlset>
