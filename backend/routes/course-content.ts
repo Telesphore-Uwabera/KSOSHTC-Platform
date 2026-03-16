@@ -1,6 +1,5 @@
 import { Request, Response } from "express";
 import path from "node:path";
-import fs from "node:fs";
 import crypto from "node:crypto";
 import type {
   CourseDoc,
@@ -22,71 +21,11 @@ import {
   isValidCourseSlug,
 } from "../lib/course-firestore";
 import { submissionsCollection, progressCollection } from "../lib/firestore";
-import { getCoursesFromPublicFolder, getLessonsFromPublicFolder } from "../lib/seed-courses";
 import type { SubmissionDoc, ProgressDoc } from "@shared/api";
 import { v2 as cloudinary } from "cloudinary";
 
 /** All courses display duration as 3 months. */
 const DISPLAY_DURATION = "3 months";
-
-/** GET /api/course-content/courses-from-public – list courses by reading public/courses folder (no Firestore) */
-export async function getCoursesFromPublic(_req: Request, res: Response): Promise<void> {
-  try {
-    const publicCoursesPath = path.resolve(process.cwd(), "public", "courses");
-    const raw = getCoursesFromPublicFolder(publicCoursesPath);
-    const courses = raw.map((c) => ({ ...c, duration: DISPLAY_DURATION }));
-    res.json({ courses });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    console.error("getCoursesFromPublic:", msg);
-    res.status(500).json({ error: "Failed to list courses from folder." });
-  }
-}
-
-export async function getLessonsFromPublic(req: Request, res: Response): Promise<void> {
-  try {
-    const { courseId } = req.params;
-    
-    // Fetch all modules for this course
-    const modulesSnap = await modulesRef(courseId).orderBy("order", "asc").get();
-    
-    // For each module, fetch its lessons
-    const lessons: { title: string; pdfUrl: string }[] = [];
-    
-    for (const modDoc of modulesSnap.docs) {
-      const lessonsSnap = await lessonsRef(courseId, modDoc.id).orderBy("order", "asc").get();
-      for (const lesDoc of lessonsSnap.docs) {
-        const data = lesDoc.data() as LessonDoc;
-        // Only include lessons that have a PDF attached
-        if (data.pdfUrl) {
-          lessons.push({
-            title: data.title,
-            pdfUrl: data.pdfUrl,
-          });
-        }
-      }
-    }
-    
-    // If no lessons are found in the database but it's a legacy course, 
-    // fall back to reading from the public folder so existing content doesn't break
-    if (lessons.length === 0 && ALLOWED_COURSE_IDS.includes(courseId)) {
-      const publicCoursesPath = path.resolve(process.cwd(), "public", "courses");
-      const fallbackLessons = getLessonsFromPublicFolder(publicCoursesPath, courseId);
-      if (fallbackLessons.length > 0) {
-        res.json({ lessons: fallbackLessons });
-        return;
-      }
-    }
-
-    res.json({ lessons });
-  } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    console.error("getLessonsFromPublic:", msg);
-    res.status(500).json({ error: "Failed to list lessons." });
-  }
-}
-
-const ALLOWED_COURSE_IDS = ["construction", "industrial-safety", "mining", "safety-management", "safety-for-all"];
 
 /** POST /api/course-content/courses/:courseId/upload-pdf – admin upload PDF to course folder. Body: { filename: string, contentBase64: string } */
 export async function uploadCoursePdf(req: Request, res: Response): Promise<void> {
@@ -306,78 +245,10 @@ export async function getCourseStats(req: Request, res: Response): Promise<void>
   try {
     const { courseId } = req.params;
     let stats = await getCourseTotalSteps(courseId);
-    // When Firestore has no modules/lessons (e.g. safety-management), use public folder count so dashboard shows real totals
-    if (stats.totalLessons === 0 && stats.totalAssessments === 0 && ALLOWED_COURSE_IDS.includes(courseId)) {
-      const publicCoursesPath = path.resolve(process.cwd(), "public", "courses");
-      const lessons = getLessonsFromPublicFolder(publicCoursesPath, courseId);
-      if (lessons.length > 0) {
-        stats = { totalLessons: lessons.length, totalAssessments: 0 };
-      }
-    }
     res.json(stats);
   } catch (e) {
     console.error("getCourseStats:", e);
     res.status(500).json({ error: "Failed to get course stats." });
-  }
-}
-
-/** Normalize for matching: strip leading "N. ", lowercase, collapse spaces and punctuation. */
-function normalizeForMatch(s: string): string {
-  return s
-    .replace(/^[\d.]+\s*[-–—]?\s*/i, "")
-    .replace(/[\s\-+._]+/g, " ")
-    .toLowerCase()
-    .trim();
-}
-
-/** Collapse repeated characters so "asssement" and "assessment" both match. */
-function collapseRepeated(s: string): string {
-  return s.replace(/(.)\1+/g, "$1");
-}
-
-/** GET /api/course-content/courses/:courseId/resolve-pdf?title=... – find PDF in folder that best matches lesson title (fixes bad stored paths). */
-export async function resolveCoursePdf(req: Request, res: Response): Promise<void> {
-  try {
-    const { courseId } = req.params;
-    const title = (req.query.title as string)?.trim();
-    if (!courseId || !title) {
-      res.status(400).json({ error: "courseId and title are required." });
-      return;
-    }
-    const publicCoursesPath = path.resolve(process.cwd(), "public", "courses");
-    const dir = path.join(publicCoursesPath, courseId);
-    if (!fs.existsSync(dir)) {
-      res.status(404).json({ error: "Course folder not found." });
-      return;
-    }
-    const files = fs.readdirSync(dir).filter((f) => f.toLowerCase().endsWith(".pdf"));
-    const searchWords = normalizeForMatch(title).split(/\s+/).filter(Boolean);
-    if (searchWords.length === 0) {
-      res.status(400).json({ error: "Title too short to match." });
-      return;
-    }
-    let best: { filename: string; score: number } | null = null;
-    const normFile = (f: string) => collapseRepeated(normalizeForMatch(path.basename(f, ".pdf")));
-    for (const filename of files) {
-      const normalized = normFile(filename);
-      let score = 0;
-      for (const w of searchWords) {
-        if (normalized.includes(w)) score++;
-        else if (normalized.includes(collapseRepeated(w))) score++;
-      }
-      if (score > 0 && (best === null || score > best.score)) {
-        best = { filename, score };
-      }
-    }
-    if (!best) {
-      res.status(404).json({ error: "No matching PDF found." });
-      return;
-    }
-    const pdfUrl = `/courses/${courseId}/${encodeURIComponent(best.filename)}`;
-    res.json({ pdfUrl });
-  } catch (e) {
-    console.error("resolveCoursePdf:", e);
-    res.status(500).json({ error: "Failed to resolve PDF." });
   }
 }
 

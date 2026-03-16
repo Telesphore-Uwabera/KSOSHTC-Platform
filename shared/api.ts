@@ -82,7 +82,7 @@ export interface ModuleDoc {
   updatedAt: string;
 }
 
-/** Lesson under a module: optional YouTube link, optional PDF (stored in public/courses, path from DB), optional text */
+/** Lesson under a module: optional YouTube link, optional PDF (stored in Cloudinary), optional text */
 export interface LessonDoc {
   id: string;
   courseId: string;
@@ -90,7 +90,7 @@ export interface LessonDoc {
   title: string;
   order: number;
   youtubeUrl?: string;
-  /** Public URL or path to PDF e.g. /courses/construction/1.1-Health-Safety.pdf */
+  /** Public URL to PDF on Cloudinary */
   pdfUrl?: string;
   contentHtml: string;
   published: boolean;

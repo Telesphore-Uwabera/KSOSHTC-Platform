@@ -23,13 +23,10 @@ import { getCourses, getCourseQuiz, putCourseQuiz, deleteCourseQuiz } from "./ro
 import { getCourseUsage } from "./routes/analytics";
 import {
   listCourses as listCourseContent,
-  getCoursesFromPublic,
-  getLessonsFromPublic,
   uploadCoursePdf,
   uploadCourseCover,
   getCourse,
   getCourseStats,
-  resolveCoursePdf,
   createCourse,
   updateCourse,
   listModules,
@@ -51,7 +48,6 @@ import {
 } from "./routes/course-content";
 import { postEnrollment, getEnrollments, patchEnrollment } from "./routes/enrollments";
 import { getProgress, patchProgress } from "./routes/progress";
-import { postSeedCourses, postCleanCoursePdfs } from "./routes/seed";
 import { postContact } from "./routes/contact";
 import { getDb, usersCollection } from "./lib/firestore";
 
@@ -167,13 +163,10 @@ export function createServer(options?: { apiOnly?: boolean }) {
 
   // Course content (Firestore): courses, modules, lessons, assessments
   app.get("/api/course-content/courses", listCourseContent);
-  app.get("/api/course-content/courses-from-public", getCoursesFromPublic);
-  app.get("/api/course-content/courses/:courseId/lessons-from-public", getLessonsFromPublic);
   app.post("/api/course-content/courses/:courseId/upload-pdf", uploadCoursePdf);
   app.post("/api/course-content/courses/:courseId/cover-image", uploadCourseCover);
   app.get("/api/course-content/courses/:courseId", getCourse);
   app.get("/api/course-content/courses/:courseId/stats", getCourseStats);
-  app.get("/api/course-content/courses/:courseId/resolve-pdf", resolveCoursePdf);
   app.post("/api/course-content/courses", createCourse);
   app.put("/api/course-content/courses/:courseId", updateCourse);
   app.get("/api/course-content/courses/:courseId/modules", listModules);
@@ -193,8 +186,6 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.post("/api/course-content/courses/:courseId/modules/:moduleId/assessments/:assessmentId/submit", submitAssessment);
   app.get("/api/submissions", getSubmissions);
 
-  app.post("/api/admin/seed-courses", postSeedCourses);
-  app.post("/api/admin/clean-course-pdfs", postCleanCoursePdfs);
   app.post("/api/enrollments", postEnrollment);
   app.get("/api/enrollments", getEnrollments);
   app.patch("/api/enrollments/:id", patchEnrollment);

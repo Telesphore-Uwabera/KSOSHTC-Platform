@@ -416,7 +416,7 @@ export default function AdminCourseContentDetail() {
         </div>
         <div className="mb-6 p-4 rounded-xl border border-primary/20 bg-primary/5">
           <p className="text-sm font-medium text-gray-900 mb-2">Upload PDF to this course</p>
-          <p className="text-xs text-gray-600 mb-2">The file will be saved to <code className="bg-white px-1 rounded">public/courses/{courseId}/</code> and appear in course materials.</p>
+          <p className="text-xs text-gray-600 mb-2">The file will be uploaded to Cloudinary and appear in course materials.</p>
           <UploadPdfBlock courseId={courseId} getCourseContentApi={getCourseContentApi} onSuccess={() => queryClient.invalidateQueries({ queryKey: ["course-content", "lessons-from-public", courseId] })} />
         </div>
 

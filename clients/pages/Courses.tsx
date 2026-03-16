@@ -23,29 +23,10 @@ async function fetchCoursesFromFirestore(): Promise<CourseDoc[]> {
   return (data.courses ?? []).filter((c: CourseDoc) => c.published !== false);
 }
 
-async function fetchCoursesFromPublic(): Promise<CourseDoc[]> {
-  const res = await fetch(getApiBase() + "/api/course-content/courses-from-public");
-  if (!res.ok) return [];
-  const data = await res.json();
-  return (data.courses ?? []).map((c: { id: string; title: string; description?: string; sector: string; duration: string; published?: boolean; order?: number; lessonCount?: number; coverImageUrl?: string }) => ({
-    id: c.id,
-    slug: c.id as CourseDoc["slug"],
-    title: c.title,
-    description: c.description ?? "",
-    sector: c.sector,
-    duration: c.duration,
-    published: c.published !== false,
-    order: c.order ?? 99,
-    lessonCount: (c as { lessonCount?: number }).lessonCount,
-    coverImageUrl: c.coverImageUrl,
-  }));
-}
-
-/** Fetch courses: use Firestore first; if empty, use public/courses folder. Returns sorted by order. */
+/** Fetch courses from Firestore. Returns sorted by order. */
 async function fetchCourses(): Promise<CourseDoc[]> {
-  const fromFirestore = await fetchCoursesFromFirestore();
-  const list = fromFirestore.length > 0 ? fromFirestore : await fetchCoursesFromPublic();
-  return list.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
+  const courses = await fetchCoursesFromFirestore();
+  return courses.sort((a, b) => (a.order ?? 99) - (b.order ?? 99));
 }
 
 /** For an approved learner with sector: only show their sector course + safety-management. */
@@ -213,7 +194,8 @@ export default function Courses() {
                     </p>
                     <div className="mt-auto pt-2 border-t border-gray-100 shrink-0">
                       <Link
-                        to={{ pathname: "/login", state: { from: `/courses/${course.id}` } }}
+                        to="/login"
+                        state={{ from: `/courses/${course.id}` }}
                         className="inline-flex items-center gap-1.5 text-primary font-semibold text-sm hover:text-accent transition-colors"
                       >
                         View materials
