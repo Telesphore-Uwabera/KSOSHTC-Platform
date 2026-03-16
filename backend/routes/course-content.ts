@@ -27,7 +27,7 @@ import { v2 as cloudinary } from "cloudinary";
 /** All courses display duration as 3 months. */
 const DISPLAY_DURATION = "3 months";
 
-/** POST /api/course-content/courses/:courseId/upload-pdf – admin upload PDF to course folder. Body: { filename: string, contentBase64: string } */
+/** POST /api/course-content/courses/:courseId/upload-pdf – admin upload materials (PDF, Word, Excel, PPT, etc.) to course folder. Body: { filename: string, contentBase64: string } */
 export async function uploadCoursePdf(req: Request, res: Response): Promise<void> {
   try {
     const { courseId } = req.params;
@@ -43,8 +43,10 @@ export async function uploadCoursePdf(req: Request, res: Response): Promise<void
       return;
     }
     const safeName = path.basename(filename).replace(/[^a-zA-Z0-9._\-\s+()]/g, "_");
-    if (!safeName.endsWith(".pdf")) {
-      res.status(400).json({ error: "Only PDF files are allowed. Use a .pdf filename." });
+    const ext = path.extname(safeName).toLowerCase();
+    const allowed = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv"];
+    if (!allowed.includes(ext)) {
+      res.status(400).json({ error: `Unsupported file type: ${ext}. Supported: ${allowed.join(", ")}` });
       return;
     }
     const buf = Buffer.from(contentBase64, "base64");
@@ -53,12 +55,14 @@ export async function uploadCoursePdf(req: Request, res: Response): Promise<void
       return;
     }
     
-    const uri = `data:application/pdf;base64,${contentBase64}`;
+    // Use dynamic mime type or generic octet-stream
+    const uri = `data:application/octet-stream;base64,${contentBase64}`;
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
       api_key: process.env.CLOUDINARY_API_KEY,
       api_secret: process.env.CLOUDINARY_API_SECRET,
     });
+    // For docs/raw files, we use resource_type: "raw"
     const result = await cloudinary.uploader.upload(uri, {
       folder: `ksohtc/courses/${courseId}`,
       public_id: path.parse(safeName).name,
@@ -70,7 +74,7 @@ export async function uploadCoursePdf(req: Request, res: Response): Promise<void
   } catch (e) {
     const msg = e instanceof Error ? e.message : (typeof e === 'object' ? JSON.stringify(e) : String(e));
     console.error("uploadCoursePdf:", msg);
-    res.status(500).json({ error: "Failed to upload PDF.", detail: msg });
+    res.status(500).json({ error: "Failed to upload document.", detail: msg });
   }
 }
 

@@ -49,7 +49,7 @@ async function fetchAssessments(courseId: string, moduleId: string): Promise<Ass
   return (data as { assessments: AssessmentDoc[] }).assessments ?? [];
 }
 
-function UploadPdfBlock({
+function UploadDocumentBlock({
   courseId,
   getCourseContentApi,
   onSuccess,
@@ -64,10 +64,17 @@ function UploadPdfBlock({
   const [success, setSuccess] = useState("");
 
   async function handleUpload() {
-    if (!file || !file.name.toLowerCase().endsWith(".pdf")) {
-      setError("Please select a PDF file.");
+    if (!file) {
+      setError("Please select a file.");
       return;
     }
+    const ext = "." + file.name.split(".").pop()?.toLowerCase();
+    const allowed = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv"];
+    if (!allowed.includes(ext)) {
+      setError(`Unsupported file type: ${ext}. Supported: ${allowed.join(", ")}`);
+      return;
+    }
+
     setError("");
     setSuccess("");
     setUploading(true);
@@ -103,7 +110,7 @@ function UploadPdfBlock({
     <div className="flex flex-wrap items-end gap-2">
       <input
         type="file"
-        accept=".pdf"
+        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
         onChange={(e) => { setFile(e.target.files?.[0] ?? null); setError(""); setSuccess(""); }}
         className="text-sm text-gray-600 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-primary file:text-white file:font-semibold file:cursor-pointer"
       />
@@ -114,10 +121,10 @@ function UploadPdfBlock({
         className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-primary/90 disabled:opacity-50"
       >
         {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-        {uploading ? "Uploading…" : "Upload PDF"}
+        {uploading ? "Uploading…" : "Upload Document"}
       </button>
-      {error && <p className="text-red-600 text-sm w-full">{error}</p>}
-      {success && <p className="text-green-700 text-sm w-full">{success}</p>}
+      {error && <p className="text-red-600 text-sm w-full font-medium">{error}</p>}
+      {success && <p className="text-green-700 text-sm w-full font-medium">{success}</p>}
     </div>
   );
 }
@@ -415,9 +422,9 @@ export default function AdminCourseContentDetail() {
           />
         </div>
         <div className="mb-6 p-4 rounded-xl border border-primary/20 bg-primary/5">
-          <p className="text-sm font-medium text-gray-900 mb-2">Upload PDF to this course</p>
-          <p className="text-xs text-gray-600 mb-2">The file will be uploaded to Cloudinary and appear in course materials.</p>
-          <UploadPdfBlock courseId={courseId} getCourseContentApi={getCourseContentApi} onSuccess={() => queryClient.invalidateQueries({ queryKey: ["course-content", "lessons-from-public", courseId] })} />
+          <p className="text-sm font-medium text-gray-900 mb-2">Upload document to this course</p>
+          <p className="text-xs text-gray-600 mb-2">The file will be uploaded to Cloudinary and appear in course materials. PDF, Word, Excel, PowerPoint, or Text.</p>
+          <UploadDocumentBlock courseId={courseId} getCourseContentApi={getCourseContentApi} onSuccess={() => queryClient.invalidateQueries({ queryKey: ["course-content", "lessons-from-public", courseId] })} />
         </div>
 
         {modulesLoading ? (
@@ -598,6 +605,7 @@ function ModuleBlock({
           setNewLessonYoutube("");
           setNewLessonPdfFile(null);
           setNewLessonContent("");
+          queryClient.invalidateQueries({ queryKey: ["course-content", "lessons", courseId, mod.id] });
         },
       }
     );
@@ -633,7 +641,7 @@ function ModuleBlock({
                 <li key={l.id} className="space-y-1">
                   <div className="flex items-center justify-between gap-2 py-2 px-3 rounded-xl bg-white border border-gray-100">
                     <div className="flex items-center gap-2 min-w-0">
-                      {l.pdfUrl ? <FileText className="w-4 h-4 text-amber-600 shrink-0" title="PDF" /> : null}
+                       {l.pdfUrl ? <FileText className="w-4 h-4 text-amber-600 shrink-0" /> : null}
                       {l.youtubeUrl ? <Youtube className="w-4 h-4 text-red-600 shrink-0" /> : null}
                       {!l.pdfUrl && !l.youtubeUrl ? <FileText className="w-4 h-4 text-gray-400 shrink-0" /> : null}
                       <span className="truncate font-medium text-gray-900">{idx + 1}. {l.title}</span>
@@ -715,10 +723,10 @@ function ModuleBlock({
                       className="w-full px-4 py-2 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 transition-all text-sm"
                     />
                     <div className="space-y-1.5 ml-1">
-                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">PDF Materials (Optional)</label>
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Documents/Materials (Optional)</label>
                       <input
                         type="file"
-                        accept=".pdf"
+                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
                         onChange={(e) => setNewLessonPdfFile(e.target.files?.[0] ?? null)}
                         className="w-full text-xs text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-bold file:cursor-pointer hover:file:bg-primary/20 transition-all"
                       />
@@ -999,25 +1007,25 @@ function LessonEditModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">PDF Document (Optional)</label>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Documents/Materials (Optional)</label>
             {pdfUrl && !pdfFile && (
               <div className="flex items-center gap-2 mb-2 p-2 bg-gray-50 rounded border border-gray-200">
                 <FileText className="w-4 h-4 text-primary" />
-                <span className="text-sm truncate max-w-[300px]" title={pdfUrl}>{pdfUrl.split('/').pop() || "Attached PDF"}</span>
-                <button type="button" onClick={() => setPdfUrl("")} className="text-red-500 hover:text-red-700 ml-auto p-1 text-sm font-medium" title="Remove PDF">
-                  Remove
+                <span className="text-sm truncate max-w-[300px]" title={pdfUrl}>{pdfUrl.split('/').pop() || "Attached Document"}</span>
+                <button type="button" onClick={() => setPdfUrl("")} className="text-red-500 hover:text-red-700 ml-auto p-1 text-sm font-medium" title="Remove Document">
+                   Remove
                 </button>
               </div>
             )}
             {!pdfUrl || pdfFile ? (
               <input
                 type="file"
-                accept=".pdf"
+                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
                 onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
                 className="w-full text-sm text-gray-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700 file:font-semibold file:cursor-pointer hover:file:bg-gray-200"
               />
             ) : null}
-            <div className="text-xs text-gray-500 mt-1">Select a new PDF to replace the current one, or remove the existing PDF.</div>
+            <div className="text-xs text-gray-500 mt-1">Select a new document to replace the current one, or remove the existing one. PDF, Word, Excel, PPT, or Text.</div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Extra content (optional text)</label>
