@@ -505,7 +505,7 @@ export async function createLesson(req: Request, res: Response): Promise<void> {
     }
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
-    const data: Omit<LessonDoc, "id"> = {
+    const rawData = {
       courseId,
       moduleId,
       title: String(body.title ?? "Untitled lesson").trim(),
@@ -517,11 +517,14 @@ export async function createLesson(req: Request, res: Response): Promise<void> {
       createdAt: now,
       updatedAt: now,
     };
+    // Strip undefined fields — Firestore rejects them when ignoreUndefinedProperties is not set
+    const data = Object.fromEntries(Object.entries(rawData).filter(([, v]) => v !== undefined)) as Omit<LessonDoc, "id">;
     await lessonDoc(courseId, moduleId, id).set(data);
     res.status(201).json({ id, ...data });
   } catch (e) {
-    console.error("createLesson:", e);
-    res.status(500).json({ error: "Failed to create lesson." });
+    const msg = e instanceof Error ? e.message : (typeof e === 'object' ? JSON.stringify(e) : String(e));
+    console.error("createLesson:", msg);
+    res.status(500).json({ error: "Failed to create lesson.", detail: msg });
   }
 }
 
