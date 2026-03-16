@@ -11,11 +11,14 @@ const SECTOR_OPTIONS: { value: LearnerSector | ""; label: string }[] = [
   { value: "mining", label: "Mining" },
 ];
 
-type EnrollmentWithPercent = EnrollmentDoc & { completionPercent: number };
+type EnrollmentWithPerformance = EnrollmentDoc & { 
+  completionPercent: number;
+  quizPerformance?: Record<string, { score: number, maxScore: number, percentage: number, passed: boolean }>;
+};
 
 async function fetchLearnersSummary(): Promise<{
   users: UserPublic[];
-  enrollmentsByUserId: Record<string, EnrollmentWithPercent[]>;
+  enrollmentsByUserId: Record<string, EnrollmentWithPerformance[]>;
 }> {
   const res = await fetch(getApiBase() + "/api/users/learners-summary");
   if (!res.ok) throw new Error("Failed to load learners");
@@ -308,38 +311,89 @@ export default function AdminLearners() {
                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Enrollments</p>
                             <div className="flex flex-col gap-2">
                               {enrollments.map((en) => (
-                                <div
-                                  key={en.id}
-                                  className="flex flex-wrap items-center justify-between gap-2 py-2 px-3 rounded-lg bg-white border border-gray-100"
-                                >
-                                  <div className="flex items-center gap-2 min-w-0">
-                                    <BookOpen className="w-4 h-4 text-primary shrink-0" />
-                                    <span className="font-medium text-gray-900 truncate">
-                                      {courseTitleById[en.courseId] ?? en.courseId}
-                                    </span>
-                                    <span
-                                      className={`text-xs px-2 py-0.5 rounded-full shrink-0 ${statusClass[en.status ?? "active"] ?? statusClass.active}`}
-                                    >
-                                      {statusLabel[en.status ?? "active"] ?? "Active"}
-                                    </span>
-                                    <span className="text-sm text-gray-600">{en.completionPercent}% complete</span>
-                                  </div>
-                                  <select
-                                    value={en.status ?? "active"}
-                                    onChange={(e) =>
-                                      updateStatusMutation.mutate({
-                                        enrollmentId: en.id,
-                                        status: e.target.value as EnrollmentStatus,
-                                      })
-                                    }
-                                    disabled={updateStatusMutation.isPending}
-                                    className="text-sm rounded-lg border border-gray-200 px-2 py-1.5 bg-white"
+                                  <div
+                                    key={en.id}
+                                    className="flex flex-col gap-3 py-3 px-4 rounded-xl bg-white border border-gray-100 hover:border-primary/20 transition-all shadow-sm"
                                   >
-                                    <option value="active">Active</option>
-                                    <option value="completed">Completed</option>
-                                    <option value="not_approved">Not approved</option>
-                                  </select>
-                                </div>
+                                    <div className="flex flex-wrap items-center justify-between gap-3">
+                                      <div className="flex items-center gap-3 min-w-0">
+                                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                                          <BookOpen className="w-4 h-4 text-primary" />
+                                        </div>
+                                        <div className="min-w-0">
+                                          <p className="font-bold text-gray-900 truncate">
+                                            {courseTitleById[en.courseId] ?? en.courseId}
+                                          </p>
+                                          <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mt-0.5">
+                                            Enrolled: {en.enrolledAt ? new Date(en.enrolledAt).toLocaleDateString() : '—'}
+                                          </p>
+                                        </div>
+                                      </div>
+                                      
+                                      <div className="flex items-center gap-2">
+                                        <span
+                                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusClass[en.status ?? "active"] ?? statusClass.active}`}
+                                        >
+                                          {statusLabel[en.status ?? "active"] ?? "Active"}
+                                        </span>
+                                        <select
+                                          value={en.status ?? "active"}
+                                          onChange={(e) =>
+                                            updateStatusMutation.mutate({
+                                              enrollmentId: en.id,
+                                              status: e.target.value as EnrollmentStatus,
+                                            })
+                                          }
+                                          disabled={updateStatusMutation.isPending}
+                                          className="text-xs rounded-lg border border-gray-200 px-2 py-1.5 bg-white outline-none focus:border-primary transition-colors"
+                                        >
+                                          <option value="active">Active</option>
+                                          <option value="completed">Completed</option>
+                                          <option value="not_approved">Not approved</option>
+                                        </select>
+                                      </div>
+                                    </div>
+
+                                    {/* Progress Area */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-50">
+                                      <div>
+                                        <div className="flex justify-between items-center mb-1.5 transition-all">
+                                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Lesson Progress</span>
+                                          <span className="text-sm font-bold text-primary leading-none">{en.completionPercent}%</span>
+                                        </div>
+                                        <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
+                                          <div 
+                                            className="h-full bg-primary rounded-full transition-all duration-500" 
+                                            style={{ width: `${en.completionPercent}%` }}
+                                          />
+                                        </div>
+                                      </div>
+
+                                      <div className="space-y-2">
+                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none block">Quiz Performance</span>
+                                        {en.quizPerformance && Object.keys(en.quizPerformance).length > 0 ? (
+                                          <div className="flex flex-wrap gap-2">
+                                            {Object.entries(en.quizPerformance).map(([qId, perf]) => (
+                                              <div 
+                                                key={qId} 
+                                                className={`px-2 py-1 rounded-lg border text-[10px] font-bold flex items-center gap-1.5 ${
+                                                  perf.passed 
+                                                    ? 'bg-green-50 border-green-100 text-green-700' 
+                                                    : 'bg-amber-50 border-amber-100 text-amber-700'
+                                                }`}
+                                                title={`Score: ${perf.score}/${perf.maxScore}`}
+                                              >
+                                                <div className={`w-1.5 h-1.5 rounded-full ${perf.passed ? 'bg-green-500' : 'bg-amber-500'}`} />
+                                                Quiz: {perf.percentage}%
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ) : (
+                                          <p className="text-[10px] italic text-gray-400 py-1">No quizzes attempted</p>
+                                        )}
+                                      </div>
+                                    </div>
+                                  </div>
                               ))}
                             </div>
                           </td>

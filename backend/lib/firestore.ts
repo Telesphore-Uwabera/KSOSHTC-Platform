@@ -83,6 +83,7 @@ export const COLLECTIONS = {
   submissions: "submissions",
   progress: "progress",
   inquiries: "inquiries",
+  password_resets: "password_resets",
 } as const;
 
 export function usersCollection() {
@@ -115,4 +116,8 @@ export function progressCollection() {
 
 export function inquiriesCollection() {
   return getDb().collection(COLLECTIONS.inquiries);
+}
+
+export function passwordResetsCollection() {
+  return getDb().collection(COLLECTIONS.password_resets);
 }

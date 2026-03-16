@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
-import { ArrowLeft, CheckCircle, XCircle } from "lucide-react";
+import { ArrowLeft, CheckCircle, XCircle, Loader2 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { getStoredUser } from "../lib/auth";
@@ -178,77 +178,135 @@ export default function TakeModuleQuiz() {
             <p className="text-gray-600 text-sm mb-6">{assessment.description}</p>
           )}
 
-          {!submitted ? (
-            <>
-              <ul className="space-y-6">
-                {assessment.questions.map((q, idx) => (
-                  <li key={q.id} className="bg-white rounded-xl border border-gray-200 p-4 sm:p-6">
-                    <p className="font-medium text-gray-900 mb-3">
-                      {idx + 1}. {q.text}
+          <div className="space-y-6">
+            {assessment.questions.map((q, idx) => {
+              const selectedIdx = answers[q.id];
+              const isCorrect = selectedIdx === q.correctIndex;
+              
+              return (
+                <div 
+                  key={q.id} 
+                  className={`bg-white rounded-2xl border transition-all ${
+                    submitted 
+                      ? isCorrect 
+                        ? "border-green-200 bg-green-50/10" 
+                        : "border-red-200 bg-red-50/10"
+                      : "border-gray-200"
+                  } p-4 sm:p-6`}
+                >
+                  <div className="flex items-start justify-between gap-4 mb-4">
+                    <p className="font-bold text-gray-900 leading-tight">
+                      <span className="inline-flex items-center justify-center w-6 h-6 rounded-md bg-gray-100 text-gray-500 text-xs mr-2">
+                        {idx + 1}
+                      </span>
+                      {q.text}
                     </p>
-                    <ul className="space-y-2">
-                      {q.options.map((opt, oIdx) => (
+                    {submitted && (
+                      isCorrect ? (
+                        <CheckCircle className="w-5 h-5 text-green-500 shrink-0" />
+                      ) : (
+                        <XCircle className="w-5 h-5 text-red-500 shrink-0" />
+                      )
+                    )}
+                  </div>
+
+                  <ul className="space-y-3">
+                    {q.options.map((opt, oIdx) => {
+                      const isSelected = selectedIdx === oIdx;
+                      const isActuallyCorrect = oIdx === q.correctIndex;
+                      
+                      let optionClass = "border-gray-100 bg-white hover:bg-gray-50";
+                      if (submitted) {
+                        if (isActuallyCorrect) optionClass = "border-green-500 bg-green-50 text-green-800 font-semibold";
+                        else if (isSelected && !isActuallyCorrect) optionClass = "border-red-300 bg-red-50 text-red-800";
+                        else optionClass = "border-gray-100 bg-gray-50 text-gray-400 opacity-60";
+                      } else if (isSelected) {
+                        optionClass = "border-primary bg-primary/5 text-primary font-medium";
+                      }
+
+                      return (
                         <li key={oIdx}>
-                          <label className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-gray-50">
-                            <input
-                              type="radio"
-                              name={q.id}
-                              checked={answers[q.id] === oIdx}
-                              onChange={() => setAnswer(q.id, oIdx)}
-                              className="w-4 h-4 text-primary"
-                            />
-                            <span className="text-gray-700">{opt}</span>
+                          <label className={`flex items-center gap-3 p-3 rounded-xl border transition-all ${!submitted ? "cursor-pointer" : "cursor-default"} ${optionClass}`}>
+                            {!submitted && (
+                              <input
+                                type="radio"
+                                name={q.id}
+                                checked={isSelected}
+                                onChange={() => setAnswer(q.id, oIdx)}
+                                className="w-4 h-4 text-primary"
+                              />
+                            )}
+                            <span className="flex-1">{opt}</span>
+                            {submitted && isActuallyCorrect && <CheckCircle className="w-4 h-4 text-green-600" />}
+                            {submitted && isSelected && !isActuallyCorrect && <XCircle className="w-4 h-4 text-red-600" />}
                           </label>
                         </li>
-                      ))}
-                    </ul>
-                  </li>
-                ))}
-              </ul>
-              <div className="mt-8">
+                      );
+                    })}
+                  </ul>
+                </div>
+              );
+            })}
+          </div>
+
+          {!submitted ? (
+            <div className="mt-10 p-6 bg-primary/5 rounded-[24px] border border-primary/10">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div>
+                  <h3 className="font-bold text-primary mb-1">Ready to submit?</h3>
+                  <p className="text-sm text-gray-600">
+                    You've answered {Object.keys(answers).length} of {assessment.questions.length} questions.
+                  </p>
+                </div>
                 <button
                   type="button"
                   onClick={handleSubmit}
-                  disabled={
-                    Object.keys(answers).length < assessment.questions.length || submitting
-                  }
-                  className="inline-flex items-center gap-2 bg-primary text-white px-6 py-3 rounded-lg font-semibold hover:bg-primary/90 disabled:opacity-60 disabled:cursor-not-allowed"
+                  disabled={Object.keys(answers).length < assessment.questions.length || submitting}
+                  className="inline-flex items-center gap-2 bg-primary text-white px-8 py-3 rounded-xl font-bold hover:bg-secondary transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
                 >
-                  {submitting ? "Submitting…" : "Submit answers"}
+                  {submitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Submit assessment"}
                 </button>
-                <p className="text-sm text-gray-500 mt-2">
-                  You have selected answers for {Object.keys(answers).length} of{" "}
-                  {assessment.questions.length} questions.
-                </p>
               </div>
-            </>
+            </div>
           ) : (
-            <div className="bg-white rounded-xl border border-gray-200 p-6 sm:p-8">
-              <div
-                className={`flex items-center gap-3 mb-4 ${
-                  passedResult ? "text-green-700" : "text-amber-700"
-                }`}
-              >
-                {passedResult ? (
-                  <CheckCircle className="w-10 h-10" />
-                ) : (
-                  <XCircle className="w-10 h-10" />
-                )}
+            <div className={`mt-10 p-8 rounded-[32px] border-2 ${passedResult ? "border-green-200 bg-green-50/20" : "border-red-200 bg-red-50/20"} text-center`}>
+              <div className="flex flex-col items-center gap-4">
+                <div className={`w-20 h-20 rounded-full flex items-center justify-center ${passedResult ? "bg-green-100 text-green-600" : "bg-red-100 text-red-600"}`}>
+                  {passedResult ? <CheckCircle className="w-10 h-10" /> : <XCircle className="w-10 h-10" />}
+                </div>
                 <div>
-                  <p className="text-xl font-bold">
-                    {passedResult ? "Passed" : "Not passed"}
+                  <h2 className={`text-3xl font-black ${passedResult ? "text-green-800" : "text-red-800"}`}>
+                    {passedResult ? "Congratulations!" : "Keep Trying!"}
+                  </h2>
+                  <p className={`text-xl font-bold mt-1 ${passedResult ? "text-green-700" : "text-red-700"}`}>
+                    {passedResult ? "You passed the assessment." : "You didn't reach the pass threshold."}
                   </p>
-                  <p className="text-lg">
-                    Score: {score}% (required: {assessment.passThreshold}%)
-                  </p>
+                  <div className="mt-4 inline-flex items-center gap-6 px-6 py-3 bg-white/60 rounded-2xl border border-white/50 shadow-sm">
+                    <div className="text-center">
+                      <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Your Score</p>
+                      <p className={`text-2xl font-black ${passedResult ? "text-green-600" : "text-red-600"}`}>{score}%</p>
+                    </div>
+                    <div className="w-px h-8 bg-gray-200" />
+                    <div className="text-center">
+                      <p className="text-[10px] uppercase tracking-wider font-bold text-gray-400">Required</p>
+                      <p className="text-2xl font-black text-gray-700">{assessment.passThreshold}%</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                  <Link
+                    to={`/courses/${courseId}`}
+                    className={`inline-flex items-center gap-2 px-8 py-3 rounded-xl font-bold transition-all ${
+                      passedResult 
+                        ? "bg-green-600 text-white hover:bg-green-700" 
+                        : "bg-red-600 text-white hover:bg-red-700"
+                    }`}
+                  >
+                    {passedResult ? "Continue course" : "Study materials and retry"}
+                    <ArrowLeft className="w-4 h-4 rotate-180" />
+                  </Link>
                 </div>
               </div>
-              <Link
-                to={`/courses/${courseId}`}
-                className="text-primary font-medium hover:underline"
-              >
-                Back to course materials
-              </Link>
             </div>
           )}
         </div>

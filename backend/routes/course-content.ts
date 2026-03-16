@@ -689,18 +689,59 @@ export async function submitAssessment(req: Request, res: Response): Promise<voi
 /** GET /api/submissions?courseId= – list quiz submissions for a course (admin; for viewing learner marks). */
 export async function getSubmissions(req: Request, res: Response): Promise<void> {
   try {
-    const { courseId } = req.query as { courseId?: string };
-    if (!courseId) {
-      res.status(400).json({ error: "courseId query is required." });
-      return;
+    const { courseId, userId } = req.query as { courseId?: string; userId?: string };
+    let query: FirebaseFirestore.Query = submissionsCollection();
+    if (courseId) {
+      query = query.where("courseId", "==", courseId);
     }
-    const snap = await submissionsCollection().where("courseId", "==", courseId).get();
+    if (userId) {
+      query = query.where("userId", "==", userId);
+    }
+    const snap = await query.get();
     const submissions = snap.docs
       .map((d) => ({ id: d.id, ...d.data() } as SubmissionDoc))
       .sort((a, b) => (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""));
     res.json({ submissions });
+    res.json({ submissions });
   } catch (e) {
     console.error("getSubmissions:", e);
     res.status(500).json({ error: "Failed to list submissions." });
+  }
+}
+
+/** GET /api/course-content/courses/:courseId/resolve-pdf?title=... – Find a lesson PDF URL by title. */
+export async function resolveCoursePdf(req: Request, res: Response): Promise<void> {
+  try {
+    const { courseId } = req.params;
+    const { title } = req.query as { title?: string };
+    if (!title) {
+      res.status(400).json({ error: "Title is required." });
+      return;
+    }
+
+    const cleanTitle = title.trim();
+    // Search all modules for a lesson with this title
+    const modulesSnap = await modulesRef(courseId).get();
+    
+    for (const modDoc of modulesSnap.docs) {
+      const lessonsSnap = await lessonsRef(courseId, modDoc.id).get();
+      const lessonDoc = lessonsSnap.docs.find(d => {
+        const data = d.data();
+        // Match exact or fuzzy (ignoring Copy prefixes/suffixes we usually clean)
+        const dTitle = (data.title || "").trim();
+        return dTitle === cleanTitle || dTitle.includes(cleanTitle) || cleanTitle.includes(dTitle);
+      });
+
+      if (lessonDoc) {
+        const data = lessonDoc.data();
+        res.json({ pdfUrl: data.pdfUrl });
+        return;
+      }
+    }
+
+    res.status(404).json({ error: "PDF not found for this title." });
+  } catch (e) {
+    console.error("resolveCoursePdf:", e);
+    res.status(500).json({ error: "Failed to resolve PDF." });
   }
 }

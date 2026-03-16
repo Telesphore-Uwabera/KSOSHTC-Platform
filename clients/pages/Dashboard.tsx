@@ -29,6 +29,7 @@ export default function Dashboard() {
     progressByCourse,
     statsByCourse,
     kpis,
+    rows,
     isLoading,
     statsLoading,
     error,
@@ -69,29 +70,58 @@ export default function Dashboard() {
         </p>
 
         {!isLoading && !error && courses.length > 0 && (
-          <div className="grid w-full min-w-0 grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-            {courses.slice(0, 4).map((course) => {
+          <div className="grid w-full min-w-0 grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 mb-10">
+            {rows.map((row) => {
+              const { course, completionPercent, latestPerformance } = row;
               const Icon = iconBySlug[course.slug ?? course.id] ?? BookOpen;
-              const progress = progressByCourse[course.id];
-              const stats = statsByCourse[course.id] ?? { totalLessons: 0, totalAssessments: 0 };
-              const completed = (progress?.completedLessonIds?.length ?? 0) + (progress?.completedAssessmentIds?.length ?? 0);
-              const total = stats.totalLessons + stats.totalAssessments;
-              const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
               return (
-                <Link
+                <div
                   key={course.id}
-                  to={`/courses/${course.id}`}
-                  className="flex flex-col gap-2 p-4 rounded-xl border border-gray-200 bg-gray-50 hover:border-primary/30 hover:shadow-md transition-all text-left"
+                  className="flex flex-col gap-3 p-5 rounded-2xl border border-gray-200 bg-gray-50 hover:border-primary/30 hover:shadow-lg transition-all text-left group"
                 >
-                  <span className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary">
-                    <Icon className="w-5 h-5" />
-                  </span>
-                  <p className="font-semibold text-gray-900 truncate">{course.title}</p>
-                  <p className="text-xs text-gray-500">{course.sector} · {course.duration}</p>
-                  <p className="text-sm text-primary font-medium mt-auto">
-                    {completed} / {total} ({pct}%)
-                  </p>
-                </Link>
+                  <div className="flex items-start justify-between">
+                    <span className="flex-shrink-0 w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                      <Icon className="w-5 h-5" />
+                    </span>
+                    <Link to={`/courses/${course.id}`} className="p-1.5 rounded-lg text-gray-400 hover:text-primary hover:bg-white transition-colors">
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </div>
+                  <div>
+                    <p className="font-bold text-gray-900 line-clamp-1">{course.title}</p>
+                    <p className="text-xs text-gray-500">{course.sector} · {course.duration}</p>
+                  </div>
+                  
+                  <div className="space-y-1.5 mt-1">
+                    <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-gray-400">
+                      <span>Progress</span>
+                      <span className="text-primary">{completionPercent}%</span>
+                    </div>
+                    <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                      <div 
+                        className="h-full bg-primary transition-all duration-500 ease-out" 
+                        style={{ width: `${completionPercent}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {latestPerformance ? (
+                    <div className={`mt-auto p-2 rounded-lg border flex items-center gap-2 ${
+                      latestPerformance.passed 
+                        ? "bg-green-50 border-green-100 text-green-700" 
+                        : "bg-amber-50 border-amber-100 text-amber-700"
+                    }`}>
+                      <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${latestPerformance.passed ? "bg-green-500" : "bg-amber-500"}`} />
+                      <p className="text-[11px] font-semibold leading-tight">
+                        Last quiz: {latestPerformance.score}/{latestPerformance.maxScore} ({latestPerformance.percentage}%) {latestPerformance.passed ? "PASSED" : "RETRY"}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="mt-auto p-2 rounded-lg border border-dashed border-gray-200 bg-white text-gray-400">
+                      <p className="text-[11px] italic leading-tight">No quizzes taken yet</p>
+                    </div>
+                  )}
+                </div>
               );
             })}
           </div>

@@ -624,7 +624,7 @@ export default function CourseDetail() {
                       <p className="text-gray-600 text-sm">
                         View PDFs below. Materials are from your course folder.
                       </p>
-                      <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-3">
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                         {visible.map((lesson, idx) => {
                           const title = stripSectionPrefix(cleanLessonTitle(lesson.title));
                           const section = sectionLabel(idx + 1);
@@ -770,7 +770,7 @@ export default function CourseDetail() {
 
                     return (
                       <>
-                        <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
                           {visibleCards}
                         </div>
                         {hasMore && (

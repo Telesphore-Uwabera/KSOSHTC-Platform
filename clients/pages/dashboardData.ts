@@ -2,7 +2,7 @@ import { useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getStoredUser } from "../lib/auth";
 import { getApiBase } from "@/lib/apiBase";
-import type { CourseDoc, ProgressDoc } from "@shared/api";
+import type { CourseDoc, ProgressDoc, SubmissionDoc } from "@shared/api";
 
 export interface CourseStats {
   totalLessons: number;
@@ -28,6 +28,13 @@ export async function fetchCourseStats(courseId: string): Promise<CourseStats> {
   const res = await fetch(getApiBase() + "/api/course-content/courses/" + encodeURIComponent(courseId) + "/stats");
   if (!res.ok) return { totalLessons: 0, totalAssessments: 0 };
   return res.json();
+}
+
+export async function fetchUserSubmissions(userId: string): Promise<SubmissionDoc[]> {
+  const res = await fetch(getApiBase() + "/api/submissions?userId=" + encodeURIComponent(userId));
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.submissions ?? [];
 }
 
 export function filterCoursesBySector(courses: CourseDoc[], sector: string | undefined): CourseDoc[] {
@@ -66,6 +73,12 @@ export function useDashboardData() {
     enabled: !!user?.id && canAccess,
   });
 
+  const { data: allSubmissions = [] } = useQuery({
+    queryKey: ["submissions", user?.id],
+    queryFn: () => fetchUserSubmissions(user!.id),
+    enabled: !!user?.id && canAccess,
+  });
+
   const courses = useMemo(() => filterCoursesBySector(allCourses, user?.sector), [allCourses, user?.sector]);
   const courseIds = useMemo(() => courses.map((c) => c.id), [courses]);
 
@@ -100,6 +113,12 @@ export function useDashboardData() {
       passedQuizzes: number;
       totalAssessments: number;
       completionPercent: number;
+      latestPerformance?: {
+        score: number;
+        maxScore: number;
+        percentage: number;
+        passed: boolean;
+      };
     }> = [];
 
     for (const course of courses) {
@@ -110,6 +129,10 @@ export function useDashboardData() {
       const totalSteps = stats.totalLessons + stats.totalAssessments;
       const completedSteps = completedLessons + passedQuizzes;
       const completionPercent = totalSteps > 0 ? Math.round((completedSteps / totalSteps) * 100) : 0;
+
+      // Find latest performance for this course
+      const courseSubmissions = allSubmissions.filter(s => s.courseId === course.id);
+      const latestSub = courseSubmissions.length > 0 ? courseSubmissions[0] : undefined;
 
       totalCompletedLessons += completedLessons;
       totalPassedQuizzes += passedQuizzes;
@@ -122,6 +145,12 @@ export function useDashboardData() {
         passedQuizzes,
         totalAssessments: stats.totalAssessments,
         completionPercent,
+        latestPerformance: latestSub ? {
+          score: latestSub.score,
+          maxScore: latestSub.maxScore,
+          percentage: latestSub.percentage,
+          passed: latestSub.passed
+        } : undefined
       });
     }
 
@@ -139,7 +168,7 @@ export function useDashboardData() {
       },
       rows,
     };
-  }, [courses, progressByCourse, statsByCourse]);
+  }, [courses, progressByCourse, statsByCourse, allSubmissions]);
 
   return {
     user,

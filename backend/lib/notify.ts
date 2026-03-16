@@ -181,6 +181,25 @@ export async function notifyLearnerApproved(data: { name: string; email: string 
   await sendEmail(data.email, subject, lines.join("\n"));
 }
 
+/** Notify learner with a password reset link. */
+export async function notifyPasswordReset(data: { name: string; email: string; token: string }): Promise<void> {
+  const subject = "[KSOHTC] Password Reset Request";
+  const resetUrl = `${FRONTEND_URL}/reset-password/${data.token}`;
+  const lines = [
+    `Hello ${data.name},`,
+    "",
+    "We received a request to reset your password for your KSOHTC account.",
+    "Click the link below to set a new password. This link will expire in 1 hour.",
+    "",
+    `Reset password: ${resetUrl}`,
+    "",
+    "If you did not request this, you can safely ignore this email.",
+    "",
+    "— Kigali Safety & OSH Training Centre",
+  ];
+  await sendEmail(data.email, subject, lines.join("\n"));
+}
+
 /**
  * Optional: POST form data to Netlify so it appears in Netlify Forms (form detection).
  * The deployed site must have hidden forms with data-netlify="true" and name="registration" / name="contact".

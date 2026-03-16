@@ -42,6 +42,8 @@ const DashboardSettings = lazy(() => import("./pages/DashboardSettings"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Cookies = lazy(() => import("./pages/Cookies"));
+const ForgotPassword = lazy(() => import("./pages/ForgotPassword"));
+const ResetPassword = lazy(() => import("./pages/ResetPassword"));
 const NotFound = lazy(() => import("./pages/NotFound"));
 
 const queryClient = new QueryClient({
@@ -172,6 +174,8 @@ const App = () => (
               <Route path="testimonials" element={<AdminTestimonials />} />
               <Route path="settings" element={<AdminSettings />} />
             </Route>
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password/:token" element={<ResetPassword />} />
             <Route path="/courses/:courseId/quiz/take" element={<TakeQuiz />} />
             <Route path="*" element={<NotFound />} />
           </Routes>

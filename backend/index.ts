@@ -18,6 +18,8 @@ import {
   postUser,
   putUser,
   deleteUser,
+  postForgotPassword,
+  postResetPassword,
 } from "./routes/users";
 import { getCourses, getCourseQuiz, putCourseQuiz, deleteCourseQuiz } from "./routes/courses";
 import { getCourseUsage } from "./routes/analytics";
@@ -45,6 +47,7 @@ import {
   submitAssessment,
   getModuleItems,
   getSubmissions,
+  resolveCoursePdf,
 } from "./routes/course-content";
 import { postEnrollment, getEnrollments, patchEnrollment } from "./routes/enrollments";
 import { getProgress, patchProgress } from "./routes/progress";
@@ -148,6 +151,8 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.get("/api/users/learners-summary", getLearnersSummary);
   app.get("/api/users/:id", getUser);
   app.patch("/api/users/:id/approve", patchUserApprove);
+  app.post("/api/forgot-password", postForgotPassword);
+  app.post("/api/reset-password", postResetPassword);
   app.post("/api/users", postUser);
   app.put("/api/users/:id", putUser);
   app.delete("/api/users/:id", deleteUser);
@@ -179,6 +184,7 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.delete("/api/course-content/courses/:courseId/modules/:moduleId/lessons/:lessonId", deleteLesson);
   app.get("/api/course-content/courses/:courseId/modules/:moduleId/assessments", listAssessments);
   app.get("/api/course-content/courses/:courseId/modules/:moduleId/items", getModuleItems);
+  app.get("/api/course-content/courses/:courseId/resolve-pdf", resolveCoursePdf);
   app.get("/api/course-content/courses/:courseId/modules/:moduleId/assessments/:assessmentId", getAssessment);
   app.post("/api/course-content/courses/:courseId/modules/:moduleId/assessments", createAssessment);
   app.put("/api/course-content/courses/:courseId/modules/:moduleId/assessments/:assessmentId", updateAssessment);

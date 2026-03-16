@@ -1,10 +1,12 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
+import crypto from "node:crypto";
 import type { User, UserCreate, UserPublic, LearnerSector } from "@shared/api";
-import { getDb, usersCollection, enrollmentsCollection, progressCollection, submissionsCollection } from "../lib/firestore";
-import { notifyNewRegistration, notifyLearnerApproved } from "../lib/notify";
+import { getDb, usersCollection, enrollmentsCollection, progressCollection, submissionsCollection, passwordResetsCollection } from "../lib/firestore";
+import { notifyNewRegistration, notifyLearnerApproved, notifyPasswordReset } from "../lib/notify";
 import type { EnrollmentWithPercent } from "./enrollments";
 import { getEnrollmentsForUser } from "./enrollments";
+import type { SubmissionDoc } from "@shared/api";
 
 const BCRYPT_ROUNDS = 10;
 
@@ -163,7 +165,24 @@ export async function getLearnersSummary(_req: Request, res: Response): Promise<
     await Promise.all(
       users.map(async (u) => {
         const enrollments = await getEnrollmentsForUser(u.id);
-        enrollmentsByUserId[u.id] = enrollments;
+        const subsSnap = await submissionsCollection().where("userId", "==", u.id).get();
+        const subs = subsSnap.docs.map(d => d.data() as SubmissionDoc);
+        
+        // Add best score per assessment to each enrollment's data
+        const enriched = enrollments.map(en => {
+          const courseSubs = subs.filter(s => s.courseId === en.courseId);
+          const quizPerformance = courseSubs.reduce((acc, s) => {
+            const existing = acc[s.assessmentId];
+            if (!existing || s.percentage > existing.percentage) {
+              acc[s.assessmentId] = { score: s.score, maxScore: s.maxScore, percentage: s.percentage, passed: s.passed };
+            }
+            return acc;
+          }, {} as Record<string, { score: number, maxScore: number, percentage: number, passed: boolean }>);
+          
+          return { ...en, quizPerformance };
+        });
+        
+        enrollmentsByUserId[u.id] = enriched as any;
       })
     );
     res.json({ users, enrollmentsByUserId });
@@ -347,5 +366,87 @@ export async function deleteUser(req: Request, res: Response): Promise<void> {
   } catch (e) {
     console.error("Delete user error:", e);
     res.status(500).json({ error: "Failed to delete learner." });
+  }
+}
+
+/** POST /api/forgot-password – request a password reset token. Body: { email } */
+export async function postForgotPassword(req: Request, res: Response): Promise<void> {
+  try {
+    const { email } = req.body as { email?: string };
+    if (!email) {
+      res.status(400).json({ error: "Email is required." });
+      return;
+    }
+
+    const normalizedEmail = normalizeEmail(email);
+    const snap = await usersCollection().where("email", "==", normalizedEmail).limit(1).get();
+    
+    // Security: always return 200 to avoid account enumeration
+    if (snap.empty) {
+      res.json({ ok: true, message: "If an account exists, a reset link has been sent." });
+      return;
+    }
+
+    const user = snap.docs[0].data() as User;
+    const token = crypto.randomBytes(32).toString("hex");
+    const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour
+
+    await passwordResetsCollection().doc(token).set({
+      email: normalizedEmail,
+      token,
+      expiresAt,
+    });
+
+    await notifyPasswordReset({ name: user.name, email: user.email, token }).catch(err => {
+      console.error("[FORGOT_PWD] Email failed:", err);
+    });
+
+    res.json({ ok: true, message: "If an account exists, a reset link has been sent." });
+  } catch (e) {
+    console.error("Forgot password error:", e);
+    res.status(500).json({ error: "Failed to process request." });
+  }
+}
+
+/** POST /api/reset-password – set new password using token. Body: { token, password } */
+export async function postResetPassword(req: Request, res: Response): Promise<void> {
+  try {
+    const { token, password } = req.body as { token?: string; password?: string };
+    if (!token || !password) {
+      res.status(400).json({ error: "Token and password are required." });
+      return;
+    }
+
+    const resetRef = passwordResetsCollection().doc(token);
+    const resetSnap = await resetRef.get();
+    
+    if (!resetSnap.exists) {
+      res.status(400).json({ error: "Invalid or expired reset token." });
+      return;
+    }
+
+    const data = resetSnap.data() as { email: string; expiresAt: number };
+    if (Date.now() > data.expiresAt) {
+      await resetRef.delete();
+      res.status(400).json({ error: "Reset token has expired." });
+      return;
+    }
+
+    const userSnap = await usersCollection().where("email", "==", data.email).limit(1).get();
+    if (userSnap.empty) {
+      res.status(404).json({ error: "User not found." });
+      return;
+    }
+
+    const userDoc = userSnap.docs[0];
+    const passwordHash = await hashPassword(password);
+    
+    await userDoc.ref.update({ password: passwordHash });
+    await resetRef.delete();
+
+    res.json({ ok: true, message: "Password has been successfully reset." });
+  } catch (e) {
+    console.error("Reset password error:", e);
+    res.status(500).json({ error: "Failed to reset password." });
   }
 }

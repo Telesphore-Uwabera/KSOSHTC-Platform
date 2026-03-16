@@ -694,51 +694,57 @@ function ModuleBlock({
               ))}
             </ul>
             {addingLesson ? (
-              <div className="space-y-2 p-4 bg-white rounded-xl border border-gray-200">
-                <input
-                  type="text"
-                  value={newLessonTitle}
-                  onChange={(e) => setNewLessonTitle(e.target.value)}
-                  placeholder="Lesson title"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200"
-                />
-                <input
-                  type="url"
-                  value={newLessonYoutube}
-                  onChange={(e) => setNewLessonYoutube(e.target.value)}
-                  placeholder="YouTube URL (optional)"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200"
-                />
-                <div className="space-y-1">
-                  <label className="text-sm font-medium text-gray-700">PDF Document (Optional)</label>
-                  <input
-                    type="file"
-                    accept=".pdf"
-                    onChange={(e) => setNewLessonPdfFile(e.target.files?.[0] ?? null)}
-                    className="w-full text-sm text-gray-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700 file:font-semibold file:cursor-pointer hover:file:bg-gray-200"
-                  />
+                <div className="space-y-4 p-4 rounded-2xl bg-gray-50/50 border border-gray-100 animate-in fade-in slide-in-from-top-1">
+                  <div className="flex items-center gap-2 mb-1">
+                    <div className="w-1 h-4 bg-primary rounded-full" />
+                    <h5 className="text-sm font-bold text-gray-900">New Lesson</h5>
+                  </div>
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      value={newLessonTitle}
+                      onChange={(e) => setNewLessonTitle(e.target.value)}
+                      placeholder="Title e.g., 1.1 Intro to Safety"
+                      className="w-full px-4 py-2 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 transition-all font-medium"
+                    />
+                    <input
+                      type="url"
+                      value={newLessonYoutube}
+                      onChange={(e) => setNewLessonYoutube(e.target.value)}
+                      placeholder="YouTube link (optional)"
+                      className="w-full px-4 py-2 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 transition-all text-sm"
+                    />
+                    <div className="space-y-1.5 ml-1">
+                      <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">PDF Materials (Optional)</label>
+                      <input
+                        type="file"
+                        accept=".pdf"
+                        onChange={(e) => setNewLessonPdfFile(e.target.files?.[0] ?? null)}
+                        className="w-full text-xs text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-bold file:cursor-pointer hover:file:bg-primary/20 transition-all"
+                      />
+                    </div>
+                    <textarea
+                      value={newLessonContent}
+                      onChange={(e) => setNewLessonContent(e.target.value)}
+                      placeholder="Lesson description or transcript..."
+                      rows={3}
+                      className="w-full px-4 py-2 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 transition-all text-sm resize-none"
+                    />
+                  </div>
+                  <div className="flex gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleAddLesson}
+                      disabled={!newLessonTitle.trim() || addLessonMutation.isPending || uploadingPdf}
+                      className="flex-1 bg-primary text-white px-4 py-2.5 rounded-xl font-bold hover:bg-secondary disabled:opacity-50 transition-all shadow-md shadow-primary/10"
+                    >
+                      {addLessonMutation.isPending || uploadingPdf ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Save Lesson"}
+                    </button>
+                    <button type="button" onClick={onCloseAddLesson} className="px-4 py-2.5 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-all">
+                      Cancel
+                    </button>
+                  </div>
                 </div>
-                <textarea
-                  value={newLessonContent}
-                  onChange={(e) => setNewLessonContent(e.target.value)}
-                  placeholder="Content (text; PDF content as text)"
-                  rows={3}
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 resize-y"
-                />
-                <div className="flex gap-2">
-                  <button
-                    type="button"
-                    onClick={handleAddLesson}
-                    disabled={!newLessonTitle.trim() || addLessonMutation.isPending || uploadingPdf}
-                    className="bg-primary text-white px-4 py-2 rounded-lg font-semibold disabled:opacity-50"
-                  >
-                    {addLessonMutation.isPending || uploadingPdf ? <Loader2 className="w-4 h-4 animate-spin" /> : "Add lesson"}
-                  </button>
-                  <button type="button" onClick={onCloseAddLesson} className="text-gray-500 hover:text-gray-700">
-                    Cancel
-                  </button>
-                </div>
-              </div>
             ) : (
               <button
                 type="button"
@@ -857,33 +863,57 @@ function AddAssessmentForm({
   };
 
   return (
-    <div className="mt-3 p-4 bg-white rounded-xl border border-gray-200 space-y-3">
-      <form onSubmit={handleSubmit}>
-        <input
-          type="text"
-          value={title}
-          onChange={(e) => setTitle(e.target.value)}
-          placeholder="Assessment title"
-          className="w-full px-3 py-2 rounded-lg border border-gray-200 mb-2"
-          required
-        />
-        <label className="flex items-center gap-2 text-sm text-gray-600">
-          Pass threshold (%):
+    <div className="mt-4 p-5 bg-gray-50/50 rounded-[24px] border border-gray-100 space-y-4 animate-in fade-in slide-in-from-top-2">
+      <div className="flex items-center gap-2 mb-1">
+        <div className="w-1.5 h-6 bg-primary rounded-full" />
+        <h4 className="font-bold text-gray-900">New Assessment</h4>
+      </div>
+      <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Assessment Title</label>
           <input
-            type="number"
-            min={0}
-            max={100}
-            value={passThreshold}
-            onChange={(e) => setPassThreshold(Number(e.target.value))}
-            className="w-20 px-2 py-1 rounded border border-gray-200"
+            type="text"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            placeholder="e.g., Module 1 Break Quiz"
+            className="w-full px-4 py-2.5 rounded-xl border border-gray-200 bg-white focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            required
           />
-        </label>
-        {error && <p className="text-red-600 text-sm">{error}</p>}
-        <div className="flex gap-2 mt-2">
-          <button type="submit" disabled={saving} className="bg-primary text-white px-4 py-2 rounded-lg font-semibold disabled:opacity-50">
-            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : "Create"}
+        </div>
+        
+        <div className="flex items-center gap-4">
+          <div className="flex-1">
+            <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1.5 ml-1">Pass Threshold (%)</label>
+            <div className="flex items-center gap-3">
+              <input
+                type="range"
+                min={0}
+                max={100}
+                step={5}
+                value={passThreshold}
+                onChange={(e) => setPassThreshold(Number(e.target.value))}
+                className="flex-1 accent-primary h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer"
+              />
+              <span className="w-12 text-center font-black text-primary bg-primary/10 py-1 rounded-lg text-sm">{passThreshold}%</span>
+            </div>
+          </div>
+        </div>
+
+        {error && <p className="text-red-600 text-xs font-bold pl-1">{error}</p>}
+        
+        <div className="flex items-center gap-3 pt-2">
+          <button 
+            type="submit" 
+            disabled={saving} 
+            className="flex-1 bg-primary text-white px-6 py-2.5 rounded-xl font-bold hover:bg-secondary transition-all disabled:opacity-50 shadow-md shadow-primary/10"
+          >
+            {saving ? <Loader2 className="w-5 h-5 animate-spin mx-auto" /> : "Create Assessment"}
           </button>
-          <button type="button" onClick={onClose} className="text-gray-600 hover:text-gray-900">
+          <button 
+            type="button" 
+            onClick={onClose} 
+            className="px-6 py-2.5 rounded-xl font-bold text-gray-500 hover:bg-gray-100 transition-all"
+          >
             Cancel
           </button>
         </div>

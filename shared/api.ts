@@ -47,7 +47,7 @@ export type UserCreate = Pick<User, "email" | "password" | "name" | "phone" | "o
 export type UserPublic = Omit<User, "password">;
 
 /** Course identifier (must match client course ids). safety-for-all = common safety course after the three main courses */
-export type CourseId = "construction" | "industrial-safety" | "mining" | "safety-management" | "safety-for-all";
+export type CourseId = "construction" | "industrial-safety" | "mining" | "safety-management";
 
 /** Course document (Firestore) */
 export interface CourseDoc {
