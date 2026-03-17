@@ -31,21 +31,7 @@ async function fetchModules(courseId: string): Promise<ModuleDoc[]> {
   return data.modules ?? [];
 }
 
-type LessonFromFolder = { title: string; pdfUrl: string };
-
-async function fetchCoursesFromPublic(): Promise<Array<{ id: string; title: string; description?: string; sector: string; duration: string }>> {
-  const res = await fetch(`${getCourseContentApi()}/courses-from-public`);
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.courses ?? [];
-}
-
-async function fetchLessonsFromPublic(courseId: string): Promise<LessonFromFolder[]> {
-  const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/lessons-from-public`);
-  if (!res.ok) return [];
-  const data = await res.json();
-  return data.lessons ?? [];
-}
+// [REMOVED] fetchCoursesFromPublic and fetchLessonsFromPublic as they are legacy routes not present in backend
 
 type ModuleItem = { type: "lesson"; data: LessonDoc } | { type: "assessment"; data: AssessmentDoc };
 
@@ -140,6 +126,8 @@ function PdfViewerModal({
   }, [courseId, title, initialPdfUrl]);
 
   const pdfUrl = (resolvedUrl ?? initialPdfUrl).trim();
+  // Ensure we use an absolute URL for the iframe src.
+  // If base is empty (local dev), we prefix with a slash to ensure it's root-relative on the frontend domain.
   const src = pdfUrl
     ? (pdfUrl.startsWith("http")
         ? pdfUrl
@@ -417,13 +405,7 @@ export default function CourseDetail() {
     enabled: !!courseId,
   });
 
-  const { data: coursesFromPublic = [] } = useQuery({
-    queryKey: ["course-content", "courses-from-public"],
-    queryFn: fetchCoursesFromPublic,
-    enabled: !!courseId && !course && !courseLoading,
-  });
-
-  const displayCourse = course ?? coursesFromPublic.find((c) => c.id === courseId) ?? null;
+  const displayCourse = course; // [FIXED] Removed fallback to coursesFromPublic
 
   const { data: modules = [], isLoading: modulesLoading } = useQuery({
     queryKey: ["course-content", "modules", courseId],
@@ -431,15 +413,7 @@ export default function CourseDetail() {
     enabled: !!courseId && !!displayCourse,
   });
 
-  const { data: lessonsFromPublic = [] } = useQuery({
-    queryKey: ["course-content", "lessons-from-public", courseId],
-    queryFn: () => fetchLessonsFromPublic(courseId!),
-    enabled:
-      !!courseId &&
-      !!displayCourse &&
-      !modulesLoading &&
-      (modules.length === 0 || courseId === "safety-management"),
-  });
+  const lessonsFromPublic: any[] = []; // [REMOVED] Legacy local lesson lookup
 
   const { data: progress, refetch: refetchProgress } = useQuery({
     queryKey: ["progress", user?.id, courseId],

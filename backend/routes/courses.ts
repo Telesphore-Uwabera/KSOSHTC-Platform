@@ -30,7 +30,7 @@ export async function getCourseQuiz(req: Request, res: Response): Promise<void> 
     }
     const doc = await quizzesCollection().doc(courseId).get();
     if (!doc.exists) {
-      res.status(404).json({ error: "No quiz set for this course." });
+      res.status(204).send(); // No contents found; not an error
       return;
     }
     res.json(doc.data());
