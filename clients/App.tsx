@@ -135,6 +135,14 @@ function RouteLoader() {
 const App = () => {
   const [showSplash, setShowSplash] = useState(true);
 
+  // Fail-safe: Ensure the app is NEVER stuck on the splash screen.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowSplash(false);
+    }, 10000); // 10 seconds max
+    return () => clearTimeout(timer);
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>

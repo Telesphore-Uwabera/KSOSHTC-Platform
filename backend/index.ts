@@ -88,12 +88,46 @@ export function createServer(options?: { apiOnly?: boolean }) {
       message: "The /courses page is served by the frontend. Use the app URL (e.g. Netlify) to open the Courses page.",
     });
   });
-  app.get("/courses/", (_req, res) => {
-    res.status(404).json({
-      error: "Not found",
-      message: "The /courses page is served by the frontend. Use the app URL (e.g. Netlify) to open the Courses page.",
-    });
+
+  // SMART REDIRECTOR: Intercept legacy relative paths and redirect to Cloudinary if possible.
+  app.get("/courses/:sector/:filename", async (req, res, next) => {
+    try {
+      const { filename } = req.params;
+      const cleanFile = decodeURIComponent(filename).trim();
+      
+      // Look for any lesson in Firestore that has a pdfUrl matching this filename or a title matching it
+      const db = getDb();
+      const coursesSnap = await db.collection("courses").get();
+      
+      for (const courseDoc of coursesSnap.docs) {
+        const modulesSnap = await db.collection("courses").doc(courseDoc.id).collection("modules").get();
+        for (const modDoc of modulesSnap.docs) {
+          const lessonsSnap = await db.collection("courses").doc(courseDoc.id).collection("modules").doc(modDoc.id).collection("lessons").get();
+          const lesson = lessonsSnap.docs.find(d => {
+             const data = d.data();
+             const pdf = (data.pdfUrl || "").toLowerCase();
+             const title = (data.title || "").toLowerCase();
+             const search = cleanFile.toLowerCase();
+             return pdf.includes(search) || title.includes(search);
+          });
+          
+          if (lesson) {
+            const pdfUrl = lesson.data().pdfUrl;
+            if (pdfUrl && pdfUrl.startsWith("http")) {
+              console.log(`[REDIRECT] Mapping legacy file ${cleanFile} -> ${pdfUrl}`);
+              res.redirect(pdfUrl);
+              return;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.error("[REDIRECT_ERR]", e);
+    }
+    // Fall back to static server if not found or error
+    next();
   });
+
   app.use("/courses", express.static(path.resolve(process.cwd(), "public", "courses")));
   app.use("/course-covers", express.static(path.resolve(process.cwd(), "public", "course-covers")));
 
@@ -162,6 +196,15 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.get("/api/courses/:courseId/quiz", getCourseQuiz);
   app.put("/api/courses/:courseId/quiz", putCourseQuiz);
   app.delete("/api/courses/:courseId/quiz", deleteCourseQuiz);
+  
+  app.post("/api/admin/test-email", async (req, res) => {
+     const { email } = req.body;
+     if (!email) return res.status(400).json({ error: "Email is required." });
+     const { testEmail } = await import("./lib/notify");
+     const result = await testEmail(email);
+     if (result.success) res.json(result);
+     else res.status(500).json(result);
+  });
 
   // Analytics (for main dashboard only)
   app.get("/api/analytics/course-usage", getCourseUsage);

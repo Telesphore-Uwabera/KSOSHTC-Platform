@@ -11,24 +11,34 @@ export function BrandedSplashScreen({ onComplete }: { onComplete: () => void }) 
   const DURATION = 7000; // 7 seconds as requested
 
   useEffect(() => {
+    let completed = false;
     const startTime = Date.now();
+    
     const interval = setInterval(() => {
+      if (completed) return;
+
       const elapsed = Date.now() - startTime;
       const newProgress = Math.min((elapsed / DURATION) * 100, 100);
       setProgress(newProgress);
       
       if (elapsed >= DURATION) {
+        completed = true;
         clearInterval(interval);
         // Start fade out
         setTimeout(() => {
           setVisible(false);
           // Wait for fade out animation
-          setTimeout(onComplete, 500);
+          setTimeout(() => {
+             if (onComplete) onComplete();
+          }, 600);
         }, 300);
       }
     }, 16); // ~60fps
 
-    return () => clearInterval(interval);
+    return () => {
+      completed = true;
+      clearInterval(interval);
+    };
   }, [onComplete]);
 
   return (

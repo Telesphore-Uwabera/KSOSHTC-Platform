@@ -80,16 +80,31 @@ async function sendEmail(to: string, subject: string, text: string, html?: strin
     return;
   }
   try {
-    await transport.sendMail({
+    const info = await transport.sendMail({
       from: fromAddress(),
       to,
       subject,
       text,
       html: html ?? text.replace(/\n/g, "<br>\n"),
     });
-    console.log("[NOTIFY] Email sent:", subject, "to", to);
+    console.log("[NOTIFY] Email sent successfully:", subject, "to", to, "Response:", info.response);
   } catch (e) {
-    console.error("[NOTIFY] Email failed:", e instanceof Error ? e.message : e);
+    console.error("[NOTIFY] Email failed dramatically:", e instanceof Error ? e.message : e);
+    if (e instanceof Error && e.stack) console.error("[NOTIFY_STACK]", e.stack);
+  }
+}
+
+/** Admin-only test function to verify SMTP connectivity. */
+export async function testEmail(to: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const transport = getTransporter();
+    if (!transport) return { success: false, message: "SMTP not configured (HOST, USER, or PASS missing in .env)." };
+    await transport.verify();
+    await sendEmail(to, "[KSOSHTC] SMTP Test Connection", "Your SMTP configuration is working correctly!");
+    return { success: true, message: `Test email sent to ${to}. Check inbox and SPAM folder.` };
+  } catch (e) {
+    console.error("[NOTIFY_TEST] SMTP Verify failed:", e);
+    return { success: false, message: e instanceof Error ? e.message : String(e) };
   }
 }
 
