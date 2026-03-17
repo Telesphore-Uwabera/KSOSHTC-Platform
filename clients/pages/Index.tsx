@@ -28,8 +28,8 @@ export default function Index() {
   const [contactSuccess, setContactSuccess] = useState(false);
 
   useEffect(() => {
-    document.title = "KSOHTC | Occupational Safety & Health Training Rwanda";
-    return () => { document.title = "Kigali Safety OSH Training Center - KSOHTC"; };
+    document.title = "KSOSHTC | Occupational Safety & Health Training Rwanda";
+    return () => { document.title = "Kigali Safety OSH Training Center - KSOSHTC"; };
   }, []);
 
   useEffect(() => {
@@ -162,7 +162,7 @@ export default function Index() {
           </div>
 
           <p className="text-white/95 text-sm sm:text-base leading-relaxed max-w-3xl mb-8 scroll-reveal reveal-spring delay-1200">
-            <span className="font-bold text-white">KSOHTC</span> — competent safety professionals for construction, industrial & mining. Structured, regulation-aligned programs.
+            <span className="font-bold text-white">KSOSHTC</span> — competent safety professionals for construction, industrial & mining. Structured, regulation-aligned programs.
           </p>
 
           {/* Description cards — scale in with stagger */}
@@ -337,7 +337,7 @@ export default function Index() {
               <div className="relative">
                 <img
                   src="/ksohtc-8.webp"
-                  alt="KSOHTC mission in action"
+                  alt="KSOSHTC mission in action"
                   className="w-full h-36 sm:h-44 object-cover"
                   loading="lazy"
                   decoding="async"
@@ -396,7 +396,7 @@ export default function Index() {
               <div className="relative">
                 <img
                   src="/ksohtc-9.webp"
-                  alt="KSOHTC training — our vision"
+                  alt="KSOSHTC training — our vision"
                   className="w-full h-36 sm:h-44 object-cover"
                   loading="lazy"
                   decoding="async"

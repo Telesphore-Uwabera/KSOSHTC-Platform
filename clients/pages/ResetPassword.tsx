@@ -10,8 +10,8 @@ export default function ResetPassword() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    document.title = "Set New Password | KSOHTC";
-    return () => { document.title = "Kigali Safety OSH Training Center - KSOHTC"; };
+    document.title = "Set New Password | KSOSHTC";
+    return () => { document.title = "Kigali Safety OSH Training Center - KSOSHTC"; };
   }, []);
 
   const [password, setPassword] = useState("");

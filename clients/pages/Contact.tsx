@@ -17,7 +17,7 @@ const faqs = [
   { q: "What are your opening hours?", a: "We are available by WhatsApp during business hours. For visits, please contact us in advance to confirm availability at Kicukiro." },
   { q: "How quickly do you respond to inquiries?", a: "We aim to respond to contact form submissions and emails within 1–2 business days. For urgent enrollment or quote requests, WhatsApp is fastest." },
   { q: "Can I request a quote for group training?", a: "Yes. Use the form below or email us with your organization name, number of participants, and preferred program or sector. We will send a tailored quote." },
-  { q: "Where is KSOHTC located?", a: "We are based at Kicukiro, Kigali, Rwanda. Use the map below for directions or WhatsApp to schedule a visit." },
+  { q: "Where is KSOSHTC located?", a: "We are based at Kicukiro, Kigali, Rwanda. Use the map below for directions or WhatsApp to schedule a visit." },
 ];
 
 export default function Contact() {
@@ -30,8 +30,8 @@ export default function Contact() {
   const [success, setSuccess] = useState(false);
 
   useEffect(() => {
-    document.title = "Contact | KSOHTC";
-    return () => { document.title = "Kigali Safety OSH Training Center - KSOHTC"; };
+    document.title = "Contact | KSOSHTC";
+    return () => { document.title = "Kigali Safety OSH Training Center - KSOSHTC"; };
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -210,7 +210,7 @@ export default function Contact() {
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="KSOHTC location on Google Maps"
+                title="KSOSHTC location on Google Maps"
                 className="w-full h-full min-h-[140px] sm:min-h-[160px] md:min-h-[180px]"
               />
             </div>

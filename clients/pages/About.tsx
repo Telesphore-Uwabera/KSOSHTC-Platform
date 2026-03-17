@@ -6,8 +6,8 @@ import Footer from "../components/Footer";
 
 export default function About() {
   useEffect(() => {
-    document.title = "About Us | KSOHTC";
-    return () => { document.title = "Kigali Safety OSH Training Center - KSOHTC"; };
+    document.title = "About Us | KSOSHTC";
+    return () => { document.title = "Kigali Safety OSH Training Center - KSOSHTC"; };
   }, []);
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
@@ -40,7 +40,7 @@ export default function About() {
             <p className="text-white/90 text-sm sm:text-base max-w-2xl scroll-reveal text-reveal-fade drop-shadow" style={{ animationDelay: "0.15s" }}>OSH capacity-building for construction, industrial & mining.</p>
           </div>
           <p className="text-white/95 text-sm sm:text-base mb-8 leading-relaxed max-w-3xl scroll-reveal reveal-spring delay-1200 drop-shadow">
-            <span className="font-bold text-white">KSOHTC</span> — competent safety professionals. Construction, industrial & mining. <span className="font-semibold text-accent">Safety today, Prosperity tomorrow.</span>
+            <span className="font-bold text-white">KSOSHTC</span> — competent safety professionals. Construction, industrial & mining. <span className="font-semibold text-accent">Safety today, Prosperity tomorrow.</span>
           </p>
 
           {/* Row 1: Three goal cards */}
@@ -93,7 +93,7 @@ export default function About() {
                 <h3 className="section-header text-white">Our Mission</h3>
               </div>
               <div className="relative">
-                <img src="/ksohtc-8.webp" alt="KSOHTC mission — team on site" className="w-full h-40 object-cover" loading="lazy" decoding="async" />
+                <img src="/ksohtc-8.webp" alt="KSOSHTC mission — team on site" className="w-full h-40 object-cover" loading="lazy" decoding="async" />
                 <div className="img-overlay" aria-hidden="true" />
               </div>
               <div className="p-6 sm:p-8 pt-5 sm:pt-6">
@@ -124,7 +124,7 @@ export default function About() {
                 <h3 className="section-header text-white">Our Vision</h3>
               </div>
               <div className="relative">
-                <img src="/ksohtc-9.webp" alt="KSOHTC vision — training" className="w-full h-40 object-cover" loading="lazy" decoding="async" />
+                <img src="/ksohtc-9.webp" alt="KSOSHTC vision — training" className="w-full h-40 object-cover" loading="lazy" decoding="async" />
                 <div className="img-overlay" aria-hidden="true" />
               </div>
               <div className="p-8">

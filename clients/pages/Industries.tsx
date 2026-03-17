@@ -16,8 +16,8 @@ const faqs = [
 
 export default function Industries() {
   useEffect(() => {
-    document.title = "Industries | KSOHTC";
-    return () => { document.title = "Kigali Safety OSH Training Center - KSOHTC"; };
+    document.title = "Industries | KSOSHTC";
+    return () => { document.title = "Kigali Safety OSH Training Center - KSOSHTC"; };
   }, []);
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">

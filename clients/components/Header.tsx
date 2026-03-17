@@ -57,7 +57,7 @@ export default function Header() {
               <Link to="/" className="flex-shrink-0 flex items-center group cursor-pointer transition-all duration-300 hover:scale-105">
                 <img
                   src="/logo.webp"
-                  alt="KSOHTC Logo"
+                  alt="KSOSHTC Logo"
                   className={`object-contain max-w-full h-auto transition-all duration-300 group-hover:rotate-3 ${compact ? "w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16" : "w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 xl:w-32 xl:h-32"}`}
                   loading="lazy"
                   decoding="async"
@@ -145,7 +145,7 @@ export default function Header() {
           <Link to="/" className="md:hidden flex-shrink-0 flex items-center group cursor-pointer transition-all duration-300 hover:scale-105">
             <img
               src="/logo.webp"
-              alt="KSOHTC Logo"
+              alt="KSOSHTC Logo"
               className={`object-contain max-w-full h-auto transition-all duration-300 group-hover:rotate-3 ${compact ? "w-14 h-14 sm:w-16 sm:h-16" : "w-20 h-20 sm:w-24 sm:h-24"}`}
               loading="lazy"
               decoding="async"

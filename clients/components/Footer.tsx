@@ -13,7 +13,7 @@ export default function Footer() {
             <Link to="/" className="block">
               <img
                 src="/logo.webp"
-                alt="KSOHTC Footer Logo"
+                alt="KSOSHTC Footer Logo"
                 className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 xl:w-44 xl:h-44 object-contain max-w-full transition-all duration-300 hover:scale-110 mb-4 sm:mb-6"
                 loading="lazy"
                 decoding="async"
@@ -56,7 +56,7 @@ export default function Footer() {
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title="KSOHTC location"
+                title="KSOSHTC location"
                 className="w-full h-full min-h-[64px]"
               />
             </div>

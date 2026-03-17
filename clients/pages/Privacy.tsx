@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
-const DEFAULT_TITLE = "Kigali Safety OSH Training Center - KSOHTC";
+const DEFAULT_TITLE = "Kigali Safety OSH Training Center - KSOSHTC";
 
 export default function Privacy() {
   useEffect(() => {
-    document.title = "Privacy Policy | KSOHTC";
+    document.title = "Privacy Policy | KSOSHTC";
     return () => { document.title = DEFAULT_TITLE; };
   }, []);
   return (
@@ -22,7 +22,7 @@ export default function Privacy() {
               Privacy Policy
             </h1>
             <p className="text-gray-600 text-sm sm:text-base">
-              Kigali Safety & OSH Training Centre (KSOHTC) respects your privacy. This policy
+              Kigali Safety & OSH Training Centre (KSOSHTC) respects your privacy. This policy
               describes how we collect, use, and protect your personal data when you use our website
               and learning platform.
             </p>

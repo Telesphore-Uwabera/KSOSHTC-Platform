@@ -16,7 +16,7 @@ export default function DashboardProgress() {
       <div className="bg-white rounded-[30px] shadow-sm border border-gray-200 p-6 sm:p-8">
         <h2 className="text-lg font-bold text-primary mb-2">Registration under review</h2>
         <p className="text-gray-600">
-          Thank you for registering with KSOHTC. Your account is currently under review by our administration team. You will be able to see your progress once your registration has been approved. If you have already been approved, please log out and log in again to refresh your access.
+          Thank you for registering with KSOSHTC. Your account is currently under review by our administration team. You will be able to see your progress once your registration has been approved. If you have already been approved, please log out and log in again to refresh your access.
         </p>
         <Link to="/courses" className="text-primary font-medium mt-4 inline-block">View courses</Link>
       </div>

@@ -53,8 +53,8 @@ export default function Courses() {
   const canAccess = user && user.approved;
 
   useEffect(() => {
-    document.title = "Courses | KSOHTC";
-    return () => { document.title = "Kigali Safety OSH Training Center - KSOHTC"; };
+    document.title = "Courses | KSOSHTC";
+    return () => { document.title = "Kigali Safety OSH Training Center - KSOSHTC"; };
   }, []);
 
   const { data: allCourses = [], isLoading, error } = useQuery({
@@ -119,7 +119,7 @@ export default function Courses() {
               <div>
                 <p className="font-semibold text-amber-900">Registration under review</p>
                 <p className="text-sm text-amber-800">
-                  Thank you for registering with KSOHTC. Your account is currently under review by our administration team. You will be able to access your courses and learning materials once your registration has been approved. If you have already been approved, please log out and log in again to refresh your access.
+                  Thank you for registering with KSOSHTC. Your account is currently under review by our administration team. You will be able to access your courses and learning materials once your registration has been approved. If you have already been approved, please log out and log in again to refresh your access.
                 </p>
               </div>
             </div>

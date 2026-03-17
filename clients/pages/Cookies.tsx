@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
-const DEFAULT_TITLE = "Kigali Safety OSH Training Center - KSOHTC";
+const DEFAULT_TITLE = "Kigali Safety OSH Training Center - KSOSHTC";
 
 export default function Cookies() {
   useEffect(() => {
-    document.title = "Cookie Policy | KSOHTC";
+    document.title = "Cookie Policy | KSOSHTC";
     return () => { document.title = DEFAULT_TITLE; };
   }, []);
   return (
@@ -22,7 +22,7 @@ export default function Cookies() {
               Cookie Policy
             </h1>
             <p className="text-gray-600 text-sm sm:text-base">
-              This Cookie Policy explains how Kigali Safety & OSH Training Centre (KSOHTC) uses
+              This Cookie Policy explains how Kigali Safety & OSH Training Centre (KSOSHTC) uses
               cookies and similar technologies on our website and learning platform.
             </p>
             <p className="text-gray-500 text-xs sm:text-sm mt-2">

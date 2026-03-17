@@ -3,11 +3,11 @@ import { Link } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 
-const DEFAULT_TITLE = "Kigali Safety OSH Training Center - KSOHTC";
+const DEFAULT_TITLE = "Kigali Safety OSH Training Center - KSOSHTC";
 
 export default function Terms() {
   useEffect(() => {
-    document.title = "Terms & Conditions | KSOHTC";
+    document.title = "Terms & Conditions | KSOSHTC";
     return () => { document.title = DEFAULT_TITLE; };
   }, []);
   return (
@@ -23,7 +23,7 @@ export default function Terms() {
             </h1>
             <p className="text-gray-600 text-sm sm:text-base">
               These Terms and Conditions govern your use of the Kigali Safety & OSH Training Centre
-              (KSOHTC) website and online learning platform. By registering, logging in, or using
+              (KSOSHTC) website and online learning platform. By registering, logging in, or using
               our services, you agree to these terms.
             </p>
             <p className="text-gray-500 text-xs sm:text-sm mt-2">
@@ -41,10 +41,10 @@ export default function Terms() {
               <p className="mb-2">
                 Learner accounts are created through the registration form. Access to courses and
                 learning materials is only granted after your registration has been reviewed and
-                approved by a KSOHTC administrator.
+                approved by a KSOSHTC administrator.
               </p>
               <p>
-                KSOHTC may decline or revoke access if the information provided is inaccurate,
+                KSOSHTC may decline or revoke access if the information provided is inaccurate,
                 incomplete, or used in a way that is inconsistent with our training objectives or
                 applicable regulations.
               </p>
@@ -60,7 +60,7 @@ export default function Terms() {
               </p>
               <p>
                 You may not copy, redistribute, resell, or publicly share the materials without
-                written permission from KSOHTC.
+                written permission from KSOSHTC.
               </p>
             </section>
 
@@ -72,7 +72,7 @@ export default function Terms() {
                 <li>Provide accurate information during registration.</li>
                 <li>Keep your login details confidential.</li>
                 <li>Use the platform respectfully and for training purposes only.</li>
-                <li>Follow any additional class rules or safety guidelines communicated by KSOHTC.</li>
+                <li>Follow any additional class rules or safety guidelines communicated by KSOSHTC.</li>
               </ul>
             </section>
 
@@ -95,7 +95,7 @@ export default function Terms() {
                 5. Changes to these terms
               </h2>
               <p>
-                KSOHTC may update these Terms and Conditions from time to time to reflect changes
+                KSOSHTC may update these Terms and Conditions from time to time to reflect changes
                 in our services or legal requirements. The latest version will always be available
                 on this page. Continued use of the platform after changes are published constitutes
                 your acceptance of the updated terms.

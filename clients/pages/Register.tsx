@@ -18,8 +18,8 @@ const COUNTRIES = ["Rwanda", "Uganda", "Kenya", "Tanzania", "Burundi", "Other"];
 export default function Register() {
   const navigate = useNavigate();
   useEffect(() => {
-    document.title = "Register | KSOHTC";
-    return () => { document.title = "Kigali Safety OSH Training Center - KSOHTC"; };
+    document.title = "Register | KSOSHTC";
+    return () => { document.title = "Kigali Safety OSH Training Center - KSOSHTC"; };
   }, []);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");

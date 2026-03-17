@@ -1,4 +1,4 @@
-# KSOHTC Platform
+# KSOSHTC Platform
 
 Production-ready full-stack React app with Express backend: React Router 6 SPA, TypeScript, Vite, TailwindCSS, Firebase Firestore. Only add API endpoints when necessary (e.g. private keys, DB operations).
 
@@ -227,5 +227,5 @@ Backend and frontend are separate: backend on Render, frontend on Netlify; front
 ## Security and UX notes
 
 - **Passwords:** User passwords are hashed with **bcrypt** before storage. Existing users with plain-text passwords (if any) still log in via a fallback; new registrations and admin-created users use hashes only.
-- **Document titles:** Key pages set `document.title` (e.g. "Contact | KSOHTC") for better tabs and SEO; the default title is restored on navigation.
+- **Document titles:** Key pages set `document.title` (e.g. "Contact | KSOSHTC") for better tabs and SEO; the default title is restored on navigation.
 - **404:** The not-found page uses the same Header and Footer as the rest of the site and a "Return to Home" link.

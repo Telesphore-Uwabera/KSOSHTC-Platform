@@ -585,7 +585,7 @@ export default function CourseDetail() {
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-amber-900">
               <p className="font-semibold">Registration under review</p>
               <p className="mt-2">
-                Thank you for registering with KSOHTC. Your account is currently under review by our administration team. You will be able to view course materials once your registration has been approved. If you have already been approved, please log out and log in again to refresh your access.
+                Thank you for registering with KSOSHTC. Your account is currently under review by our administration team. You will be able to view course materials once your registration has been approved. If you have already been approved, please log out and log in again to refresh your access.
               </p>
               <div className="mt-4 flex flex-wrap gap-3">
                 <Link

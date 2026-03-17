@@ -6,7 +6,7 @@
  * EMAIL FORMATS (plain text; HTML is auto-generated from newlines -> <br>):
  *
  * 1) New registration (to ADMIN):
- *    Subject: [KSOHTC] New registration: {name}
+ *    Subject: [KSOSHTC] New registration: {name}
  *    Body:
  *      A new learner has registered. Below are all the details they entered (stored in Firebase).
  *
@@ -22,7 +22,7 @@
  *      Approve or manage this user in your admin dashboard (Learners).
  *
  * 2) New contact (to ADMIN):
- *    Subject: [KSOHTC] New contact: {name}
+ *    Subject: [KSOSHTC] New contact: {name}
  *    Body:
  *      New message from the contact form.
  *
@@ -36,11 +36,11 @@
  *      {message}
  *
  * 3) Account approved (to LEARNER):
- *    Subject: [KSOHTC] Your account has been approved
+ *    Subject: [KSOSHTC] Your account has been approved
  *    Body:
  *      Hello {name},
  *
- *      Your KSOHTC learning account has been approved. You can now log in and access your courses.
+ *      Your KSOSHTC learning account has been approved. You can now log in and access your courses.
  *
  *      Log in: {FRONTEND_URL}/login
  *
@@ -108,7 +108,7 @@ export async function notifyNewRegistration(data: {
   sector?: string;
   createdAt?: string;
 }): Promise<void> {
-  const subject = `[KSOHTC] New registration: ${data.name}`;
+  const subject = `[KSOSHTC] New registration: ${data.name}`;
   const phoneLine = data.phone ? `Phone: ${data.phone}` : "Phone: (not provided)";
   const lines = [
     "A new learner has registered. Below are all the details they entered (stored in Firebase).",
@@ -142,7 +142,7 @@ export async function notifyNewContact(data: {
   phone?: string;
   message: string;
 }): Promise<void> {
-  const subject = `[KSOHTC] New contact: ${data.name}`;
+  const subject = `[KSOSHTC] New contact: ${data.name}`;
   const phoneLine = data.phone ? `Phone: ${data.phone}` : "Phone: (not provided)";
   const lines = [
     "New message from the contact form.",
@@ -168,11 +168,11 @@ export async function notifyNewContact(data: {
 
 /** Notify the learner that their account has been approved (call after setting approved: true). */
 export async function notifyLearnerApproved(data: { name: string; email: string }): Promise<void> {
-  const subject = "[KSOHTC] Your account has been approved";
+  const subject = "[KSOSHTC] Your account has been approved";
   const lines = [
     `Hello ${data.name},`,
     "",
-    "Your KSOHTC learning account has been approved. You can now log in and access your courses.",
+    "Your KSOSHTC learning account has been approved. You can now log in and access your courses.",
     "",
     `Log in: ${FRONTEND_URL}/login`,
     "",
@@ -183,12 +183,12 @@ export async function notifyLearnerApproved(data: { name: string; email: string 
 
 /** Notify learner with a password reset link. */
 export async function notifyPasswordReset(data: { name: string; email: string; token: string }): Promise<void> {
-  const subject = "[KSOHTC] Password Reset Request";
+  const subject = "[KSOSHTC] Password Reset Request";
   const resetUrl = `${FRONTEND_URL}/reset-password/${data.token}`;
   const lines = [
     `Hello ${data.name},`,
     "",
-    "We received a request to reset your password for your KSOHTC account.",
+    "We received a request to reset your password for your KSOSHTC account.",
     "Click the link below to set a new password. This link will expire in 1 hour.",
     "",
     `Reset password: ${resetUrl}`,

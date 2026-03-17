@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 /**
  * A premium branded splash screen that shows for a fixed duration (7s).
- * Features the KSOHTC logo and a branded progress bar.
+ * Features the KSOSHTC logo and a branded progress bar.
  */
 export function BrandedSplashScreen({ onComplete }: { onComplete: () => void }) {
   const [progress, setProgress] = useState(0);
@@ -43,7 +43,7 @@ export function BrandedSplashScreen({ onComplete }: { onComplete: () => void }) 
         <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-white p-4 shadow-2xl flex items-center justify-center border-4 border-[#D4AF37]/30 overflow-hidden group">
           <img 
             src="/logo.webp" 
-            alt="KSOHTC Logo" 
+            alt="KSOSHTC Logo" 
             className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-700"
           />
           {/* Subtle spinning glow behind logo */}
@@ -84,7 +84,7 @@ export function BrandedSplashScreen({ onComplete }: { onComplete: () => void }) 
       
       {/* Bottom tagline */}
       <div className="absolute bottom-12 text-white/20 text-xs font-medium tracking-[0.2em] uppercase">
-        KSOHTC &bull; Rwanda
+        KSOSHTC &bull; Rwanda
       </div>
     </div>
   );

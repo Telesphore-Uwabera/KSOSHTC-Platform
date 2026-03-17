@@ -7,8 +7,8 @@ import { getApiBase } from "@/lib/apiBase";
 
 export default function ForgotPassword() {
   useEffect(() => {
-    document.title = "Forgot Password | KSOHTC";
-    return () => { document.title = "Kigali Safety OSH Training Center - KSOHTC"; };
+    document.title = "Forgot Password | KSOSHTC";
+    return () => { document.title = "Kigali Safety OSH Training Center - KSOSHTC"; };
   }, []);
 
   const [email, setEmail] = useState("");
