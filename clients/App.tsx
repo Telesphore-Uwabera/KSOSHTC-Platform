@@ -12,6 +12,7 @@ import { ScrollRevealObserver } from "@/components/ScrollRevealObserver";
 import BackToTop from "@/components/BackToTop";
 import { getApiBase } from "@/lib/apiBase";
 import { BrandedSplashScreen } from "@/components/BrandedSplashScreen";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 
 const Index = lazy(() => import("./pages/Index"));
 const About = lazy(() => import("./pages/About"));
@@ -146,57 +147,59 @@ const App = () => {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {showSplash && <BrandedSplashScreen onComplete={() => setShowSplash(false)} />}
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <ScrollToTop />
-          <PrefetchKeyData />
-          <RouteLoader />
-          <ScrollRevealObserver />
-          <Suspense fallback={<PageLoaderFallback />}>
-            <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/about" element={<About />} />
-            <Route path="/programs" element={<Programs />} />
-            <Route path="/industries" element={<Industries />} />
-            <Route path="/contact" element={<Contact />} />
-            <Route path="/terms" element={<Terms />} />
-            <Route path="/privacy" element={<Privacy />} />
-            <Route path="/cookies" element={<Cookies />} />
-            <Route path="/courses" element={<Courses />} />
-            <Route path="/courses/:courseId" element={<CourseDetail />} />
-            <Route path="/courses/:courseId/modules/:moduleId/quiz/:assessmentId" element={<TakeModuleQuiz />} />
-            <Route path="/dashboard" element={<StudentLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="courses" element={<DashboardCourses />} />
-              <Route path="progress" element={<DashboardProgress />} />
-              <Route path="settings" element={<DashboardSettings />} />
-            </Route>
-            <Route path="/register" element={<Register />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<AdminDashboard />} />
-              <Route path="courses" element={<AdminCourses />} />
-              <Route path="courses/:courseId/quiz" element={<AdminCourseQuiz />} />
-              <Route path="course-content" element={<AdminCourseContent />} />
-              <Route path="course-content/:courseId" element={<AdminCourseContentDetail />} />
-              <Route path="course-content/:courseId/modules/:moduleId/assessments/:assessmentId" element={<AdminModuleAssessment />} />
-              <Route path="learners" element={<AdminLearners />} />
-              <Route path="testimonials" element={<AdminTestimonials />} />
-              <Route path="settings" element={<AdminSettings />} />
-            </Route>
-            <Route path="/forgot-password" element={<ForgotPassword />} />
-            <Route path="/reset-password/:token" element={<ResetPassword />} />
-            <Route path="/courses/:courseId/quiz/take" element={<TakeQuiz />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
-          <BackToTop />
-        </Suspense>
-      </BrowserRouter>
-    </TooltipProvider>
-  </QueryClientProvider>
+        <ErrorBoundary>
+          {showSplash && <BrandedSplashScreen onComplete={() => setShowSplash(false)} />}
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <ScrollToTop />
+            <PrefetchKeyData />
+            <RouteLoader />
+            <ScrollRevealObserver />
+            <Suspense fallback={<PageLoaderFallback />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/programs" element={<Programs />} />
+                <Route path="/industries" element={<Industries />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/cookies" element={<Cookies />} />
+                <Route path="/courses" element={<Courses />} />
+                <Route path="/courses/:courseId" element={<CourseDetail />} />
+                <Route path="/courses/:courseId/modules/:moduleId/quiz/:assessmentId" element={<TakeModuleQuiz />} />
+                <Route path="/dashboard" element={<StudentLayout />}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="courses" element={<DashboardCourses />} />
+                  <Route path="progress" element={<DashboardProgress />} />
+                  <Route path="settings" element={<DashboardSettings />} />
+                </Route>
+                <Route path="/register" element={<Register />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="courses" element={<AdminCourses />} />
+                  <Route path="courses/:courseId/quiz" element={<AdminCourseQuiz />} />
+                  <Route path="course-content" element={<AdminCourseContent />} />
+                  <Route path="course-content/:courseId" element={<AdminCourseContentDetail />} />
+                  <Route path="course-content/:courseId/modules/:moduleId/assessments/:assessmentId" element={<AdminModuleAssessment />} />
+                  <Route path="learners" element={<AdminLearners />} />
+                  <Route path="testimonials" element={<AdminTestimonials />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                </Route>
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
+                <Route path="/courses/:courseId/quiz/take" element={<TakeQuiz />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <BackToTop />
+            </Suspense>
+          </BrowserRouter>
+        </ErrorBoundary>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 };
 

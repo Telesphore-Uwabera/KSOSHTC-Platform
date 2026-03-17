@@ -69,7 +69,18 @@ export default function Dashboard() {
             : "Open a course in My courses to view materials and track progress."}
         </p>
 
-        {!isLoading && !error && courses.length > 0 && (
+        {isLoading ? (
+          <div className="grid w-full min-w-0 grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 mb-10">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="animate-pulse bg-gray-100 rounded-2xl h-48 border border-gray-100" />
+            ))}
+          </div>
+        ) : error ? (
+          <div className="bg-red-50 border border-red-200 rounded-2xl p-6 text-center mb-10">
+            <p className="text-red-700 font-semibold">Failed to load courses</p>
+            <p className="text-red-600 text-sm mt-1">Please check your internet connection and refresh the page.</p>
+          </div>
+        ) : courses.length > 0 ? (
           <div className="grid w-full min-w-0 grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 mb-10">
             {rows.map((row) => {
               const { course, completionPercent, latestPerformance } = row;
@@ -124,6 +135,10 @@ export default function Dashboard() {
                 </div>
               );
             })}
+          </div>
+        ) : (
+          <div className="bg-gray-50 border border-gray-200 border-dashed rounded-2xl p-10 text-center mb-10">
+            <p className="text-gray-500 font-medium">No courses available in this category yet.</p>
           </div>
         )}
 

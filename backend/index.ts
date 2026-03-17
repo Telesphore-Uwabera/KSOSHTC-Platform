@@ -90,12 +90,18 @@ export function createServer(options?: { apiOnly?: boolean }) {
   });
 
   // SMART REDIRECTOR: Intercept legacy relative paths and redirect to Cloudinary if possible.
-  app.get("/courses/:sector/:filename", async (req, res, next) => {
+  // Supports both /courses/... and /api/courses/...
+  app.get(["/courses/:sector/:filename", "/api/courses/:sector/:filename"], async (req, res, next) => {
     try {
       const { filename } = req.params;
-      const cleanFile = decodeURIComponent(filename).trim();
+      const cleanFile = decodeURIComponent(filename)
+        .replace(/[^a-zA-Z0-9]/g, "") // Keep only alphanumeric for fuzzy matching
+        .toLowerCase();
       
-      // Look for any lesson in Firestore that has a pdfUrl matching this filename or a title matching it
+      if (!cleanFile) return next();
+
+      console.log(`[REDIRECT_PROBE] Searching for legacy file match: ${cleanFile}`);
+
       const db = getDb();
       const coursesSnap = await db.collection("courses").get();
       
@@ -103,19 +109,20 @@ export function createServer(options?: { apiOnly?: boolean }) {
         const modulesSnap = await db.collection("courses").doc(courseDoc.id).collection("modules").get();
         for (const modDoc of modulesSnap.docs) {
           const lessonsSnap = await db.collection("courses").doc(courseDoc.id).collection("modules").doc(modDoc.id).collection("lessons").get();
+          
           const lesson = lessonsSnap.docs.find(d => {
              const data = d.data();
-             const pdf = (data.pdfUrl || "").toLowerCase();
-             const title = (data.title || "").toLowerCase();
-             const search = cleanFile.toLowerCase();
-             return pdf.includes(search) || title.includes(search);
+             const pdf = (data.pdfUrl || "").toLowerCase().replace(/[^a-zA-Z0-9]/g, "");
+             const title = (data.title || "").toLowerCase().replace(/[^a-zA-Z0-9]/g, "");
+             // Fuzzy match: either stored path or title contains the alphanumeric filename
+             return (pdf && pdf.includes(cleanFile)) || (title && title.includes(cleanFile)) || cleanFile.includes(title);
           });
           
           if (lesson) {
             const pdfUrl = lesson.data().pdfUrl;
             if (pdfUrl && pdfUrl.startsWith("http")) {
-              console.log(`[REDIRECT] Mapping legacy file ${cleanFile} -> ${pdfUrl}`);
-              res.redirect(pdfUrl);
+              console.log(`[REDIRECT_SUCCESS] Mapping legacy file ${filename} -> ${pdfUrl}`);
+              res.redirect(301, pdfUrl);
               return;
             }
           }
@@ -124,7 +131,6 @@ export function createServer(options?: { apiOnly?: boolean }) {
     } catch (e) {
       console.error("[REDIRECT_ERR]", e);
     }
-    // Fall back to static server if not found or error
     next();
   });
 
