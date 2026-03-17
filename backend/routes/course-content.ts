@@ -723,24 +723,32 @@ export async function resolveCoursePdf(req: Request, res: Response): Promise<voi
       return;
     }
 
-    const cleanTitle = title.trim();
-    // Search all modules for a lesson with this title
+    const cleanTitle = title.trim().toLowerCase();
     const modulesSnap = await modulesRef(courseId).get();
     
+    let fallbackPdf: string | undefined = undefined;
+
     for (const modDoc of modulesSnap.docs) {
       const lessonsSnap = await lessonsRef(courseId, modDoc.id).get();
-      const lessonDoc = lessonsSnap.docs.find(d => {
+      for (const d of lessonsSnap.docs) {
         const data = d.data();
-        // Match exact or fuzzy (ignoring Copy prefixes/suffixes we usually clean)
-        const dTitle = (data.title || "").trim();
-        return dTitle === cleanTitle || dTitle.includes(cleanTitle) || cleanTitle.includes(dTitle);
-      });
-
-      if (lessonDoc) {
-        const data = lessonDoc.data();
-        res.json({ pdfUrl: data.pdfUrl });
-        return;
+        const dTitle = (data.title || "").trim().toLowerCase();
+        
+        // Match: exact, contains, or fuzzy
+        if (dTitle === cleanTitle || dTitle.includes(cleanTitle) || cleanTitle.includes(dTitle)) {
+           const pdf = (data.pdfUrl || "").trim();
+           if (pdf.startsWith("http")) {
+             res.json({ pdfUrl: pdf });
+             return;
+           }
+           if (pdf && !fallbackPdf) fallbackPdf = pdf;
+        }
       }
+    }
+
+    if (fallbackPdf) {
+      res.json({ pdfUrl: fallbackPdf });
+      return;
     }
 
     res.status(404).json({ error: "PDF not found for this title." });

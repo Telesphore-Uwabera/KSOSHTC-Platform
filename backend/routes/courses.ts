@@ -11,26 +11,48 @@ const COURSES: CoursePublic[] = [
   { id: "safety-management", title: "Safety Management (General)", sector: "General", duration: "3 months" },
 ];
 
-function isValidCourseId(id: string): id is CourseId {
-  return COURSES.some((c) => c.id === id);
+/** Check if a courseId is valid by checking the COURSES array OR Firestore. */
+async function isValidCourseId(id: string): Promise<boolean> {
+  if (COURSES.some((c) => c.id === id)) return true;
+  // Fallback: check Firestore if not in hardcoded list
+  try {
+    const { coursesCollection } = await import("../lib/firestore");
+    const doc = await coursesCollection().doc(id).get();
+    return doc.exists;
+  } catch (e) {
+    return false;
+  }
 }
 
 /** GET /api/courses – list courses (for admin) */
-export function getCourses(_req: Request, res: Response): void {
-  res.json({ courses: COURSES });
+export async function getCourses(_req: Request, res: Response): Promise<void> {
+  try {
+    const { coursesCollection } = await import("../lib/firestore");
+    const snap = await coursesCollection().get();
+    const dbCourses = snap.docs.map(d => ({ id: d.id, ...d.data() } as CoursePublic));
+    // Merge or prioritize? For now, if DB has them, use them.
+    if (dbCourses.length > 0) {
+      res.json({ courses: dbCourses });
+    } else {
+      res.json({ courses: COURSES });
+    }
+  } catch (e) {
+    res.json({ courses: COURSES });
+  }
 }
 
 /** GET /api/courses/:courseId/quiz – get quiz for a course */
 export async function getCourseQuiz(req: Request, res: Response): Promise<void> {
   try {
     const { courseId } = req.params;
-    if (!isValidCourseId(courseId)) {
+    if (!(await isValidCourseId(courseId))) {
       res.status(404).json({ error: "Course not found." });
       return;
     }
     const doc = await quizzesCollection().doc(courseId).get();
     if (!doc.exists) {
-      res.status(204).send(); // No contents found; not an error
+      // Return 204 No Content for missing quiz; front-end handles this gracefully.
+      res.status(204).send();
       return;
     }
     res.json(doc.data());
