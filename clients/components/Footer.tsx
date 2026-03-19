@@ -105,7 +105,7 @@ export default function Footer() {
                 href="https://uwaberatelesphore.netlify.app/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 hover:text-accent transition-colors duration-300"
+                className="inline-flex items-center gap-1.5 border border-green-500/70 bg-transparent px-2.5 py-1.5 rounded-none hover:bg-green-500/10 hover:text-accent transition-colors duration-300"
               >
                 <Code2 className="w-4 h-4" />
                 Contact Developer
