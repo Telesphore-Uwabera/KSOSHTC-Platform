@@ -150,10 +150,11 @@ async function uploadFile(courseId: string, filePath: string): Promise<CloudAsse
     throw new Error("File too large (max 50MB)");
   }
   const contentBase64 = buf.toString("base64");
-  const uri = `data:application/octet-stream;base64,${contentBase64}`;
+  const uri = `data:application/pdf;base64,${contentBase64}`;
+  const publicId = `${path.parse(safeName).name}${ext}`;
   const result = await cloudinary.uploader.upload(uri, {
     folder: `ksohtc/courses/${courseId}`,
-    public_id: path.parse(safeName).name,
+    public_id: publicId,
     resource_type: "raw",
   });
   if (!result.public_id || !result.secure_url) {

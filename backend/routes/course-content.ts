@@ -57,17 +57,17 @@ export async function uploadCoursePdf(req: Request, res: Response): Promise<void
       return;
     }
     
-    // Use dynamic mime type or generic octet-stream
-    const uri = `data:application/octet-stream;base64,${contentBase64}`;
+    const uri = `data:application/pdf;base64,${contentBase64}`;
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
       api_key: process.env.CLOUDINARY_API_KEY,
       api_secret: process.env.CLOUDINARY_API_SECRET,
     });
-    // For docs/raw files, we use resource_type: "raw"
+    // Raw uploads: include .pdf in public_id so delivery URLs and the console show a real extension/format.
+    const publicId = `${path.parse(safeName).name}.pdf`;
     const result = await cloudinary.uploader.upload(uri, {
       folder: `ksohtc/courses/${courseId}`,
-      public_id: path.parse(safeName).name,
+      public_id: publicId,
       resource_type: "raw",
     });
     
