@@ -24,6 +24,7 @@ import {
 } from "../lib/course-firestore";
 import { submissionsCollection, progressCollection } from "../lib/firestore";
 import type { SubmissionDoc, ProgressDoc } from "@shared/api";
+import { normalizeCloudinaryCourseUrl } from "@shared/normalizeCloudinaryUrl";
 import { v2 as cloudinary } from "cloudinary";
 
 /** All courses display duration as 3 months. */
@@ -721,7 +722,9 @@ export async function getSubmissions(req: Request, res: Response): Promise<void>
  */
 export async function streamCourseDocument(req: Request, res: Response): Promise<void> {
   try {
-    const urlStr = typeof req.query.url === "string" ? req.query.url.trim() : "";
+    const urlStr = normalizeCloudinaryCourseUrl(
+      typeof req.query.url === "string" ? req.query.url.trim() : ""
+    );
     const filenameRaw = typeof req.query.filename === "string" ? req.query.filename.trim() : "";
     const wantDownload =
       req.query.download === "1" || req.query.download === "true" || req.query.download === "yes";

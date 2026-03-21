@@ -1,12 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, FileText, ExternalLink, ClipboardList, Lock, X, AlertCircle, Download } from "lucide-react";
+import { ArrowLeft, FileText, ExternalLink, ClipboardList, Lock, X, AlertCircle } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { getStoredUser, clearStoredUser } from "../lib/auth";
 import { getApiBase } from "@/lib/apiBase";
 import type { CourseDoc, ModuleDoc, LessonDoc, AssessmentDoc, ProgressDoc } from "@shared/api";
+import { normalizeCloudinaryCourseUrl } from "@shared/normalizeCloudinaryUrl";
 
 const getCourseContentApi = () => getApiBase() + "/api/course-content";
 
@@ -98,13 +99,9 @@ const SECTION_CARDS_STEP = 6;
  * Cloudinary course files (raw or image delivery) often omit `.pdf` in the URL and may force download.
  * Proxy through our API for inline viewing, correct MIME, and optional explicit download.
  */
-function courseDocumentViewerSrc(
-  pdfUrl: string,
-  displayTitle: string,
-  opts?: { download?: boolean }
-): string {
+function courseDocumentViewerSrc(pdfUrl: string, displayTitle: string): string {
   const base = getApiBase().replace(/\/$/, "");
-  const trimmed = pdfUrl.trim();
+  const trimmed = normalizeCloudinaryCourseUrl(pdfUrl);
   if (!trimmed) return "";
   const absolute = trimmed.startsWith("http")
     ? trimmed
@@ -118,7 +115,6 @@ function courseDocumentViewerSrc(
   if (isCloudinaryCourse) {
     const name = `${displayTitle.trim() || "Lesson"}.pdf`;
     const q = new URLSearchParams({ url: absolute, filename: name });
-    if (opts?.download) q.set("download", "1");
     return `${base}/api/course-content/stream-document?${q.toString()}`;
   }
   return absolute;
@@ -160,28 +156,15 @@ function PdfViewerModal({
       .finally(() => setLoading(false));
   }, [courseId, title, initialPdfUrl]);
 
-  const pdfUrl = (resolvedUrl ?? initialPdfUrl).trim();
+  const pdfUrl = normalizeCloudinaryCourseUrl((resolvedUrl ?? initialPdfUrl).trim());
   const inlineSrc = pdfUrl ? courseDocumentViewerSrc(pdfUrl, title) : "";
   const iframeSrc = inlineSrc ? pdfIframeFitUrl(inlineSrc) : "";
-  const downloadHref = pdfUrl ? courseDocumentViewerSrc(pdfUrl, title, { download: true }) : "";
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/90" role="dialog" aria-modal="true" aria-label="PDF viewer">
       <div className="flex items-center justify-between gap-4 shrink-0 px-4 py-2 bg-gray-900 text-white">
         <span className="font-medium truncate text-sm">{title}</span>
         <div className="flex items-center gap-2">
-          {downloadHref ? (
-            <a
-              href={downloadHref}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
-              title="Download PDF"
-            >
-              <Download className="w-4 h-4 shrink-0" aria-hidden />
-              Download
-            </a>
-          ) : null}
           <button
             type="button"
             onClick={onClose}

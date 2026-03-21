@@ -7,7 +7,8 @@ services:
     region: oregon
 
     buildCommand: pnpm install && pnpm run build:backend
-    startCommand: node dist/backend/production.mjs
+    # Must match vite server build output (see package.json "start")
+    startCommand: node dist/backend/node-build.mjs
 
     envVars:
       - key: NODE_ENV
