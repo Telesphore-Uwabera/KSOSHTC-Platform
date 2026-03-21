@@ -38,3 +38,6 @@ serviceAccount*.json
 
 # Local Cloudinary exports (large binaries)
 downloads/cloudinary-export/
+
+# Render CLI binary (see scripts/install-render-cli.ps1)
+tools/render/
