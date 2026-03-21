@@ -6,7 +6,7 @@
  *   - CLOUDINARY_* for uploads
  *   - GOOGLE_APPLICATION_CREDENTIALS / FIREBASE_SERVICE_ACCOUNT* for Firestore (same as backend)
  *
- * Source folder (default): downloads/cloudinary-export/<courseId>/
+ * Source folder (default): downloads/cloudinary-export/<courseId>/ (PDF files only)
  *
  * Usage:
  *   pnpm tsx scripts/reupload-courses-from-export.ts              # dry-run
@@ -31,7 +31,8 @@ const COURSE_FILTER = courseArg ? courseArg.split("=")[1]?.trim() : null;
 
 const EXPORT_ROOT = path.resolve(process.cwd(), "downloads", "cloudinary-export");
 
-const ALLOWED_EXT = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv"];
+/** Course Cloudinary folder is PDF-only. */
+const ALLOWED_EXT = [".pdf"];
 
 function norm(s: string): string {
   try {

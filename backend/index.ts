@@ -48,6 +48,7 @@ import {
   getModuleItems,
   getSubmissions,
   resolveCoursePdf,
+  streamCourseDocument,
 } from "./routes/course-content";
 import { postEnrollment, getEnrollments, patchEnrollment } from "./routes/enrollments";
 import { getProgress, patchProgress } from "./routes/progress";
@@ -233,6 +234,7 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.delete("/api/course-content/courses/:courseId/modules/:moduleId/lessons/:lessonId", deleteLesson);
   app.get("/api/course-content/courses/:courseId/modules/:moduleId/assessments", listAssessments);
   app.get("/api/course-content/courses/:courseId/modules/:moduleId/items", getModuleItems);
+  app.get("/api/course-content/stream-document", streamCourseDocument);
   app.get("/api/course-content/courses/:courseId/resolve-pdf", resolveCoursePdf);
   app.get("/api/course-content/courses/:courseId/modules/:moduleId/assessments/:assessmentId", getAssessment);
   app.post("/api/course-content/courses/:courseId/modules/:moduleId/assessments", createAssessment);

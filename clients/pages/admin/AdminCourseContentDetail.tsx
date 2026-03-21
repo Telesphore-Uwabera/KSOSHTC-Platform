@@ -69,9 +69,9 @@ function UploadDocumentBlock({
       return;
     }
     const ext = "." + file.name.split(".").pop()?.toLowerCase();
-    const allowed = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv"];
+    const allowed = [".pdf"];
     if (!allowed.includes(ext)) {
-      setError(`Unsupported file type: ${ext}. Supported: ${allowed.join(", ")}`);
+      setError(`Only PDF files are allowed for course materials (got ${ext}).`);
       return;
     }
 
@@ -110,7 +110,7 @@ function UploadDocumentBlock({
     <div className="flex flex-wrap items-end gap-2">
       <input
         type="file"
-        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+        accept=".pdf,application/pdf"
         onChange={(e) => { setFile(e.target.files?.[0] ?? null); setError(""); setSuccess(""); }}
         className="text-sm text-gray-600 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-primary file:text-white file:font-semibold file:cursor-pointer"
       />
@@ -121,7 +121,7 @@ function UploadDocumentBlock({
         className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-primary/90 disabled:opacity-50"
       >
         {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-        {uploading ? "Uploading…" : "Upload Document"}
+        {uploading ? "Uploading…" : "Upload PDF"}
       </button>
       {error && <p className="text-red-600 text-sm w-full font-medium">{error}</p>}
       {success && <p className="text-green-700 text-sm w-full font-medium">{success}</p>}
@@ -726,7 +726,7 @@ function ModuleBlock({
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Documents/Materials (Optional)</label>
                       <input
                         type="file"
-                        accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                        accept=".pdf,application/pdf"
                         onChange={(e) => setNewLessonPdfFile(e.target.files?.[0] ?? null)}
                         className="w-full text-xs text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-bold file:cursor-pointer hover:file:bg-primary/20 transition-all"
                       />
@@ -1020,12 +1020,12 @@ function LessonEditModal({
             {!pdfUrl || pdfFile ? (
               <input
                 type="file"
-                accept=".pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv"
+                accept=".pdf,application/pdf"
                 onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
                 className="w-full text-sm text-gray-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700 file:font-semibold file:cursor-pointer hover:file:bg-gray-200"
               />
             ) : null}
-            <div className="text-xs text-gray-500 mt-1">Select a new document to replace the current one, or remove the existing one. PDF, Word, Excel, PPT, or Text.</div>
+            <div className="text-xs text-gray-500 mt-1">Replace with a PDF only, or remove the current file.</div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Extra content (optional text)</label>

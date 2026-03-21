@@ -1,6 +1,8 @@
 import { Request, Response } from "express";
 import path from "node:path";
 import crypto from "node:crypto";
+import { PassThrough } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import type {
   CourseDoc,
   CourseId,
@@ -27,7 +29,7 @@ import { v2 as cloudinary } from "cloudinary";
 /** All courses display duration as 3 months. */
 const DISPLAY_DURATION = "3 months";
 
-/** POST /api/course-content/courses/:courseId/upload-pdf – admin upload materials (PDF, Word, Excel, PPT, etc.) to course folder. Body: { filename: string, contentBase64: string } */
+/** POST /api/course-content/courses/:courseId/upload-pdf – admin upload course PDF only. Body: { filename: string, contentBase64: string } */
 export async function uploadCoursePdf(req: Request, res: Response): Promise<void> {
   try {
     const { courseId } = req.params;
@@ -44,9 +46,9 @@ export async function uploadCoursePdf(req: Request, res: Response): Promise<void
     }
     const safeName = path.basename(filename).replace(/[^a-zA-Z0-9._\-\s+()]/g, "_");
     const ext = path.extname(safeName).toLowerCase();
-    const allowed = [".pdf", ".doc", ".docx", ".xls", ".xlsx", ".ppt", ".pptx", ".txt", ".csv"];
+    const allowed = [".pdf"];
     if (!allowed.includes(ext)) {
-      res.status(400).json({ error: `Unsupported file type: ${ext}. Supported: ${allowed.join(", ")}` });
+      res.status(400).json({ error: `Only PDF course materials are allowed (got ${ext}).` });
       return;
     }
     const buf = Buffer.from(contentBase64, "base64");
@@ -708,7 +710,148 @@ export async function getSubmissions(req: Request, res: Response): Promise<void>
     res.json({ submissions });
   } catch (e) {
     console.error("getSubmissions:", e);
-    return res.status(500).json({ error: "Failed to list submissions." });
+    res.status(500).json({ error: "Failed to list submissions." });
+  }
+}
+
+/**
+ * GET /api/course-content/stream-document?url=&filename=&download=1
+ * Streams Cloudinary course PDFs with correct headers. Verifies %PDF magic — non-PDF assets are rejected.
+ * Use download=1 for Content-Disposition: attachment (explicit download). Default is inline for in-page viewing.
+ */
+export async function streamCourseDocument(req: Request, res: Response): Promise<void> {
+  try {
+    const urlStr = typeof req.query.url === "string" ? req.query.url.trim() : "";
+    const filenameRaw = typeof req.query.filename === "string" ? req.query.filename.trim() : "";
+    const wantDownload =
+      req.query.download === "1" || req.query.download === "true" || req.query.download === "yes";
+
+    if (!urlStr) {
+      res.status(400).json({ error: "Query parameter url is required." });
+      return;
+    }
+
+    const cloudName = process.env.CLOUDINARY_CLOUD_NAME?.trim();
+    if (!cloudName) {
+      res.status(500).json({ error: "Server misconfiguration (Cloudinary)." });
+      return;
+    }
+
+    let parsed: URL;
+    try {
+      parsed = new URL(urlStr);
+    } catch {
+      res.status(400).json({ error: "Invalid url." });
+      return;
+    }
+
+    if (parsed.protocol !== "https:" || !parsed.hostname.endsWith("res.cloudinary.com")) {
+      res.status(403).json({ error: "URL host not allowed." });
+      return;
+    }
+
+    const p = parsed.pathname;
+    if (!p.includes("/ksohtc/courses/")) {
+      res.status(403).json({ error: "URL path not allowed." });
+      return;
+    }
+
+    const firstSeg = p.split("/").filter(Boolean)[0];
+    if (firstSeg !== cloudName) {
+      res.status(403).json({ error: "Cloudinary account mismatch." });
+      return;
+    }
+
+    if (!p.includes("/raw/upload/") && !p.includes("/image/upload/")) {
+      res.status(403).json({ error: "Resource delivery type not allowed." });
+      return;
+    }
+
+    const upstream = await fetch(urlStr, { redirect: "follow" });
+    if (!upstream.ok) {
+      res.status(502).json({ error: "Failed to fetch document from storage." });
+      return;
+    }
+    if (!upstream.body) {
+      res.status(502).json({ error: "Empty response from storage." });
+      return;
+    }
+
+    const reader = upstream.body.getReader();
+    const first = await reader.read();
+    if (first.done || !first.value?.length) {
+      res.status(502).json({ error: "Empty file from storage." });
+      return;
+    }
+    let firstBuf = Buffer.from(first.value);
+    while (firstBuf.length < 4) {
+      const n = await reader.read();
+      if (n.done) break;
+      if (n.value?.length) firstBuf = Buffer.concat([firstBuf, Buffer.from(n.value)]);
+    }
+    const isPdf =
+      firstBuf.length >= 4 &&
+      firstBuf[0] === 0x25 &&
+      firstBuf[1] === 0x50 &&
+      firstBuf[2] === 0x44 &&
+      firstBuf[3] === 0x46;
+    if (!isPdf) {
+      await reader.cancel().catch(() => {});
+      res.status(415).json({ error: "Course materials must be PDF files only." });
+      return;
+    }
+
+    const baseName = (filenameRaw || "lesson")
+      .replace(/[\\/]/g, " ")
+      .replace(/[\u0000-\u001F\u007F]/g, "")
+      .trim()
+      .slice(0, 180) || "lesson";
+    const withExt = /\.[a-z0-9]{2,8}$/i.test(baseName) ? baseName : `${baseName}.pdf`;
+    const asciiFallback = withExt.replace(/[^\x20-\x7E]/g, "_");
+
+    const disposition = wantDownload ? "attachment" : "inline";
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader(
+      "Content-Disposition",
+      `${disposition}; filename="${asciiFallback.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"; filename*=UTF-8''${encodeURIComponent(withExt)}`
+    );
+    res.setHeader("Cache-Control", "private, max-age=300");
+    res.setHeader("X-Content-Type-Options", "nosniff");
+
+    const len = upstream.headers.get("content-length");
+    if (len && /^\d+$/.test(len)) {
+      res.setHeader("Content-Length", len);
+    }
+
+    const pass = new PassThrough();
+    pass.write(firstBuf);
+    void (async () => {
+      try {
+        for (;;) {
+          const n = await reader.read();
+          if (n.done) break;
+          if (n.value?.length) pass.write(Buffer.from(n.value));
+        }
+        pass.end();
+      } catch (err) {
+        pass.destroy(err instanceof Error ? err : undefined);
+      }
+    })();
+
+    try {
+      await pipeline(pass, res);
+    } catch (err) {
+      if (!res.headersSent) {
+        res.status(502).json({ error: "Failed to stream document." });
+      } else {
+        res.destroy(err instanceof Error ? err : undefined);
+      }
+    }
+  } catch (e) {
+    console.error("streamCourseDocument:", e);
+    if (!res.headersSent) {
+      res.status(500).json({ error: "Failed to stream document." });
+    }
   }
 }
 

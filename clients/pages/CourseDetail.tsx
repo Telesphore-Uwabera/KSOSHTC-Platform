@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams, Navigate, useNavigate } from "react-router-dom";
 import { useQuery, useMutation } from "@tanstack/react-query";
-import { ArrowLeft, FileText, ExternalLink, ClipboardList, Lock, X, AlertCircle } from "lucide-react";
+import { ArrowLeft, FileText, ExternalLink, ClipboardList, Lock, X, AlertCircle, Download } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { getStoredUser, clearStoredUser } from "../lib/auth";
@@ -94,6 +94,42 @@ function stripSectionPrefix(title: string): string {
 const INITIAL_SECTION_CARDS = 6;
 const SECTION_CARDS_STEP = 6;
 
+/**
+ * Cloudinary course files (raw or image delivery) often omit `.pdf` in the URL and may force download.
+ * Proxy through our API for inline viewing, correct MIME, and optional explicit download.
+ */
+function courseDocumentViewerSrc(
+  pdfUrl: string,
+  displayTitle: string,
+  opts?: { download?: boolean }
+): string {
+  const base = getApiBase().replace(/\/$/, "");
+  const trimmed = pdfUrl.trim();
+  if (!trimmed) return "";
+  const absolute = trimmed.startsWith("http")
+    ? trimmed
+    : `${base}${trimmed.startsWith("/") ? "" : "/"}${trimmed}`;
+
+  const isCloudinaryCourse =
+    absolute.includes("res.cloudinary.com") &&
+    absolute.includes("/ksohtc/courses/") &&
+    (absolute.includes("/raw/upload/") || absolute.includes("/image/upload/"));
+
+  if (isCloudinaryCourse) {
+    const name = `${displayTitle.trim() || "Lesson"}.pdf`;
+    const q = new URLSearchParams({ url: absolute, filename: name });
+    if (opts?.download) q.set("download", "1");
+    return `${base}/api/course-content/stream-document?${q.toString()}`;
+  }
+  return absolute;
+}
+
+/** Fit PDF to width in the built-in viewer (Chrome/Edge); harmless if ignored. */
+function pdfIframeFitUrl(viewerSrc: string): string {
+  if (!viewerSrc || viewerSrc.includes("#")) return viewerSrc;
+  return `${viewerSrc}#view=FitH`;
+}
+
 /** Full-screen modal to read PDF inline. Resolves PDF path by title when courseId is set (fixes bad stored paths). */
 function PdfViewerModal({
   pdfUrl: initialPdfUrl,
@@ -106,7 +142,6 @@ function PdfViewerModal({
   courseId?: string;
   onClose: () => void;
 }) {
-  const base = getApiBase();
   const [resolvedUrl, setResolvedUrl] = useState<string | null>(null);
   const [loading, setLoading] = useState(!!courseId);
 
@@ -126,19 +161,27 @@ function PdfViewerModal({
   }, [courseId, title, initialPdfUrl]);
 
   const pdfUrl = (resolvedUrl ?? initialPdfUrl).trim();
-  // Ensure we use an absolute URL for the iframe src.
-  // If base is empty (local dev), we prefix with a slash to ensure it's root-relative on the frontend domain.
-  const src = pdfUrl
-    ? (pdfUrl.startsWith("http")
-        ? pdfUrl
-        : `${base.replace(/\/$/, "")}${pdfUrl.startsWith("/") ? "" : "/"}${pdfUrl}`)
-    : "";
+  const inlineSrc = pdfUrl ? courseDocumentViewerSrc(pdfUrl, title) : "";
+  const iframeSrc = inlineSrc ? pdfIframeFitUrl(inlineSrc) : "";
+  const downloadHref = pdfUrl ? courseDocumentViewerSrc(pdfUrl, title, { download: true }) : "";
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/90" role="dialog" aria-modal="true" aria-label="PDF viewer">
       <div className="flex items-center justify-between gap-4 shrink-0 px-4 py-2 bg-gray-900 text-white">
         <span className="font-medium truncate text-sm">{title}</span>
         <div className="flex items-center gap-2">
+          {downloadHref ? (
+            <a
+              href={downloadHref}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-2 rounded-lg bg-white/10 hover:bg-white/20 transition-colors"
+              title="Download PDF"
+            >
+              <Download className="w-4 h-4 shrink-0" aria-hidden />
+              Download
+            </a>
+          ) : null}
           <button
             type="button"
             onClick={onClose}
@@ -149,14 +192,21 @@ function PdfViewerModal({
           </button>
         </div>
       </div>
-      <div className="flex-1 min-h-0 p-2">
+      <p className="sr-only">
+        PDFs open in the viewer below. Websites cannot block operating-system screenshots or screen recording.
+      </p>
+      <div
+        className="flex-1 min-h-0 p-2 select-none"
+        onContextMenu={(e) => e.preventDefault()}
+        style={{ WebkitUserSelect: "none" as const }}
+      >
         {loading ? (
           <div className="w-full h-full flex items-center justify-center text-white/80">Loading PDF…</div>
-        ) : src ? (
+        ) : iframeSrc ? (
           <iframe
             title={title}
-            src={src}
-            className="w-full h-full rounded-lg bg-white border-4 border-green-500"
+            src={iframeSrc}
+            className="w-full h-full min-h-[70vh] rounded-lg bg-white border-4 border-green-500"
             allow="fullscreen"
             loading="lazy"
           />

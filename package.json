@@ -33,7 +33,9 @@
     "migrate:lesson-pdfurls": "tsx scripts/migrate-lesson-pdfurls-to-cloudinary.ts",
     "download:cloudinary": "tsx scripts/download-cloudinary-course-raw.ts",
     "delete:cloudinary-courses": "tsx scripts/delete-cloudinary-course-raw.ts",
-    "reupload:courses": "tsx scripts/reupload-courses-from-export.ts"
+    "cleanup:cloudinary-nonpdf": "tsx scripts/cleanup-cloudinary-nonpdf-courses.ts",
+    "reupload:courses": "tsx scripts/reupload-courses-from-export.ts",
+    "verify:export-cloudinary": "tsx scripts/verify-export-vs-cloudinary.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
