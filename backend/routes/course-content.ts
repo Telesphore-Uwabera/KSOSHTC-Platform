@@ -706,10 +706,9 @@ export async function getSubmissions(req: Request, res: Response): Promise<void>
       .map((d) => ({ id: d.id, ...d.data() } as SubmissionDoc))
       .sort((a, b) => (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""));
     res.json({ submissions });
-    res.json({ submissions });
   } catch (e) {
     console.error("getSubmissions:", e);
-    res.status(500).json({ error: "Failed to list submissions." });
+    return res.status(500).json({ error: "Failed to list submissions." });
   }
 }
 

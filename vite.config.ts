@@ -55,7 +55,17 @@ function expressPlugin(): Plugin {
 
       // Only send /api requests to Express; everything else (e.g. GET /) stays with Vite so the website loads
       server.middlewares.use((req, res, next) => {
-        if (req.url?.startsWith("/api") || req.originalUrl?.startsWith("/api")) {
+        const url = (req.originalUrl ?? req.url ?? "").toString();
+        const lowerUrl = url.toLowerCase();
+
+        const shouldForwardToExpress =
+          lowerUrl.startsWith("/api") ||
+          // Serve uploaded course PDFs from the backend static handler.
+          // Important: we only forward file requests (not `/courses/:courseId` SPA routes).
+          (lowerUrl.startsWith("/courses/") && lowerUrl.includes(".pdf")) ||
+          lowerUrl.startsWith("/course-covers/");
+
+        if (shouldForwardToExpress) {
           return app(req, res, next);
         }
         next();
