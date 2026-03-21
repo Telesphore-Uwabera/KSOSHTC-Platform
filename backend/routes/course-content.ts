@@ -24,7 +24,7 @@ import {
 } from "../lib/course-firestore";
 import { submissionsCollection, progressCollection } from "../lib/firestore";
 import type { SubmissionDoc, ProgressDoc } from "@shared/api";
-import { normalizeCloudinaryCourseUrl } from "@shared/normalizeCloudinaryUrl";
+import { normalizeCloudinaryCourseUrl } from "../../shared/normalizeCloudinaryUrl";
 import { v2 as cloudinary } from "cloudinary";
 
 /** All courses display duration as 3 months. */
