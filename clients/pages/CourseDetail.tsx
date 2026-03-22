@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { ArrowLeft, FileText, ExternalLink, ClipboardList, Lock, X, AlertCircle } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { CoursePdfJsViewer } from "../components/CoursePdfJsViewer";
 import { getStoredUser, clearStoredUser } from "../lib/auth";
 import { getApiBase } from "@/lib/apiBase";
 import type { CourseDoc, ModuleDoc, LessonDoc, AssessmentDoc, ProgressDoc } from "@shared/api";
@@ -120,12 +121,6 @@ function courseDocumentViewerSrc(pdfUrl: string, displayTitle: string): string {
   return absolute;
 }
 
-/** Fit PDF to width in the built-in viewer (Chrome/Edge); harmless if ignored. */
-function pdfIframeFitUrl(viewerSrc: string): string {
-  if (!viewerSrc || viewerSrc.includes("#")) return viewerSrc;
-  return `${viewerSrc}#view=FitH`;
-}
-
 /** Full-screen modal to read PDF inline. Resolves PDF path by title when courseId is set (fixes bad stored paths). */
 function PdfViewerModal({
   pdfUrl: initialPdfUrl,
@@ -157,8 +152,7 @@ function PdfViewerModal({
   }, [courseId, title, initialPdfUrl]);
 
   const pdfUrl = normalizeCloudinaryCourseUrl((resolvedUrl ?? initialPdfUrl).trim());
-  const inlineSrc = pdfUrl ? courseDocumentViewerSrc(pdfUrl, title) : "";
-  const iframeSrc = inlineSrc ? pdfIframeFitUrl(inlineSrc) : "";
+  const documentSrc = pdfUrl ? courseDocumentViewerSrc(pdfUrl, title) : "";
 
   return (
     <div className="fixed inset-0 z-50 flex flex-col bg-black/90" role="dialog" aria-modal="true" aria-label="PDF viewer">
@@ -185,14 +179,8 @@ function PdfViewerModal({
       >
         {loading ? (
           <div className="w-full h-full flex items-center justify-center text-white/80">Loading PDF…</div>
-        ) : iframeSrc ? (
-          <iframe
-            title={title}
-            src={iframeSrc}
-            className="w-full h-full min-h-[70vh] rounded-lg bg-white border-4 border-green-500"
-            allow="fullscreen"
-            loading="lazy"
-          />
+        ) : documentSrc ? (
+          <CoursePdfJsViewer fileUrl={documentSrc} />
         ) : (
           <div className="w-full h-full flex items-center justify-center text-white/80 px-6 text-center">
             No PDF found for this lesson yet.

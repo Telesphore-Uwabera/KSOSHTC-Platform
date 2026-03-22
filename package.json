@@ -36,9 +36,6 @@
     "cleanup:cloudinary-nonpdf": "tsx scripts/cleanup-cloudinary-nonpdf-courses.ts",
     "reupload:courses": "tsx scripts/reupload-courses-from-export.ts",
     "migrate:cloudinary-pdf-ext": "tsx scripts/migrate-cloudinary-pdf-extensions.ts",
-    "install:render-cli": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/install-render-cli.ps1",
-    "deploy:render": "powershell -NoProfile -ExecutionPolicy Bypass -File ./scripts/deploy-render-cli.ps1",
-    "deploy:render:api": "node scripts/trigger-render-deploy.mjs",
     "verify:export-cloudinary": "tsx scripts/verify-export-vs-cloudinary.ts"
   },
   "dependencies": {
@@ -48,6 +45,7 @@
     "express": "^5.1.0",
     "firebase-admin": "^13.0.1",
     "nodemailer": "^8.0.2",
+    "react-pdf": "^10.4.1",
     "zod": "^3.25.76"
   },
   "devDependencies": {
