@@ -66,7 +66,7 @@ export async function getCourseQuiz(req: Request, res: Response): Promise<void> 
 export async function putCourseQuiz(req: Request, res: Response): Promise<void> {
   try {
     const { courseId } = req.params;
-    if (!isValidCourseId(courseId)) {
+    if (!(await isValidCourseId(courseId))) {
       res.status(404).json({ error: "Course not found." });
       return;
     }
@@ -110,7 +110,7 @@ export async function putCourseQuiz(req: Request, res: Response): Promise<void> 
 export async function deleteCourseQuiz(req: Request, res: Response): Promise<void> {
   try {
     const { courseId } = req.params;
-    if (!isValidCourseId(courseId)) {
+    if (!(await isValidCourseId(courseId))) {
       res.status(404).json({ error: "Course not found." });
       return;
     }

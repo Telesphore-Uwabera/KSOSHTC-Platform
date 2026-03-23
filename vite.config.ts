@@ -1,6 +1,7 @@
 import { defineConfig, Plugin, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
+import type { NextFunction, Request, Response } from "express";
 import { createServer } from "./backend";
 
 // https://vitejs.dev/config/
@@ -66,7 +67,8 @@ function expressPlugin(): Plugin {
           lowerUrl.startsWith("/course-covers/");
 
         if (shouldForwardToExpress) {
-          return app(req, res, next);
+          // Vite passes Node http.IncomingMessage; Express app accepts it at runtime.
+          return app(req as Request, res as Response, next as NextFunction);
         }
         next();
       });

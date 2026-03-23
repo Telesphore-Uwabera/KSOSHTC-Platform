@@ -46,6 +46,7 @@ export const VALID_COURSE_SLUGS: CourseId[] = [
   "industrial-safety",
   "mining",
   "safety-management",
+  "safety-for-all",
 ];
 
 export function isValidCourseSlug(slug: string): slug is CourseId {
