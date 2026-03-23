@@ -39,11 +39,11 @@ export default function Footer() {
               <div className="flex items-center gap-3 whitespace-nowrap">
                 <Mail className="w-4 h-4 text-accent flex-shrink-0" />
                 <a
-                  href="mailto:kigalisafetyoshtrainingcenter@gmail.com"
+                  href="mailto:ksoshtc@gmail.com"
                   className="hover:text-accent transition-colors duration-300 truncate"
-                  title="kigalisafetyoshtrainingcenter@gmail.com"
+                  title="ksoshtc@gmail.com"
                 >
-                  kigalisafetyoshtrainingcenter@gmail.com
+                  ksoshtc@gmail.com
                 </a>
               </div>
             </div>

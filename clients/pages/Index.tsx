@@ -504,7 +504,7 @@ export default function Index() {
               { q: "Who can enroll?", a: "A2 is the minimum. Individuals and corporate clients can enroll. Contact us for details." },
               { q: "Where are trainings held?", a: "We are based at Kicukiro, Kigali, Rwanda. Trainings can be held on-site or at your organization's premises for group enrollments." },
               { q: "Are certificates issued?", a: "Yes. Successful participants receive certificates of completion. Our programs are designed to support recognition and accreditation in line with national and industry standards." },
-              { q: "How do I enroll or get a quote?", a: "Use the contact form below, WhatsApp +250 785 072 512, or email kigalisafetyoshtrainingcenter@gmail.com. We will respond with enrollment steps or a tailored quote for your organization." },
+              { q: "How do I enroll or get a quote?", a: "Use the contact form below, WhatsApp +250 785 072 512, or email ksoshtc@gmail.com. We will respond with enrollment steps or a tailored quote for your organization." },
               { q: "What sectors do you train for?", a: "Occupational Safety and Health in Construction Management (OSH in Construction), Occupational Safety and Health in Industrial Management (OSH in Industrial), and Occupational Safety and Health in Mining (OSH in Mining)." },
             ].map((faq, idx) => (
               <details
@@ -560,8 +560,8 @@ export default function Index() {
                     {
                       icon: Mail,
                       title: "Email",
-                      content: "kigalisafetyoshtrainingcenter@gmail.com",
-                      link: "mailto:kigalisafetyoshtrainingcenter@gmail.com",
+                    content: "ksoshtc@gmail.com",
+                    link: "mailto:ksoshtc@gmail.com",
                     },
                   ].map((contact, idx) => {
                     const Icon = contact.icon;

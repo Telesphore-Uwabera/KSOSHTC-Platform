@@ -51,7 +51,7 @@ import nodemailer from "nodemailer";
 
 /** Admin inbox for approvals and notifications (use ADMIN_EMAIL in .env; fallback for notifications). */
 const ADMIN_EMAIL =
-  process.env.ADMIN_EMAIL?.trim() || "kigalisafetyoshtrainingcenter@gmail.com";
+  process.env.ADMIN_EMAIL?.trim() || "ksoshtc@gmail.com";
 const FRONTEND_URL = process.env.FRONTEND_URL ?? "https://www.kigalisafetytraining.com";
 
 /** Build transporter from env (SMTP). If not configured, returns null and we skip email. */

@@ -10,7 +10,7 @@ const MAP_DIRECTIONS_URL = "https://www.google.com/maps/dir//-1.984504,30.103123
 const contacts = [
   { icon: MapPin, title: "Address", content: "Kicukiro, Kigali, Rwanda", link: "#map" },
   { icon: Phone, title: "WhatsApp", content: "+250 785 072 512", link: "https://wa.me/250785072512" },
-  { icon: Mail, title: "Email", content: "kigalisafetyoshtrainingcenter@gmail.com", link: "mailto:kigalisafetyoshtrainingcenter@gmail.com" },
+  { icon: Mail, title: "Email", content: "ksoshtc@gmail.com", link: "mailto:ksoshtc@gmail.com" },
 ];
 
 const faqs = [
