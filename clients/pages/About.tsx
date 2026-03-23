@@ -14,27 +14,25 @@ export default function About() {
       <Header />
       <div className="h-28 sm:h-32" aria-hidden="true" />
 
-      {/* Page hero with background image */}
-      <section className="relative text-white py-16 sm:py-20 md:py-28 min-h-[40vh] flex flex-col justify-center overflow-hidden">
+      {/* Shared background for About hero + Who We Are (single image, no duplication) */}
+      <div className="relative overflow-hidden text-white">
         <div className="absolute inset-0">
-          <img src="/ksohtc-2.webp" alt="" className="w-full h-full object-cover hero-zoom bg-image-animate bg-image-move-endless" loading="lazy" decoding="async" aria-hidden />
-          <div className="absolute inset-0 bg-black/30" aria-hidden="true" />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/95 via-primary/90 to-secondary/90" />
+          <img src="/about-emmanuel-2.webp" alt="" className="w-full h-full object-cover hero-zoom bg-image-animate bg-image-move-endless" loading="lazy" decoding="async" aria-hidden />
+          <div className="absolute inset-0 bg-black/55" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/70" aria-hidden="true" />
         </div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 hero-reveal-slow" style={{ animationDelay: "0.4s", animationFillMode: "both" }}>About Us</h1>
-          <p className="text-base sm:text-xl text-white/90 max-w-2xl hero-reveal-slow" style={{ animationDelay: "0.9s", animationFillMode: "both" }}>Who we are, our mission, vision, and what our graduates are trained to do.</p>
-        </div>
-      </section>
 
-      {/* Who We Are — background image with overlay and text on top */}
-      <section className="relative py-16 sm:py-20 md:py-28 min-h-[60vh] flex flex-col justify-center overflow-hidden">
-        <div className="absolute inset-0">
-          <img src="/ksohtc-2.webp" alt="" className="w-full h-full object-cover bg-image-animate bg-image-move-endless" loading="lazy" decoding="async" aria-hidden />
-          <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/70" aria-hidden="true" />
-        </div>
-        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full animate-windy">
+        {/* Page hero */}
+        <section className="relative py-16 sm:py-20 md:py-28 min-h-[40vh] flex flex-col justify-center">
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
+            <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 hero-reveal-slow" style={{ animationDelay: "0.4s", animationFillMode: "both" }}>About Us</h1>
+            <p className="text-base sm:text-xl text-white/90 max-w-2xl hero-reveal-slow" style={{ animationDelay: "0.9s", animationFillMode: "both" }}>Who we are, our mission, vision, and what our graduates are trained to do.</p>
+          </div>
+        </section>
+
+        {/* Who We Are */}
+        <section className="relative py-16 sm:py-20 md:py-28 min-h-[60vh] flex flex-col justify-center">
+          <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full animate-windy">
           <div className="mb-8 sm:mb-10">
             <h2 className="section-header text-white mb-4 scroll-reveal reveal-flip drop-shadow-md">Who We Are</h2>
             <p className="text-white/90 text-sm sm:text-base max-w-2xl scroll-reveal text-reveal-fade drop-shadow" style={{ animationDelay: "0.15s" }}>OSH capacity-building for construction, industrial & mining.</p>
@@ -79,8 +77,9 @@ export default function About() {
               </Link>
             ))}
           </div>
-        </div>
-      </section>
+          </div>
+        </section>
+      </div>
 
       {/* Mission & Vision — left/right slow, long delay; rainfall overlay + sway */}
       <section className="relative py-16 md:py-24 bg-white overflow-hidden">
