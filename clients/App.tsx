@@ -34,6 +34,7 @@ const AdminModuleAssessment = lazy(() => import("./pages/admin/AdminModuleAssess
 const AdminLearners = lazy(() => import("./pages/admin/AdminLearners"));
 const AdminTestimonials = lazy(() => import("./pages/admin/AdminTestimonials"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
+const AdminAssignmentSubmissions = lazy(() => import("./pages/admin/AdminAssignmentSubmissions"));
 const TakeQuiz = lazy(() => import("./pages/TakeQuiz"));
 const TakeModuleQuiz = lazy(() => import("./pages/TakeModuleQuiz"));
 const StudentLayout = lazy(() => import("./pages/StudentLayout"));
@@ -41,6 +42,7 @@ const Dashboard = lazy(() => import("./pages/Dashboard"));
 const DashboardCourses = lazy(() => import("./pages/DashboardCourses"));
 const DashboardProgress = lazy(() => import("./pages/DashboardProgress"));
 const DashboardSettings = lazy(() => import("./pages/DashboardSettings"));
+const DashboardWorkSubmissions = lazy(() => import("./pages/DashboardWorkSubmissions"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Cookies = lazy(() => import("./pages/Cookies"));
@@ -174,6 +176,7 @@ const App = () => {
                   <Route path="courses" element={<DashboardCourses />} />
                   <Route path="progress" element={<DashboardProgress />} />
                   <Route path="settings" element={<DashboardSettings />} />
+                  <Route path="work-submissions" element={<DashboardWorkSubmissions />} />
                 </Route>
                 <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />
@@ -186,6 +189,7 @@ const App = () => {
                   <Route path="course-content/:courseId" element={<AdminCourseContentDetail />} />
                   <Route path="course-content/:courseId/modules/:moduleId/assessments/:assessmentId" element={<AdminModuleAssessment />} />
                   <Route path="learners" element={<AdminLearners />} />
+                  <Route path="assignment-submissions" element={<AdminAssignmentSubmissions />} />
                   <Route path="testimonials" element={<AdminTestimonials />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>

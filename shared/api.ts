@@ -143,6 +143,26 @@ export interface SubmissionDoc {
   submittedAt: string;
 }
 
+/** PDF work submission for an enrolled course (separate from quiz SubmissionDoc). */
+export interface AssignmentSubmissionDoc {
+  id: string;
+  userId: string;
+  courseId: string;
+  /** Short label, e.g. module or task name */
+  title: string;
+  pdfUrl: string;
+  originalFilename: string;
+  submittedAt: string;
+  learnerName?: string;
+  learnerEmail?: string;
+  courseTitle?: string;
+  /** null/omitted = not graded yet */
+  marks?: number | null;
+  maxMarks?: number;
+  feedback?: string;
+  gradedAt?: string;
+}
+
 /** Progress: learner progress in a course (used to gate next PDF until break quiz passed) */
 export interface ProgressDoc {
   id: string;

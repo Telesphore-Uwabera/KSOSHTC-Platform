@@ -46,6 +46,18 @@ async function updateEnrollmentStatus(enrollmentId: string, status: EnrollmentSt
   if (!res.ok) throw new Error("Failed to update enrollment");
 }
 
+async function addEnrollment(userId: string, courseId: string): Promise<void> {
+  const res = await fetch(getApiBase() + "/api/enrollments", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ userId, courseId }),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error((data as { error?: string }).error ?? "Failed to add course enrollment");
+  }
+}
+
 async function createLearner(body: { name: string; email: string; password: string; organization?: string; sector?: LearnerSector; approved?: boolean }): Promise<UserPublic> {
   const res = await fetch(getApiBase() + "/api/users", {
     method: "POST",
@@ -110,6 +122,7 @@ export default function AdminLearners() {
   const [formSector, setFormSector] = useState<LearnerSector | "">("");
   const [formApproved, setFormApproved] = useState(false);
   const [formError, setFormError] = useState("");
+  const [courseToAddByUserId, setCourseToAddByUserId] = useState<Record<string, string>>({});
 
   const { data, isLoading } = useQuery({
     queryKey: ["learners-summary"],
@@ -129,6 +142,12 @@ export default function AdminLearners() {
   const updateStatusMutation = useMutation({
     mutationFn: ({ enrollmentId, status }: { enrollmentId: string; status: EnrollmentStatus }) =>
       updateEnrollmentStatus(enrollmentId, status),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["learners-summary"] }),
+  });
+
+  const addEnrollmentMutation = useMutation({
+    mutationFn: ({ userId, courseId }: { userId: string; courseId: string }) =>
+      addEnrollment(userId, courseId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["learners-summary"] }),
   });
 
@@ -305,11 +324,63 @@ export default function AdminLearners() {
                           </div>
                         </td>
                       </tr>
-                      {isExpanded && enrollments.length > 0 && (
+                      {isExpanded && (
                         <tr className="bg-gray-50/80">
                           <td colSpan={7} className="px-4 py-3">
                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Enrollments</p>
+                            <div className="mb-3 flex flex-wrap items-center gap-2">
+                              {(() => {
+                                const enrolled = new Set(enrollments.map((en) => en.courseId));
+                                const available = courses.filter((c) => !enrolled.has(c.id));
+                                if (available.length === 0) {
+                                  return (
+                                    <p className="text-xs text-gray-500">
+                                      All published courses are already assigned to this learner.
+                                    </p>
+                                  );
+                                }
+                                const selected = courseToAddByUserId[u.id] ?? available[0].id;
+                                return (
+                                  <>
+                                    <select
+                                      value={selected}
+                                      onChange={(e) =>
+                                        setCourseToAddByUserId((prev) => ({ ...prev, [u.id]: e.target.value }))
+                                      }
+                                      className="text-xs rounded-lg border border-gray-200 px-2 py-1.5 bg-white outline-none focus:border-primary transition-colors"
+                                    >
+                                      {available.map((c) => (
+                                        <option key={c.id} value={c.id}>
+                                          {c.title}
+                                        </option>
+                                      ))}
+                                    </select>
+                                    <button
+                                      type="button"
+                                      onClick={() =>
+                                        addEnrollmentMutation.mutate({
+                                          userId: u.id,
+                                          courseId: selected,
+                                        })
+                                      }
+                                      disabled={addEnrollmentMutation.isPending}
+                                      className="inline-flex items-center gap-1.5 bg-primary text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/90 disabled:opacity-60"
+                                    >
+                                      {addEnrollmentMutation.isPending ? (
+                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                      ) : (
+                                        <Plus className="w-3.5 h-3.5" />
+                                      )}
+                                      Add course
+                                    </button>
+                                  </>
+                                );
+                              })()}
+                            </div>
                             <div className="flex flex-col gap-2">
+                              {enrollments.length === 0 ? (
+                                <p className="text-xs text-gray-500 px-1">No courses assigned yet.</p>
+                              ) : null}
                               {enrollments.map((en) => (
                                   <div
                                     key={en.id}

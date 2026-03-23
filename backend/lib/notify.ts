@@ -40,7 +40,7 @@
  *    Body:
  *      Hello {name},
  *
- *      Your KSOSHTC learning account has been approved. You can now log in and access your courses.
+ *      Your payment has been confirmed and your KSOSHTC learning account has been approved.
  *
  *      Log in: {FRONTEND_URL}/login
  *
@@ -54,12 +54,32 @@ const ADMIN_EMAIL =
   process.env.ADMIN_EMAIL?.trim() || "ksoshtc@gmail.com";
 const FRONTEND_URL = process.env.FRONTEND_URL ?? "https://www.kigalisafetytraining.com";
 
+/** Support line appended to every transactional email (plain + HTML with clickable WhatsApp). */
+export const SUPPORT_PHONE_DISPLAY = "+250 785 072 512";
+const SUPPORT_WHATSAPP_WA_ME = "https://wa.me/250785072512";
+
+function emailSupportFooterText(): string {
+  return [
+    "",
+    "—",
+    "Questions or issues?",
+    `WhatsApp (click to chat): ${SUPPORT_WHATSAPP_WA_ME}`,
+    `Phone: ${SUPPORT_PHONE_DISPLAY}`,
+  ].join("\n");
+}
+
+function emailSupportFooterHtml(): string {
+  return `<p style="margin-top:1.25em;padding-top:1em;border-top:1px solid #e5e5e5;font-size:14px;color:#333;line-height:1.5;">Questions or issues?<br><a href="${SUPPORT_WHATSAPP_WA_ME}" style="color:#0d6efd;">Message us on WhatsApp</a> · ${SUPPORT_PHONE_DISPLAY}</p>`;
+}
+
 /** Build transporter from env (SMTP). If not configured, returns null and we skip email. */
 function getTransporter(): nodemailer.Transporter | null {
   const host = process.env.SMTP_HOST;
   const port = process.env.SMTP_PORT;
   const user = process.env.SMTP_USER;
-  const pass = process.env.SMTP_PASS;
+  const passRaw = process.env.SMTP_PASS?.trim();
+  // Gmail app passwords are often copied with spaces for readability.
+  const pass = host?.toLowerCase().includes("gmail") ? passRaw?.replace(/\s+/g, "") : passRaw;
   if (!host || !user || !pass) return null;
   return nodemailer.createTransport({
     host,
@@ -79,13 +99,15 @@ async function sendEmail(to: string, subject: string, text: string, html?: strin
     console.log("[NOTIFY] SMTP not configured; skipping email:", subject);
     return;
   }
+  const textBody = text.trimEnd() + "\n" + emailSupportFooterText();
+  const htmlBody = (html ?? text.replace(/\n/g, "<br>\n")) + emailSupportFooterHtml();
   try {
     const info = await transport.sendMail({
       from: fromAddress(),
       to,
       subject,
-      text,
-      html: html ?? text.replace(/\n/g, "<br>\n"),
+      text: textBody,
+      html: htmlBody,
     });
     console.log("[NOTIFY] Email sent successfully:", subject, "to", to, "Response:", info.response);
   } catch (e) {
@@ -150,6 +172,28 @@ export async function notifyNewRegistration(data: {
   });
 }
 
+/** Notify learner after registration with payment instructions (approval happens after payment confirmation). */
+export async function notifyLearnerRegistrationReceived(data: { name: string; email: string }): Promise<void> {
+  const subject = "[KSOSHTC] Registration received — complete payment to activate your account";
+  const lines = [
+    `Hello ${data.name},`,
+    "",
+    "Thank you for registering with KSOSHTC.",
+    "To proceed to account approval and start your course, please complete the payment below:",
+    "",
+    "Course fee: 10,000 FRW",
+    "Mobile number (payment support): +250 7850 72512",
+    "Bank: Equity Bank (CG account)",
+    "Account number: 4003100607428",
+    "Account name: Emmanuel NIYOBUHUNGIRO",
+    "",
+    "After payment confirmation, your account will be approved and you will receive access details.",
+    "",
+    "— Kigali Safety & OSH Training Centre",
+  ];
+  await sendEmail(data.email, subject, lines.join("\n"));
+}
+
 /** Notify admin of new contact form submission (call after Firestore write). */
 export async function notifyNewContact(data: {
   name: string;
@@ -187,8 +231,8 @@ export async function notifyLearnerApproved(data: { name: string; email: string 
   const lines = [
     `Hello ${data.name},`,
     "",
-    "Your KSOSHTC learning account has been approved. You can now log in and access your courses.",
-    "",
+    "Your payment has been confirmed and your KSOSHTC learning account has been approved.",
+    "You can now log in and start your course:",
     `Log in: ${FRONTEND_URL}/login`,
     "",
     "— Kigali Safety & OSH Training Centre",
@@ -209,6 +253,63 @@ export async function notifyPasswordReset(data: { name: string; email: string; t
     `Reset password: ${resetUrl}`,
     "",
     "If you did not request this, you can safely ignore this email.",
+    "",
+    "— Kigali Safety & OSH Training Centre",
+  ];
+  await sendEmail(data.email, subject, lines.join("\n"));
+}
+
+/** Notify admin when a learner submits assignment PDF (after Firestore + upload). */
+export async function notifyAdminAssignmentSubmitted(data: {
+  learnerName: string;
+  learnerEmail: string;
+  courseTitle: string;
+  assignmentTitle: string;
+  submissionId: string;
+}): Promise<void> {
+  const subject = `[KSOSHTC] New assignment submission: ${data.assignmentTitle}`;
+  const lines = [
+    "A learner has submitted a PDF assignment.",
+    "",
+    "——— Submission ———",
+    `Learner: ${data.learnerName}`,
+    `Email: ${data.learnerEmail}`,
+    `Course: ${data.courseTitle}`,
+    `Assignment / title: ${data.assignmentTitle}`,
+    `Submission ID: ${data.submissionId}`,
+    "———",
+    "",
+    `Review and grade in the admin dashboard: ${FRONTEND_URL}/admin/assignment-submissions`,
+  ];
+  await sendAdminEmail(subject, lines.join("\n"));
+}
+
+/** Notify learner when marks are set or updated for their submission. */
+export async function notifyLearnerAssignmentGraded(data: {
+  name: string;
+  email: string;
+  courseTitle: string;
+  assignmentTitle: string;
+  marks: number;
+  maxMarks: number;
+  feedback?: string;
+}): Promise<void> {
+  const subject = `[KSOSHTC] Marks released: ${data.assignmentTitle}`;
+  const fb =
+    data.feedback && data.feedback.trim()
+      ? ["", "Feedback from your instructor:", data.feedback.trim()].join("\n")
+      : "";
+  const lines = [
+    `Hello ${data.name},`,
+    "",
+    `Your marks are now available for the following submission.`,
+    "",
+    `Course: ${data.courseTitle}`,
+    `Assignment: ${data.assignmentTitle}`,
+    `Score: ${data.marks} / ${data.maxMarks}`,
+    fb,
+    "",
+    `View your dashboard: ${FRONTEND_URL}/dashboard/work-submissions`,
     "",
     "— Kigali Safety & OSH Training Centre",
   ];

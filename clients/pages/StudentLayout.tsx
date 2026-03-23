@@ -1,5 +1,5 @@
 import { Link, Outlet, NavLink, Navigate } from "react-router-dom";
-import { ArrowLeft, LayoutDashboard, BookOpen, BarChart3, Settings } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, BookOpen, BarChart3, Settings, FileUp } from "lucide-react";
 import Header from "../components/Header";
 import { cn } from "@/lib/utils";
 import { getStoredUser } from "../lib/auth";
@@ -8,6 +8,7 @@ const nav = [
   { to: "/dashboard", end: true, label: "Overview", icon: LayoutDashboard },
   { to: "/dashboard/courses", end: true, label: "My courses", icon: BookOpen },
   { to: "/dashboard/progress", end: true, label: "Progress", icon: BarChart3 },
+  { to: "/dashboard/work-submissions", end: true, label: "Submit work", icon: FileUp },
   { to: "/dashboard/settings", end: true, label: "Settings", icon: Settings },
 ];
 

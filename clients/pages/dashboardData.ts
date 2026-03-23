@@ -2,7 +2,7 @@ import { useMemo, useEffect } from "react";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getStoredUser } from "../lib/auth";
 import { getApiBase } from "@/lib/apiBase";
-import type { CourseDoc, ProgressDoc, SubmissionDoc } from "@shared/api";
+import type { CourseDoc, EnrollmentDoc, ProgressDoc, SubmissionDoc } from "@shared/api";
 
 export interface CourseStats {
   totalLessons: number;
@@ -22,6 +22,13 @@ export async function fetchAllProgress(userId: string): Promise<ProgressDoc[]> {
   const data = await res.json();
   const p = data.progress;
   return Array.isArray(p) ? p : [];
+}
+
+export async function fetchUserEnrollments(userId: string): Promise<EnrollmentDoc[]> {
+  const res = await fetch(getApiBase() + "/api/enrollments?userId=" + encodeURIComponent(userId));
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.enrollments ?? [];
 }
 
 export async function fetchCourseStats(courseId: string): Promise<CourseStats> {
@@ -79,7 +86,21 @@ export function useDashboardData() {
     enabled: !!user?.id && canAccess,
   });
 
-  const courses = useMemo(() => filterCoursesBySector(allCourses, user?.sector), [allCourses, user?.sector]);
+  const { data: enrollments = [] } = useQuery({
+    queryKey: ["enrollments", user?.id],
+    queryFn: () => fetchUserEnrollments(user!.id),
+    enabled: !!user?.id && canAccess,
+  });
+
+  const courses = useMemo(() => {
+    const enrolledCourseIds = new Set((enrollments as EnrollmentDoc[]).map((e) => e.courseId));
+    // Prefer explicit enrollments when they exist (admin-assigned or learner-enrolled courses).
+    if (enrolledCourseIds.size > 0) {
+      return allCourses.filter((c) => enrolledCourseIds.has(c.id));
+    }
+    // Fallback for older accounts with no enrollment docs yet.
+    return filterCoursesBySector(allCourses, user?.sector);
+  }, [allCourses, enrollments, user?.sector]);
   const courseIds = useMemo(() => courses.map((c) => c.id), [courses]);
 
   const { data: statsByCourse = {}, isLoading: statsLoading } = useQuery({

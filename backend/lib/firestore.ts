@@ -81,6 +81,7 @@ export const COLLECTIONS = {
   courses: "courses",
   enrollments: "enrollments",
   submissions: "submissions",
+  assignment_submissions: "assignment_submissions",
   progress: "progress",
   inquiries: "inquiries",
   password_resets: "password_resets",
@@ -108,6 +109,10 @@ export function enrollmentsCollection() {
 
 export function submissionsCollection() {
   return getDb().collection(COLLECTIONS.submissions);
+}
+
+export function assignmentSubmissionsCollection() {
+  return getDb().collection(COLLECTIONS.assignment_submissions);
 }
 
 export function progressCollection() {

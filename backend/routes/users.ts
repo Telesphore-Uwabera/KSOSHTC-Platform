@@ -2,8 +2,21 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import type { User, UserCreate, UserPublic, LearnerSector } from "@shared/api";
-import { getDb, usersCollection, enrollmentsCollection, progressCollection, submissionsCollection, passwordResetsCollection } from "../lib/firestore";
-import { notifyNewRegistration, notifyLearnerApproved, notifyPasswordReset } from "../lib/notify";
+import {
+  getDb,
+  usersCollection,
+  enrollmentsCollection,
+  progressCollection,
+  submissionsCollection,
+  assignmentSubmissionsCollection,
+  passwordResetsCollection,
+} from "../lib/firestore";
+import {
+  notifyNewRegistration,
+  notifyLearnerRegistrationReceived,
+  notifyLearnerApproved,
+  notifyPasswordReset,
+} from "../lib/notify";
 import type { EnrollmentWithPercent } from "./enrollments";
 import { getEnrollmentsForUser } from "./enrollments";
 import type { SubmissionDoc } from "@shared/api";
@@ -83,6 +96,10 @@ export async function postRegister(req: Request, res: Response): Promise<void> {
       sector: user.sector,
       createdAt: user.createdAt,
     }).catch((err) => console.error("[REGISTER] Notify failed:", err));
+    notifyLearnerRegistrationReceived({
+      name: user.name,
+      email: user.email,
+    }).catch((err) => console.error("[REGISTER] Learner payment email failed:", err));
     res.status(201).json({ user: toPublic(user) });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
@@ -360,6 +377,8 @@ export async function deleteUser(req: Request, res: Response): Promise<void> {
     progressSnap.docs.forEach((d) => batch.delete(d.ref));
     const submissions = await submissionsCollection().where("userId", "==", id).get();
     submissions.docs.forEach((d) => batch.delete(d.ref));
+    const assignmentSubs = await assignmentSubmissionsCollection().where("userId", "==", id).get();
+    assignmentSubs.docs.forEach((d) => batch.delete(d.ref));
     batch.delete(ref);
     await batch.commit();
     res.status(204).send();
