@@ -54,6 +54,63 @@ const ADMIN_EMAIL =
   process.env.ADMIN_EMAIL?.trim() || "ksoshtc@gmail.com";
 const FRONTEND_URL = process.env.FRONTEND_URL ?? "https://www.kigalisafetytraining.com";
 
+const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
+
+function getBrevoApiKey(): string | null {
+  const k = process.env.BREVO_API_KEY?.trim();
+  return k || null;
+}
+
+/**
+ * Brevo requires a verified sender. Set BREVO_SENDER_EMAIL (+ optional BREVO_SENDER_NAME),
+ * or use SMTP_FROM / SMTP_USER (must match an address verified in Brevo).
+ */
+function brevoSender(): { name: string; email: string } {
+  const explicitEmail = process.env.BREVO_SENDER_EMAIL?.trim();
+  const explicitName = process.env.BREVO_SENDER_NAME?.trim();
+  if (explicitEmail) {
+    return { name: explicitName || "KSOSHTC", email: explicitEmail };
+  }
+  const raw = process.env.SMTP_FROM?.trim() || process.env.SMTP_USER?.trim() || ADMIN_EMAIL;
+  const m = raw.match(/^(.+?)\s*<([^>\s]+@[^>\s]+)>\s*$/);
+  if (m) {
+    return { name: m[1].trim().replace(/^["']|["']$/g, ""), email: m[2].trim() };
+  }
+  return { name: "KSOSHTC", email: raw };
+}
+
+async function sendViaBrevo(
+  to: string,
+  subject: string,
+  textContent: string,
+  htmlContent: string
+): Promise<void> {
+  const apiKey = getBrevoApiKey();
+  if (!apiKey) throw new Error("BREVO_API_KEY missing");
+
+  const sender = brevoSender();
+  const res = await fetch(BREVO_API_URL, {
+    method: "POST",
+    headers: {
+      accept: "application/json",
+      "content-type": "application/json",
+      "api-key": apiKey,
+    },
+    body: JSON.stringify({
+      sender: { name: sender.name, email: sender.email },
+      to: [{ email: to }],
+      subject,
+      textContent,
+      htmlContent,
+    }),
+  });
+
+  if (!res.ok) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`Brevo API ${res.status}: ${errText || res.statusText}`);
+  }
+}
+
 /** Support line appended to every transactional email (plain + HTML with clickable WhatsApp). */
 export const SUPPORT_PHONE_DISPLAY = "+250 785 072 512";
 const SUPPORT_WHATSAPP_WA_ME = "https://wa.me/250785072512";
@@ -92,15 +149,27 @@ function getTransporter(): nodemailer.Transporter | null {
 const fromAddress = (): string =>
   process.env.SMTP_FROM ?? process.env.SMTP_USER ?? ADMIN_EMAIL;
 
-/** Send email to a single recipient. No-op if SMTP not configured. */
+/** Send email to a single recipient. Uses Brevo when BREVO_API_KEY is set; otherwise SMTP. */
 async function sendEmail(to: string, subject: string, text: string, html?: string): Promise<void> {
-  const transport = getTransporter();
-  if (!transport) {
-    console.log("[NOTIFY] SMTP not configured; skipping email:", subject);
-    return;
-  }
   const textBody = text.trimEnd() + "\n" + emailSupportFooterText();
   const htmlBody = (html ?? text.replace(/\n/g, "<br>\n")) + emailSupportFooterHtml();
+
+  if (getBrevoApiKey()) {
+    try {
+      await sendViaBrevo(to, subject, textBody, htmlBody);
+      console.log("[NOTIFY] Email sent via Brevo:", subject, "to", to);
+    } catch (e) {
+      console.error("[NOTIFY] Brevo failed:", e instanceof Error ? e.message : e);
+      if (e instanceof Error && e.stack) console.error("[NOTIFY_STACK]", e.stack);
+    }
+    return;
+  }
+
+  const transport = getTransporter();
+  if (!transport) {
+    console.log("[NOTIFY] Email not configured (set BREVO_API_KEY or SMTP); skipping:", subject);
+    return;
+  }
   try {
     const info = await transport.sendMail({
       from: fromAddress(),
@@ -109,23 +178,40 @@ async function sendEmail(to: string, subject: string, text: string, html?: strin
       text: textBody,
       html: htmlBody,
     });
-    console.log("[NOTIFY] Email sent successfully:", subject, "to", to, "Response:", info.response);
+    console.log("[NOTIFY] Email sent via SMTP:", subject, "to", to, "Response:", info.response);
   } catch (e) {
-    console.error("[NOTIFY] Email failed dramatically:", e instanceof Error ? e.message : e);
+    console.error("[NOTIFY] SMTP failed:", e instanceof Error ? e.message : e);
     if (e instanceof Error && e.stack) console.error("[NOTIFY_STACK]", e.stack);
   }
 }
 
-/** Admin-only test function to verify SMTP connectivity. */
+/** Admin-only test: uses Brevo if BREVO_API_KEY is set, otherwise SMTP verify + send. */
 export async function testEmail(to: string): Promise<{ success: boolean; message: string }> {
   try {
+    if (getBrevoApiKey()) {
+      const subj = "[KSOSHTC] Email test (Brevo)";
+      const baseText = "Your Brevo configuration is working correctly!";
+      const baseHtml = "<p>Your Brevo configuration is working correctly!</p>";
+      await sendViaBrevo(
+        to,
+        subj,
+        baseText + "\n" + emailSupportFooterText(),
+        baseHtml + emailSupportFooterHtml()
+      );
+      return { success: true, message: `Test email sent to ${to} via Brevo. Check inbox and SPAM folder.` };
+    }
     const transport = getTransporter();
-    if (!transport) return { success: false, message: "SMTP not configured (HOST, USER, or PASS missing in .env)." };
+    if (!transport) {
+      return {
+        success: false,
+        message: "No email provider: set BREVO_API_KEY or SMTP (HOST, USER, PASS).",
+      };
+    }
     await transport.verify();
     await sendEmail(to, "[KSOSHTC] SMTP Test Connection", "Your SMTP configuration is working correctly!");
-    return { success: true, message: `Test email sent to ${to}. Check inbox and SPAM folder.` };
+    return { success: true, message: `Test email sent to ${to} via SMTP. Check inbox and SPAM folder.` };
   } catch (e) {
-    console.error("[NOTIFY_TEST] SMTP Verify failed:", e);
+    console.error("[NOTIFY_TEST] Email verify/send failed:", e);
     return { success: false, message: e instanceof Error ? e.message : String(e) };
   }
 }
