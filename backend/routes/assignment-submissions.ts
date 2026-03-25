@@ -2,7 +2,7 @@ import { Request, Response } from "express";
 import path from "node:path";
 import crypto from "node:crypto";
 import type { AssignmentSubmissionDoc, CourseDoc, EnrollmentDoc, User } from "@shared/api";
-import { enrollmentAllowsLearnerAccess } from "@shared/learnerEnrollment";
+import { enrollmentAllowsLearnerAccess } from "../../shared/learnerEnrollment.ts";
 import { courseDoc } from "../lib/course-firestore";
 import {
   assignmentSubmissionsCollection,

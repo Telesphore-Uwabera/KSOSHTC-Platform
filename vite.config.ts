@@ -2,7 +2,6 @@ import { defineConfig, Plugin, loadEnv } from "vite";
 import react from "@vitejs/plugin-react-swc";
 import path from "path";
 import type { NextFunction, Request, Response } from "express";
-import { createServer } from "./backend";
 
 // https://vitejs.dev/config/
 export default defineConfig(({ mode }) => {
@@ -50,7 +49,10 @@ function expressPlugin(): Plugin {
   return {
     name: "express-plugin",
     apply: "serve", // Only apply during development (serve mode)
-    configureServer(server) {
+    async configureServer(server) {
+      // Lazy-load backend so the config bundle (used by `vite build` on CI) never pulls in
+      // backend routes and @shared/* aliases—which Node cannot resolve in the config .mjs shim.
+      const { createServer } = await import("./backend/index.ts");
       // apiOnly: true so Express only handles /api/*; GET / is left for Vite to serve the SPA
       const app = createServer({ apiOnly: true });
 
