@@ -44,9 +44,10 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
 
     const userEnrollments = await enrollmentsCollection().where("userId", "==", userId).get();
     const hasAnyEnrollment = !userEnrollments.empty;
-    const enrolledInCourse = userEnrollments.docs.some(
-      (d) => (d.data() as EnrollmentDoc).courseId === courseId
-    );
+    const enrolledInCourse = userEnrollments.docs.some((d) => {
+      const e = d.data() as EnrollmentDoc;
+      return e.courseId === courseId && e.status !== "not_approved";
+    });
     const sectorAllows =
       courseId === "safety-management" || courseId === (user.sector ?? "");
     const allowed = enrolledInCourse || (!hasAnyEnrollment && sectorAllows);

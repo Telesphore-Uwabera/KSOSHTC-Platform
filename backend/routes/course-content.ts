@@ -717,7 +717,8 @@ export async function getSubmissions(req: Request, res: Response): Promise<void>
 
 /**
  * GET /api/course-content/stream-document?url=&filename=&download=1
- * Streams Cloudinary course PDFs with correct headers. Verifies %PDF magic — non-PDF assets are rejected.
+ * Streams Cloudinary PDFs (course materials + learner assignment uploads) with correct headers.
+ * Verifies %PDF magic — non-PDF assets are rejected.
  * Use download=1 for Content-Disposition: attachment (explicit download). Default is inline for in-page viewing.
  */
 export async function streamCourseDocument(req: Request, res: Response): Promise<void> {
@@ -754,7 +755,9 @@ export async function streamCourseDocument(req: Request, res: Response): Promise
     }
 
     const p = parsed.pathname;
-    if (!p.includes("/ksohtc/courses/")) {
+    const pathAllowed =
+      p.includes("/ksohtc/courses/") || p.includes("/ksohtc/assignment-submissions/");
+    if (!pathAllowed) {
       res.status(403).json({ error: "URL path not allowed." });
       return;
     }

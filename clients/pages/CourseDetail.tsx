@@ -7,7 +7,7 @@ import Footer from "../components/Footer";
 import { CoursePdfJsViewer } from "../components/CoursePdfJsViewer";
 import { getStoredUser, clearStoredUser } from "../lib/auth";
 import { getApiBase } from "@/lib/apiBase";
-import type { CourseDoc, ModuleDoc, LessonDoc, AssessmentDoc, ProgressDoc } from "@shared/api";
+import type { CourseDoc, ModuleDoc, LessonDoc, AssessmentDoc, ProgressDoc, EnrollmentDoc } from "@shared/api";
 import { normalizeCloudinaryCourseUrl } from "@shared/normalizeCloudinaryUrl";
 
 const getCourseContentApi = () => getApiBase() + "/api/course-content";
@@ -55,6 +55,13 @@ async function fetchProgress(userId: string, courseId: string): Promise<Progress
   if (!res.ok) return null;
   const data = await res.json();
   return data.progress ?? null;
+}
+
+async function fetchUserEnrollments(userId: string): Promise<EnrollmentDoc[]> {
+  const res = await fetch(`${getApiBase()}/api/enrollments?userId=${encodeURIComponent(userId)}`);
+  if (!res.ok) return [];
+  const data = await res.json();
+  return data.enrollments ?? [];
 }
 
 async function markLessonComplete(userId: string, courseId: string, lessonId: string): Promise<void> {
@@ -426,6 +433,12 @@ export default function CourseDetail() {
     enabled: !!courseId,
   });
 
+  const { data: myEnrollments = [] } = useQuery({
+    queryKey: ["enrollments", user?.id],
+    queryFn: () => fetchUserEnrollments(user!.id),
+    enabled: !!user?.id && canAccess,
+  });
+
   const displayCourse = course; // [FIXED] Removed fallback to coursesFromPublic
 
   const { data: modules = [], isLoading: modulesLoading } = useQuery({
@@ -499,7 +512,62 @@ export default function CourseDetail() {
   }
   if (!displayCourse) return <Navigate to="/dashboard" replace />;
 
-  if (canAccess && user?.sector && courseId !== "safety-management" && courseId !== user.sector) {
+  const enrollmentForThisCourse = myEnrollments.find((e) => e.courseId === courseId);
+  const enrollmentAllowsAccess = Boolean(
+    enrollmentForThisCourse && enrollmentForThisCourse.status !== "not_approved"
+  );
+
+  if (canAccess && enrollmentForThisCourse?.status === "not_approved") {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <Header />
+        <div className="h-28" aria-hidden="true" />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div
+            className="bg-white rounded-2xl shadow-xl border border-gray-200 max-w-md w-full p-6 text-center"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="enrollment-pending-title"
+          >
+            <div className="flex justify-center mb-4">
+              <span className="inline-flex w-12 h-12 rounded-full bg-amber-100 items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-amber-700" />
+              </span>
+            </div>
+            <h2 id="enrollment-pending-title" className="text-lg font-bold text-gray-900 mb-2">
+              Course access pending
+            </h2>
+            <p className="text-gray-600 text-sm mb-6">
+              This course was added to your account, but your enrollment is not active yet. It will appear on your dashboard once an administrator approves access.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard", { replace: true })}
+                className="px-4 py-2.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                Go to my dashboard
+              </button>
+              <Link
+                to="/dashboard"
+                className="px-4 py-2.5 border-2 border-gray-300 text-gray-700 font-semibold rounded-lg hover:bg-gray-50 transition-colors text-center"
+              >
+                Back to dashboard
+              </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (
+    canAccess &&
+    !enrollmentAllowsAccess &&
+    user?.sector &&
+    courseId !== "safety-management" &&
+    courseId !== user.sector
+  ) {
     const sectorLabel = SECTOR_LABELS[user.sector] ?? user.sector;
     const message = `You are registered for ${sectorLabel}. Please join ${sectorLabel} courses from your dashboard. As an approved learner you can also join Safety Management (General).`;
     return (

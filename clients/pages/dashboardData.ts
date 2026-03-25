@@ -93,9 +93,12 @@ export function useDashboardData() {
   });
 
   const courses = useMemo(() => {
-    const enrolledCourseIds = new Set((enrollments as EnrollmentDoc[]).map((e) => e.courseId));
-    // Prefer explicit enrollments when they exist (admin-assigned or learner-enrolled courses).
-    if (enrolledCourseIds.size > 0) {
+    const list = enrollments as EnrollmentDoc[];
+    // Any Firestore enrollment row (even not_approved) means we use enrollment-based visibility only.
+    const hasEnrollmentRows = list.length > 0;
+    const visible = list.filter((e) => e.status !== "not_approved");
+    const enrolledCourseIds = new Set(visible.map((e) => e.courseId));
+    if (hasEnrollmentRows) {
       return allCourses.filter((c) => enrolledCourseIds.has(c.id));
     }
     // Fallback for older accounts with no enrollment docs yet.
