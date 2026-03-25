@@ -9,6 +9,7 @@ import { getStoredUser, clearStoredUser } from "../lib/auth";
 import { getApiBase } from "@/lib/apiBase";
 import type { CourseDoc, ModuleDoc, LessonDoc, AssessmentDoc, ProgressDoc, EnrollmentDoc } from "@shared/api";
 import { normalizeCloudinaryCourseUrl } from "@shared/normalizeCloudinaryUrl";
+import { enrollmentAllowsLearnerAccess } from "@shared/learnerEnrollment";
 
 const getCourseContentApi = () => getApiBase() + "/api/course-content";
 
@@ -514,10 +515,15 @@ export default function CourseDetail() {
 
   const enrollmentForThisCourse = myEnrollments.find((e) => e.courseId === courseId);
   const enrollmentAllowsAccess = Boolean(
-    enrollmentForThisCourse && enrollmentForThisCourse.status !== "not_approved"
+    enrollmentForThisCourse && enrollmentAllowsLearnerAccess(enrollmentForThisCourse.status)
   );
 
-  if (canAccess && enrollmentForThisCourse?.status === "not_approved") {
+  if (
+    canAccess &&
+    enrollmentForThisCourse &&
+    !enrollmentAllowsLearnerAccess(enrollmentForThisCourse.status) &&
+    enrollmentForThisCourse.status === "not_approved"
+  ) {
     return (
       <div className="min-h-screen bg-white flex flex-col">
         <Header />
@@ -554,6 +560,49 @@ export default function CourseDetail() {
               >
                 Back to dashboard
               </Link>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (
+    canAccess &&
+    enrollmentForThisCourse &&
+    !enrollmentAllowsLearnerAccess(enrollmentForThisCourse.status) &&
+    enrollmentForThisCourse.status !== "not_approved"
+  ) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <Header />
+        <div className="h-28" aria-hidden="true" />
+        <div className="flex-1 flex items-center justify-center p-4">
+          <div
+            className="bg-white rounded-2xl shadow-xl border border-gray-200 max-w-md w-full p-6 text-center"
+            role="alertdialog"
+            aria-modal="true"
+            aria-labelledby="enrollment-inactive-title"
+          >
+            <div className="flex justify-center mb-4">
+              <span className="inline-flex w-12 h-12 rounded-full bg-amber-100 items-center justify-center">
+                <AlertCircle className="w-6 h-6 text-amber-700" />
+              </span>
+            </div>
+            <h2 id="enrollment-inactive-title" className="text-lg font-bold text-gray-900 mb-2">
+              This course is not available on your account
+            </h2>
+            <p className="text-gray-600 text-sm mb-6">
+              Your access to this course is not active. It will reappear on your dashboard if an administrator restores your enrollment.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
+              <button
+                type="button"
+                onClick={() => navigate("/dashboard", { replace: true })}
+                className="px-4 py-2.5 bg-primary text-white font-semibold rounded-lg hover:bg-primary/90 transition-colors"
+              >
+                Go to my dashboard
+              </button>
             </div>
           </div>
         </div>

@@ -1,50 +1,6 @@
 /**
- * Notifications: email to admin + optional Netlify form submission.
- * Firestore (registration, contact) is unchanged. Email is sent only after
- * data is successfully stored in Firestore (see postRegister / postContact).
- *
- * EMAIL FORMATS (plain text; HTML is auto-generated from newlines -> <br>):
- *
- * 1) New registration (to ADMIN):
- *    Subject: [KSOSHTC] New registration: {name}
- *    Body:
- *      A new learner has registered. Below are all the details they entered (stored in Firebase).
- *
- *      ——— Details of the registrant ———
- *      Full name: {name}
- *      Email: {email}
- *      Phone: {phone or "(not provided)"}
- *      Organization: {org or "(not provided)"}
- *      Sector: {sector or "(not provided)"}
- *      Registered at: {createdAt}
- *      ———
- *
- *      Approve or manage this user in your admin dashboard (Learners).
- *
- * 2) New contact (to ADMIN):
- *    Subject: [KSOSHTC] New contact: {name}
- *    Body:
- *      New message from the contact form.
- *
- *      ——— Sender ———
- *      Name: {name}
- *      Email: {email}
- *      Phone: {phone or "(not provided)"}
- *      ———
- *
- *      Message:
- *      {message}
- *
- * 3) Account approved (to LEARNER):
- *    Subject: [KSOSHTC] Your account has been approved
- *    Body:
- *      Hello {name},
- *
- *      Your payment has been confirmed and your KSOSHTC learning account has been approved.
- *
- *      Log in: {FRONTEND_URL}/login
- *
- *      — Kigali Safety & OSH Training Centre
+ * Transactional email (Brevo or SMTP): HTML + plain text per template.
+ * Sends after successful Firestore writes where applicable.
  */
 
 import nodemailer from "nodemailer";
@@ -113,20 +69,80 @@ async function sendViaBrevo(
 
 /** Support line appended to every transactional email (plain + HTML with clickable WhatsApp). */
 export const SUPPORT_PHONE_DISPLAY = "+250 785 072 512";
+/** Rwanda local format (no spaces) for MoMo / call / WhatsApp lines in learner emails. */
+export const SUPPORT_PHONE_LOCAL_RW = "0785072512";
 const SUPPORT_WHATSAPP_WA_ME = "https://wa.me/250785072512";
 
-function emailSupportFooterText(): string {
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
+}
+
+function webBase(): string {
+  return FRONTEND_URL.replace(/\/$/, "");
+}
+
+/** Closing block for learner-facing transactional emails (registration email omits this by design). */
+function emailLearnerFooterText(): string {
+  const web = webBase();
   return [
     "",
+    "────────────────────────────────────",
+    "Kind regards,",
+    "KSOSHTC Management",
+    "",
     "—",
-    "Questions or issues?",
-    `WhatsApp (click to chat): ${SUPPORT_WHATSAPP_WA_ME}`,
-    `Phone: ${SUPPORT_PHONE_DISPLAY}`,
+    `Website: ${web}`,
+    `WhatsApp (tap to chat): ${SUPPORT_WHATSAPP_WA_ME}`,
+    `Call / WhatsApp: ${SUPPORT_PHONE_LOCAL_RW} · ${SUPPORT_PHONE_DISPLAY}`,
+    "",
+    "Kigali Safety & OSH Training Centre (KSOS HTC)",
   ].join("\n");
 }
 
-function emailSupportFooterHtml(): string {
-  return `<p style="margin-top:1.25em;padding-top:1em;border-top:1px solid #e5e5e5;font-size:14px;color:#333;line-height:1.5;">Questions or issues?<br><a href="${SUPPORT_WHATSAPP_WA_ME}" style="color:#0d6efd;">Message us on WhatsApp</a> · ${SUPPORT_PHONE_DISPLAY}</p>`;
+function emailLearnerFooterHtml(): string {
+  const web = webBase();
+  return `<div style="margin-top:1.5em;padding-top:1.25em;border-top:1px solid #dee2e6;font-size:14px;color:#444;line-height:1.6;">
+<p style="margin:0;">Kind regards,<br><strong style="color:#1a1a1a;">KSOSHTC Management</strong></p>
+<p style="margin:1em 0 0;">
+<a href="${web}" style="color:#0d6efd;">Visit our website</a>
+&nbsp;·&nbsp;
+<a href="${SUPPORT_WHATSAPP_WA_ME}" style="color:#0d6efd;">WhatsApp</a>
+&nbsp;·&nbsp;
+${escapeHtml(SUPPORT_PHONE_LOCAL_RW)}
+</p>
+<p style="margin:0.75em 0 0;font-size:13px;color:#666;">Kigali Safety &amp; OSH Training Centre (KSOS HTC)</p>
+</div>`;
+}
+
+/** Footer for admin inbox notifications (internal tone). */
+function emailAdminFooterText(): string {
+  const web = webBase();
+  return [
+    "",
+    "────────────────────────────────────",
+    "This is an automated message from the KSOSHTC platform.",
+    "",
+    `Admin dashboard: ${web}/admin`,
+    `Public website: ${web}`,
+    `Support — WhatsApp: ${SUPPORT_WHATSAPP_WA_ME}`,
+    `Call / WhatsApp: ${SUPPORT_PHONE_LOCAL_RW} (${SUPPORT_PHONE_DISPLAY})`,
+  ].join("\n");
+}
+
+function emailAdminFooterHtml(): string {
+  const web = webBase();
+  return `<div style="margin-top:1.5em;padding-top:1.25em;border-top:1px solid #dee2e6;font-size:14px;color:#444;line-height:1.6;">
+<p style="margin:0;font-size:13px;color:#666;">Automated notification · <strong style="color:#1a1a1a;">KSOSHTC</strong></p>
+<p style="margin:0.75em 0 0;"><a href="${web}/admin" style="color:#0d6efd;">Admin dashboard</a> · <a href="${web}" style="color:#0d6efd;">Website</a></p>
+<p style="margin:0.5em 0 0;">
+<a href="${SUPPORT_WHATSAPP_WA_ME}" style="color:#0d6efd;">WhatsApp</a>
+&nbsp;·&nbsp; ${escapeHtml(SUPPORT_PHONE_LOCAL_RW)} (${escapeHtml(SUPPORT_PHONE_DISPLAY)})
+</p>
+</div>`;
 }
 
 /** Build transporter from env (SMTP). If not configured, returns null and we skip email. */
@@ -149,10 +165,31 @@ function getTransporter(): nodemailer.Transporter | null {
 const fromAddress = (): string =>
   process.env.SMTP_FROM ?? process.env.SMTP_USER ?? ADMIN_EMAIL;
 
+export type SendEmailOptions = {
+  appendSupportFooter?: boolean;
+  /** Admin notifications use a neutral footer; learners get sign-off + website / WhatsApp. */
+  audience?: "learner" | "admin";
+};
+
 /** Send email to a single recipient. Uses Brevo when BREVO_API_KEY is set; otherwise SMTP. */
-async function sendEmail(to: string, subject: string, text: string, html?: string): Promise<void> {
-  const textBody = text.trimEnd() + "\n" + emailSupportFooterText();
-  const htmlBody = (html ?? text.replace(/\n/g, "<br>\n")) + emailSupportFooterHtml();
+async function sendEmail(
+  to: string,
+  subject: string,
+  text: string,
+  html?: string,
+  options?: SendEmailOptions
+): Promise<void> {
+  const append = options?.appendSupportFooter !== false;
+  const audience = options?.audience ?? "learner";
+  const textBody = append
+    ? text.trimEnd() +
+      "\n" +
+      (audience === "admin" ? emailAdminFooterText() : emailLearnerFooterText())
+    : text.trimEnd();
+  const baseHtml = html ?? text.replace(/\n/g, "<br>\n");
+  const htmlBody = append
+    ? baseHtml + (audience === "admin" ? emailAdminFooterHtml() : emailLearnerFooterHtml())
+    : baseHtml;
 
   if (getBrevoApiKey()) {
     try {
@@ -189,14 +226,18 @@ async function sendEmail(to: string, subject: string, text: string, html?: strin
 export async function testEmail(to: string): Promise<{ success: boolean; message: string }> {
   try {
     if (getBrevoApiKey()) {
-      const subj = "[KSOSHTC] Email test (Brevo)";
-      const baseText = "Your Brevo configuration is working correctly!";
-      const baseHtml = "<p>Your Brevo configuration is working correctly!</p>";
+      const subj = "[KSOSHTC] Email delivery test — Brevo";
+      const baseText =
+        "This is a test message from the KSOSHTC platform. If you received it, your Brevo API configuration is working correctly.";
+      const baseHtml = `<div style="font-family:Georgia,serif;font-size:15px;line-height:1.55;color:#1a1a1a;">
+<p style="margin:0;">This is a <strong>test message</strong> from the KSOSHTC platform.</p>
+<p style="margin:1em 0 0;">If you received this email, your <strong>Brevo</strong> integration is configured correctly.</p>
+</div>`;
       await sendViaBrevo(
         to,
         subj,
-        baseText + "\n" + emailSupportFooterText(),
-        baseHtml + emailSupportFooterHtml()
+        baseText + "\n" + emailLearnerFooterText(),
+        baseHtml + emailLearnerFooterHtml()
       );
       return { success: true, message: `Test email sent to ${to} via Brevo. Check inbox and SPAM folder.` };
     }
@@ -208,7 +249,15 @@ export async function testEmail(to: string): Promise<{ success: boolean; message
       };
     }
     await transport.verify();
-    await sendEmail(to, "[KSOSHTC] SMTP Test Connection", "Your SMTP configuration is working correctly!");
+    await sendEmail(
+      to,
+      "[KSOSHTC] Email delivery test — SMTP",
+      "This is a test message from the KSOSHTC platform. If you received it, your SMTP settings are working correctly.",
+      `<div style="font-family:Georgia,serif;font-size:15px;line-height:1.55;color:#1a1a1a;">
+<p style="margin:0;">This is a <strong>test message</strong> from the KSOSHTC platform.</p>
+<p style="margin:1em 0 0;">If you received this email, your <strong>SMTP</strong> configuration is working correctly.</p>
+</div>`
+    );
     return { success: true, message: `Test email sent to ${to} via SMTP. Check inbox and SPAM folder.` };
   } catch (e) {
     console.error("[NOTIFY_TEST] Email verify/send failed:", e);
@@ -219,7 +268,7 @@ export async function testEmail(to: string): Promise<{ success: boolean; message
 /** Send email to admin. No-op if SMTP not configured. */
 export async function sendAdminEmail(subject: string, text: string, html?: string): Promise<void> {
   if (!ADMIN_EMAIL) return;
-  await sendEmail(ADMIN_EMAIL, subject, text, html);
+  await sendEmail(ADMIN_EMAIL, subject, text, html, { audience: "admin" });
 }
 
 /** Notify admin of new registration (call only after successful Firestore write). */
@@ -231,23 +280,48 @@ export async function notifyNewRegistration(data: {
   sector?: string;
   createdAt?: string;
 }): Promise<void> {
-  const subject = `[KSOSHTC] New registration: ${data.name}`;
-  const phoneLine = data.phone ? `Phone: ${data.phone}` : "Phone: (not provided)";
-  const lines = [
-    "A new learner has registered. Below are all the details they entered (stored in Firebase).",
+  const subject = `[KSOSHTC] New learner registration — ${data.name}`;
+  const phone = data.phone ?? "—";
+  const org = data.organization ?? "—";
+  const sector = data.sector ?? "—";
+  const registered = data.createdAt ?? new Date().toISOString();
+  const adminLearners = `${webBase()}/admin/learners`;
+
+  const text = [
+    "A new learner has completed the registration form. Their details are stored in your database.",
+    "Please review the record below and approve the account once any required registration fee payment has been confirmed.",
     "",
-    "——— Details of the registrant ———",
-    `Full name: ${data.name}`,
-    `Email: ${data.email}`,
-    phoneLine,
-    `Organization: ${data.organization ?? "(not provided)"}`,
-    `Sector: ${data.sector ?? "(not provided)"}`,
-    `Registered at: ${data.createdAt ?? new Date().toISOString()}`,
-    "———",
+    "REGISTRANT DETAILS",
+    `Full name:        ${data.name}`,
+    `Email:           ${data.email}`,
+    `Phone:           ${phone}`,
+    `Organisation:    ${org}`,
+    `Sector:          ${sector}`,
+    `Registered at:   ${registered}`,
     "",
-    "Approve or manage this user in your admin dashboard (Learners).",
-  ];
-  await sendAdminEmail(subject, lines.join("\n"));
+    "NEXT STEP",
+    `Open the Learners section in your admin dashboard to approve or manage this user:`,
+    adminLearners,
+  ].join("\n");
+
+  const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
+<p style="margin:0 0 1em;">A new learner has completed the registration form. Their details are stored in your database.</p>
+<p style="margin:0 0 1.25em;">Please review the record below and <strong>approve the account</strong> once any required <strong>registration fee</strong> payment has been confirmed.</p>
+<p style="margin:0 0 0.35em;font-weight:bold;letter-spacing:0.03em;">REGISTRANT DETAILS</p>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 1.25em;">
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Full name</td><td style="padding:6px 0;"><strong>${escapeHtml(data.name)}</strong></td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Email</td><td style="padding:6px 0;"><a href="mailto:${escapeHtml(data.email)}" style="color:#0d6efd;">${escapeHtml(data.email)}</a></td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Phone</td><td style="padding:6px 0;">${escapeHtml(phone)}</td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Organisation</td><td style="padding:6px 0;">${escapeHtml(org)}</td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Sector</td><td style="padding:6px 0;">${escapeHtml(sector)}</td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Registered at</td><td style="padding:6px 0;">${escapeHtml(registered)}</td></tr>
+</table>
+<p style="margin:0 0 0.35em;font-weight:bold;letter-spacing:0.03em;">NEXT STEP</p>
+<p style="margin:0 0 0.75em;">Open the <strong>Learners</strong> section to approve or manage this user:</p>
+<p style="margin:0;"><a href="${adminLearners}" style="display:inline-block;background:#0d6efd;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Go to Learners</a></p>
+</div>`;
+
+  await sendAdminEmail(subject, text, html);
 
   await submitToNetlifyForm("registration", {
     name: data.name,
@@ -258,26 +332,79 @@ export async function notifyNewRegistration(data: {
   });
 }
 
-/** Notify learner after registration with payment instructions (approval happens after payment confirmation). */
+/** Notify learner after registration with programme details, fees, MoMo payment, and links (approval after payment). */
 export async function notifyLearnerRegistrationReceived(data: { name: string; email: string }): Promise<void> {
-  const subject = "[KSOSHTC] Registration received — complete payment to activate your account";
-  const lines = [
-    `Hello ${data.name},`,
+  const subject = "[KSOSHTC] Welcome — your registration and next steps";
+  const name = data.name.trim();
+  const web = FRONTEND_URL.replace(/\/$/, "");
+
+  const text = [
+    `Dear ${name},`,
     "",
-    "Thank you for registering with KSOSHTC.",
-    "To proceed to account approval and start your course, please complete the payment below:",
+    "Thank you for choosing Kigali Safety & OSH Training Centre (KSOS HTC). We are pleased to confirm that we have received your registration.",
     "",
-    "Course fee: 10,000 FRW",
-    "Mobile number (payment support): +250 7850 72512",
-    "Bank: Equity Bank (CG account)",
-    "Account number: 4003100607428",
-    "Account name: Emmanuel NIYOBUHUNGIRO",
+    "PROGRAMME OVERVIEW",
+    "• Training sectors: OSH in Industrial Safety, OSH in Construction, and OSH in Mining.",
+    "• In-person classes: Sundays, 09:00–14:00 (EAT), for three months.",
+    "• Online sessions: Fridays, 14:00–17:00, live via Google Meet.",
+    "• Course materials are available on our website once your learning account is activated.",
+    "• After you complete the training, you will receive a certificate.",
     "",
-    "After payment confirmation, your account will be approved and you will receive access details.",
+    "FEES",
+    "• Registration fee: 10,000 FRW (required to access course materials).",
+    "• Tuition fee: 200,000 FRW (payable in instalments; contact us to arrange a payment plan).",
     "",
-    "— Kigali Safety & OSH Training Centre",
-  ];
-  await sendEmail(data.email, subject, lines.join("\n"));
+    "REGISTRATION FEE — PAYMENT (MOBILE MONEY)",
+    "To unlock access to course materials, please pay the registration fee of 10,000 FRW via MoMo to:",
+    `  ${SUPPORT_PHONE_LOCAL_RW} — EMMANUEL NIYOBUHUNGIRO`,
+    "",
+    "Alternative (bank transfer), if you prefer:",
+    "  Bank: Equity Bank (CG account) | Account: 4003100607428 | Name: Emmanuel NIYOBUHUNGIRO",
+    "",
+    "Once your payment is confirmed, your account will be approved and you will receive instructions to log in.",
+    "",
+    "USEFUL LINKS",
+    `• Visit our website: ${web}`,
+    `• WhatsApp (tap to chat): ${SUPPORT_WHATSAPP_WA_ME}`,
+    `• Call / WhatsApp: ${SUPPORT_PHONE_LOCAL_RW}`,
+    "",
+    "We look forward to supporting your professional development in occupational safety and health.",
+    "",
+    "KSOSHTC Management",
+  ].join("\n");
+
+  const htmlBody = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
+<p style="margin:0 0 1em;">Dear ${escapeHtml(name)},</p>
+<p style="margin:0 0 1em;">Thank you for choosing <strong>Kigali Safety &amp; OSH Training Centre (KSOS HTC)</strong>. We are pleased to confirm that we have received your registration.</p>
+<p style="margin:1.25em 0 0.35em;font-weight:bold;letter-spacing:0.03em;">PROGRAMME OVERVIEW</p>
+<ul style="margin:0 0 1em;padding-left:1.25em;">
+<li>Training sectors: OSH in Industrial Safety, OSH in Construction, and OSH in Mining.</li>
+<li>In-person classes: Sundays, 09:00–14:00 (EAT), for three months.</li>
+<li>Online sessions: Fridays, 14:00–17:00, live via Google Meet.</li>
+<li>Course materials are available on our website once your learning account is activated.</li>
+<li>After you complete the training, you will receive a certificate.</li>
+</ul>
+<p style="margin:1.25em 0 0.35em;font-weight:bold;letter-spacing:0.03em;">FEES</p>
+<ul style="margin:0 0 1em;padding-left:1.25em;">
+<li><strong>Registration fee:</strong> 10,000 FRW (required to access course materials).</li>
+<li><strong>Tuition fee:</strong> 200,000 FRW (payable in instalments; contact us to arrange a payment plan).</li>
+</ul>
+<p style="margin:1.25em 0 0.35em;font-weight:bold;letter-spacing:0.03em;">REGISTRATION FEE — PAYMENT (MOBILE MONEY)</p>
+<p style="margin:0 0 1em;">To unlock access to course materials, please pay the <strong>registration fee of 10,000 FRW</strong> via MoMo to:</p>
+<p style="margin:0 0 1em;padding:0.75em 1em;background:#f5f5f5;border-radius:6px;"><strong>${escapeHtml(SUPPORT_PHONE_LOCAL_RW)}</strong> — EMMANUEL NIYOBUHUNGIRO</p>
+<p style="margin:1em 0 0.35em;font-size:14px;color:#444;"><strong>Alternative (bank transfer):</strong> Equity Bank (CG account) · Account 4003100607428 · Emmanuel NIYOBUHUNGIRO</p>
+<p style="margin:1em 0;">Once your payment is confirmed, your account will be approved and you will receive instructions to log in.</p>
+<p style="margin:1.25em 0 0.35em;font-weight:bold;letter-spacing:0.03em;">USEFUL LINKS</p>
+<ul style="margin:0 0 1em;padding-left:1.25em;">
+<li><a href="${web}" style="color:#0d6efd;">Visit our website</a></li>
+<li><a href="${SUPPORT_WHATSAPP_WA_ME}" style="color:#0d6efd;">Message us on WhatsApp</a> (same number for calls)</li>
+<li>Call / WhatsApp: <strong>${escapeHtml(SUPPORT_PHONE_LOCAL_RW)}</strong></li>
+</ul>
+<p style="margin:1.25em 0 0.75em;">Thank you for joining us — where we think, we talk, and we do safety.</p>
+<p style="margin:0;font-weight:bold;">KSOSHTC Management</p>
+</div>`;
+
+  await sendEmail(data.email, subject, text, htmlBody, { appendSupportFooter: false });
 }
 
 /** Notify admin of new contact form submission (call after Firestore write). */
@@ -287,21 +414,36 @@ export async function notifyNewContact(data: {
   phone?: string;
   message: string;
 }): Promise<void> {
-  const subject = `[KSOSHTC] New contact: ${data.name}`;
-  const phoneLine = data.phone ? `Phone: ${data.phone}` : "Phone: (not provided)";
-  const lines = [
-    "New message from the contact form.",
+  const subject = `[KSOSHTC] Website contact — ${data.name}`;
+  const phone = data.phone ?? "—";
+
+  const text = [
+    "Someone has submitted a message through the KSOSHTC website contact form.",
+    "The message has been saved. You can reply directly to the sender using the email address below.",
     "",
-    "——— Sender ———",
-    `Name: ${data.name}`,
-    `Email: ${data.email}`,
-    phoneLine,
-    "———",
+    "SENDER",
+    `Name:    ${data.name}`,
+    `Email:   ${data.email}`,
+    `Phone:   ${phone}`,
     "",
-    "Message:",
+    "MESSAGE",
     data.message,
-  ];
-  await sendAdminEmail(subject, lines.join("\n"));
+  ].join("\n");
+
+  const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
+<p style="margin:0 0 1em;">Someone has submitted a message through the <strong>KSOSHTC website contact form</strong>. The message has been saved.</p>
+<p style="margin:0 0 1.25em;">You may <strong>reply directly</strong> to the sender at the email address below.</p>
+<p style="margin:0 0 0.35em;font-weight:bold;letter-spacing:0.03em;">SENDER</p>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 1.25em;">
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Name</td><td style="padding:6px 0;"><strong>${escapeHtml(data.name)}</strong></td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Email</td><td style="padding:6px 0;"><a href="mailto:${escapeHtml(data.email)}" style="color:#0d6efd;">${escapeHtml(data.email)}</a></td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Phone</td><td style="padding:6px 0;">${escapeHtml(phone)}</td></tr>
+</table>
+<p style="margin:0 0 0.35em;font-weight:bold;letter-spacing:0.03em;">MESSAGE</p>
+<div style="padding:14px 16px;background:#f8f9fa;border-radius:8px;border:1px solid #e9ecef;white-space:pre-wrap;font-size:14px;">${escapeHtml(data.message)}</div>
+</div>`;
+
+  await sendAdminEmail(subject, text, html);
 
   await submitToNetlifyForm("contact", {
     name: data.name,
@@ -313,36 +455,68 @@ export async function notifyNewContact(data: {
 
 /** Notify the learner that their account has been approved (call after setting approved: true). */
 export async function notifyLearnerApproved(data: { name: string; email: string }): Promise<void> {
-  const subject = "[KSOSHTC] Your account has been approved";
-  const lines = [
-    `Hello ${data.name},`,
+  const subject = "[KSOSHTC] Your account is active — welcome aboard";
+  const name = data.name.trim();
+  const web = webBase();
+  const loginUrl = `${web}/login`;
+
+  const text = [
+    `Dear ${name},`,
     "",
-    "Your payment has been confirmed and your KSOSHTC learning account has been approved.",
-    "You can now log in and start your course:",
-    `Log in: ${FRONTEND_URL}/login`,
+    "Thank you for completing your registration with KSOS HTC.",
     "",
-    "— Kigali Safety & OSH Training Centre",
-  ];
-  await sendEmail(data.email, subject, lines.join("\n"));
+    "Your payment has been confirmed and your online learning account is now active. Sign in anytime to access your courses, materials, and assignments.",
+    "",
+    "Sign in:",
+    loginUrl,
+    "",
+    "If you have any questions, please use the website or WhatsApp details at the end of this email.",
+  ].join("\n");
+
+  const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
+<p style="margin:0 0 1em;">Dear ${escapeHtml(name)},</p>
+<p style="margin:0 0 1em;">Thank you for completing your registration with <strong>KSOS HTC</strong>.</p>
+<p style="margin:0 0 1em;">Your payment has been confirmed and your <strong>online learning account is now active</strong>. You may sign in to access your courses, materials, and assignments.</p>
+<p style="margin:0 0 0.75em;"><a href="${loginUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;">Sign in to your account</a></p>
+<p style="margin:0;font-size:14px;color:#555;">Or open this link in your browser:<br><a href="${loginUrl}" style="color:#0d6efd;word-break:break-all;">${loginUrl}</a></p>
+<p style="margin:1.25em 0 0;font-size:14px;color:#444;">If you need assistance, use the <strong>website</strong> and <strong>WhatsApp</strong> information below.</p>
+</div>`;
+
+  await sendEmail(data.email, subject, text, html);
 }
 
 /** Notify learner with a password reset link. */
 export async function notifyPasswordReset(data: { name: string; email: string; token: string }): Promise<void> {
-  const subject = "[KSOSHTC] Password Reset Request";
-  const resetUrl = `${FRONTEND_URL}/reset-password/${data.token}`;
-  const lines = [
-    `Hello ${data.name},`,
+  const subject = "[KSOSHTC] Password reset — action required";
+  const name = data.name.trim();
+  const resetUrl = `${webBase()}/reset-password/${data.token}`;
+
+  const text = [
+    `Dear ${name},`,
     "",
-    "We received a request to reset your password for your KSOSHTC account.",
-    "Click the link below to set a new password. This link will expire in 1 hour.",
+    "We received a request to reset the password for your KSOSHTC learning account.",
     "",
-    `Reset password: ${resetUrl}`,
+    "For your security, this link can be used only once and will expire in one hour.",
     "",
-    "If you did not request this, you can safely ignore this email.",
+    "Set a new password:",
+    resetUrl,
     "",
-    "— Kigali Safety & OSH Training Centre",
-  ];
-  await sendEmail(data.email, subject, lines.join("\n"));
+    "If you did not request a password reset, you may ignore this message. Your password will remain unchanged.",
+    "",
+    "Never share this link with anyone. KSOSHTC staff will never ask for your password or this link by phone or WhatsApp.",
+  ].join("\n");
+
+  const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
+<p style="margin:0 0 1em;">Dear ${escapeHtml(name)},</p>
+<p style="margin:0 0 1em;">We received a request to reset the password for your <strong>KSOSHTC</strong> learning account.</p>
+<p style="margin:0 0 1em;">For your security, the button below can be used <strong>only once</strong> and will <strong>expire in one hour</strong>.</p>
+<p style="margin:0 0 0.75em;"><a href="${resetUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;">Set a new password</a></p>
+<p style="margin:0;font-size:13px;color:#555;word-break:break-all;"><a href="${resetUrl}" style="color:#0d6efd;">${escapeHtml(resetUrl)}</a></p>
+<p style="margin:1.25em 0 0;">If you did <strong>not</strong> request this reset, you may ignore this email. Your password will stay the same.</p>
+<p style="margin:1em 0 0;font-size:14px;color:#555;">Never share this link. KSOSHTC will never ask for your password or this link by phone or WhatsApp.</p>
+</div>`;
+
+  await sendEmail(data.email, subject, text, html);
 }
 
 /** Notify admin when a learner submits assignment PDF (after Firestore + upload). */
@@ -353,21 +527,39 @@ export async function notifyAdminAssignmentSubmitted(data: {
   assignmentTitle: string;
   submissionId: string;
 }): Promise<void> {
-  const subject = `[KSOSHTC] New assignment submission: ${data.assignmentTitle}`;
-  const lines = [
-    "A learner has submitted a PDF assignment.",
+  const subject = `[KSOSHTC] New assignment submission — ${data.assignmentTitle}`;
+  const gradeUrl = `${webBase()}/admin/assignment-submissions`;
+
+  const text = [
+    "A learner has uploaded a PDF assignment for your review.",
+    "Please open the admin assignments page to view the file and record marks when ready.",
     "",
-    "——— Submission ———",
-    `Learner: ${data.learnerName}`,
-    `Email: ${data.learnerEmail}`,
-    `Course: ${data.courseTitle}`,
-    `Assignment / title: ${data.assignmentTitle}`,
-    `Submission ID: ${data.submissionId}`,
-    "———",
+    "SUBMISSION SUMMARY",
+    `Learner:     ${data.learnerName}`,
+    `Email:       ${data.learnerEmail}`,
+    `Course:      ${data.courseTitle}`,
+    `Title:       ${data.assignmentTitle}`,
+    `Reference:   ${data.submissionId}`,
     "",
-    `Review and grade in the admin dashboard: ${FRONTEND_URL}/admin/assignment-submissions`,
-  ];
-  await sendAdminEmail(subject, lines.join("\n"));
+    "Review submissions:",
+    gradeUrl,
+  ].join("\n");
+
+  const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
+<p style="margin:0 0 1em;">A learner has uploaded a <strong>PDF assignment</strong> for your review.</p>
+<p style="margin:0 0 1.25em;">Open the <strong>Assignments</strong> page in your admin dashboard to view the document and enter marks when you are ready.</p>
+<p style="margin:0 0 0.35em;font-weight:bold;letter-spacing:0.03em;">SUBMISSION SUMMARY</p>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 1.25em;">
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Learner</td><td style="padding:6px 0;"><strong>${escapeHtml(data.learnerName)}</strong></td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Email</td><td style="padding:6px 0;"><a href="mailto:${escapeHtml(data.learnerEmail)}" style="color:#0d6efd;">${escapeHtml(data.learnerEmail)}</a></td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Course</td><td style="padding:6px 0;">${escapeHtml(data.courseTitle)}</td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Title</td><td style="padding:6px 0;">${escapeHtml(data.assignmentTitle)}</td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Reference ID</td><td style="padding:6px 0;font-family:monospace;font-size:13px;">${escapeHtml(data.submissionId)}</td></tr>
+</table>
+<p style="margin:0;"><a href="${gradeUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Open Assignments</a></p>
+</div>`;
+
+  await sendAdminEmail(subject, text, html);
 }
 
 /** Notify learner when marks are set or updated for their submission. */
@@ -380,26 +572,54 @@ export async function notifyLearnerAssignmentGraded(data: {
   maxMarks: number;
   feedback?: string;
 }): Promise<void> {
-  const subject = `[KSOSHTC] Marks released: ${data.assignmentTitle}`;
-  const fb =
+  const subject = `[KSOSHTC] Your assignment marks — ${data.assignmentTitle}`;
+  const name = data.name.trim();
+  const web = webBase();
+  const submissionsUrl = `${web}/dashboard/work-submissions`;
+  const fbText =
     data.feedback && data.feedback.trim()
-      ? ["", "Feedback from your instructor:", data.feedback.trim()].join("\n")
+      ? ["", "Instructor feedback:", data.feedback.trim()].join("\n")
       : "";
-  const lines = [
-    `Hello ${data.name},`,
+  const pct =
+    data.maxMarks > 0 ? Math.round((data.marks / data.maxMarks) * 100) : null;
+
+  const text = [
+    `Dear ${name},`,
     "",
-    `Your marks are now available for the following submission.`,
+    "Your instructor has released marks for one of your submitted assignments.",
     "",
-    `Course: ${data.courseTitle}`,
+    `Course:     ${data.courseTitle}`,
     `Assignment: ${data.assignmentTitle}`,
-    `Score: ${data.marks} / ${data.maxMarks}`,
-    fb,
+    `Score:      ${data.marks} out of ${data.maxMarks}${pct != null ? ` (${pct}%)` : ""}`,
+    fbText,
     "",
-    `View your dashboard: ${FRONTEND_URL}/dashboard/work-submissions`,
+    "You can review this result and your other submissions here:",
+    submissionsUrl,
     "",
-    "— Kigali Safety & OSH Training Centre",
-  ];
-  await sendEmail(data.email, subject, lines.join("\n"));
+    "Thank you for your continued engagement with KSOS HTC.",
+  ].join("\n");
+
+  const fbHtml =
+    data.feedback && data.feedback.trim()
+      ? `<p style="margin:1em 0 0;font-weight:bold;">Instructor feedback</p>
+<div style="margin:0.5em 0 0;padding:12px 14px;background:#f8f9fa;border-radius:8px;border:1px solid #e9ecef;white-space:pre-wrap;font-size:14px;">${escapeHtml(data.feedback.trim())}</div>`
+      : "";
+
+  const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
+<p style="margin:0 0 1em;">Dear ${escapeHtml(name)},</p>
+<p style="margin:0 0 1em;">Your instructor has released <strong>marks</strong> for one of your submitted assignments.</p>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 1em;">
+<tr><td style="padding:6px 12px 6px 0;color:#555;">Course</td><td style="padding:6px 0;">${escapeHtml(data.courseTitle)}</td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;">Assignment</td><td style="padding:6px 0;"><strong>${escapeHtml(data.assignmentTitle)}</strong></td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;">Score</td><td style="padding:6px 0;"><strong style="font-size:1.1em;color:#0d6efd;">${data.marks}</strong> / ${data.maxMarks}${pct != null ? ` <span style="color:#555;">(${pct}%)</span>` : ""}</td></tr>
+</table>
+${fbHtml}
+<p style="margin:1.25em 0 0.75em;">View this and your other submissions on your learner dashboard:</p>
+<p style="margin:0;"><a href="${submissionsUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;">Open my submissions</a></p>
+<p style="margin:1.25em 0 0;font-size:14px;color:#444;">Thank you for your continued engagement with <strong>KSOS HTC</strong>.</p>
+</div>`;
+
+  await sendEmail(data.email, subject, text, html);
 }
 
 /**

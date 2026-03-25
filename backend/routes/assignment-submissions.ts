@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import path from "node:path";
 import crypto from "node:crypto";
 import type { AssignmentSubmissionDoc, CourseDoc, EnrollmentDoc, User } from "@shared/api";
+import { enrollmentAllowsLearnerAccess } from "@shared/learnerEnrollment";
 import { courseDoc } from "../lib/course-firestore";
 import {
   assignmentSubmissionsCollection,
@@ -46,7 +47,7 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
     const hasAnyEnrollment = !userEnrollments.empty;
     const enrolledInCourse = userEnrollments.docs.some((d) => {
       const e = d.data() as EnrollmentDoc;
-      return e.courseId === courseId && e.status !== "not_approved";
+      return e.courseId === courseId && enrollmentAllowsLearnerAccess(e.status);
     });
     const sectorAllows =
       courseId === "safety-management" || courseId === (user.sector ?? "");

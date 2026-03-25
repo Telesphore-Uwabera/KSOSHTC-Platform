@@ -3,6 +3,7 @@ import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { getStoredUser } from "../lib/auth";
 import { getApiBase } from "@/lib/apiBase";
 import type { CourseDoc, EnrollmentDoc, ProgressDoc, SubmissionDoc } from "@shared/api";
+import { enrollmentAllowsLearnerAccess } from "@shared/learnerEnrollment";
 
 export interface CourseStats {
   totalLessons: number;
@@ -96,7 +97,7 @@ export function useDashboardData() {
     const list = enrollments as EnrollmentDoc[];
     // Any Firestore enrollment row (even not_approved) means we use enrollment-based visibility only.
     const hasEnrollmentRows = list.length > 0;
-    const visible = list.filter((e) => e.status !== "not_approved");
+    const visible = list.filter((e) => enrollmentAllowsLearnerAccess(e.status));
     const enrolledCourseIds = new Set(visible.map((e) => e.courseId));
     if (hasEnrollmentRows) {
       return allCourses.filter((c) => enrolledCourseIds.has(c.id));
