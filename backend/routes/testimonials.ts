@@ -1,5 +1,5 @@
 import { RequestHandler } from "express";
-import { testimonialsCollection } from "../lib/firestore";
+import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import type { Testimonial, TestimonialCreate } from "@shared/api";
 import crypto from "node:crypto";
 
@@ -13,10 +13,11 @@ export const getTestimonials: RequestHandler = async (_req, res) => {
       res.json(testimonialsCache.data);
       return;
     }
-    const snap = await testimonialsCollection().get();
-    const list = snap.docs
-      .map((d) => d.data() as Testimonial)
-      .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+    const col = mongoCollection<Testimonial>(MONGO_COLLECTIONS.testimonials);
+    const list = await col
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
     testimonialsCache = { fetchedAt: Date.now(), data: list };
     res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=300");
     res.json(list);
@@ -45,7 +46,9 @@ export const postTestimonial: RequestHandler = async (req, res) => {
       avatarUrl: typeof body?.avatarUrl === "string" ? body.avatarUrl.trim() || undefined : undefined,
       createdAt: new Date().toISOString(),
     };
-    await testimonialsCollection().doc(testimonial.id).set(testimonial);
+    const col = mongoCollection<Testimonial>(MONGO_COLLECTIONS.testimonials);
+    await col.insertOne(testimonial as any);
+    testimonialsCache = null;
     res.status(201).json(testimonial);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

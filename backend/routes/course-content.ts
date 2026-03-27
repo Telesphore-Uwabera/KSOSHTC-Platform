@@ -26,6 +26,7 @@ import { submissionsCollection, progressCollection } from "../lib/firestore";
 import type { SubmissionDoc, ProgressDoc } from "@shared/api";
 import { normalizeCloudinaryCourseUrl } from "../../shared/normalizeCloudinaryUrl";
 import { v2 as cloudinary } from "cloudinary";
+import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 
 /** All courses display duration as 3 months. */
 const DISPLAY_DURATION = "3 months";
@@ -142,11 +143,9 @@ export async function listCourses(_req: Request, res: Response): Promise<void> {
       res.json({ courses: coursesCache.data });
       return;
     }
-    const snap = await coursesRef().orderBy("order", "asc").get();
-    const courses: CourseDoc[] = snap.docs.map((d) => {
-      const doc = { id: d.id, ...d.data() } as CourseDoc;
-      return { ...doc, duration: DISPLAY_DURATION };
-    });
+    const col = mongoCollection<CourseDoc>(MONGO_COLLECTIONS.courses);
+    const raw = await col.find({}).sort({ order: 1 }).toArray();
+    const courses: CourseDoc[] = raw.map((c) => ({ ...c, duration: DISPLAY_DURATION }));
     coursesCache = { fetchedAt: Date.now(), data: courses };
     res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=300");
     res.json({ courses });
