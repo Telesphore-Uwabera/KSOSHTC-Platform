@@ -29,6 +29,8 @@ import { v2 as cloudinary } from "cloudinary";
 
 /** All courses display duration as 3 months. */
 const DISPLAY_DURATION = "3 months";
+const COURSES_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let coursesCache: { fetchedAt: number; data: CourseDoc[] } | null = null;
 
 /** POST /api/course-content/courses/:courseId/upload-pdf – admin upload course PDF only. Body: { filename: string, contentBase64: string } */
 export async function uploadCoursePdf(req: Request, res: Response): Promise<void> {
@@ -135,11 +137,18 @@ export async function uploadCourseCover(req: Request, res: Response): Promise<vo
 /** GET /api/course-content/courses – list all courses from Firestore */
 export async function listCourses(_req: Request, res: Response): Promise<void> {
   try {
+    if (coursesCache && Date.now() - coursesCache.fetchedAt < COURSES_CACHE_TTL_MS) {
+      res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=300");
+      res.json({ courses: coursesCache.data });
+      return;
+    }
     const snap = await coursesRef().orderBy("order", "asc").get();
     const courses: CourseDoc[] = snap.docs.map((d) => {
       const doc = { id: d.id, ...d.data() } as CourseDoc;
       return { ...doc, duration: DISPLAY_DURATION };
     });
+    coursesCache = { fetchedAt: Date.now(), data: courses };
+    res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=300");
     res.json({ courses });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);

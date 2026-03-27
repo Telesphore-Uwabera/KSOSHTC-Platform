@@ -3,12 +3,22 @@ import { testimonialsCollection } from "../lib/firestore";
 import type { Testimonial, TestimonialCreate } from "@shared/api";
 import crypto from "node:crypto";
 
+const TESTIMONIALS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let testimonialsCache: { fetchedAt: number; data: Testimonial[] } | null = null;
+
 export const getTestimonials: RequestHandler = async (_req, res) => {
   try {
+    if (testimonialsCache && Date.now() - testimonialsCache.fetchedAt < TESTIMONIALS_CACHE_TTL_MS) {
+      res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=300");
+      res.json(testimonialsCache.data);
+      return;
+    }
     const snap = await testimonialsCollection().get();
     const list = snap.docs
       .map((d) => d.data() as Testimonial)
       .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+    testimonialsCache = { fetchedAt: Date.now(), data: list };
+    res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=300");
     res.json(list);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
