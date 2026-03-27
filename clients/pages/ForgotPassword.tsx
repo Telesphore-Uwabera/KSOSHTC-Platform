@@ -15,6 +15,7 @@ export default function ForgotPassword() {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
+  const [successMessage, setSuccessMessage] = useState("");
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +32,7 @@ export default function ForgotPassword() {
         setError(data.error ?? "Failed to send reset link. Please try again.");
         return;
       }
+      setSuccessMessage(data.message ?? "");
       setSuccess(true);
     } catch {
       setError("Unable to reach the server. Check your connection and try again.");
@@ -65,7 +67,8 @@ export default function ForgotPassword() {
                   </div>
                   <h2 className="text-2xl font-bold text-gray-900 mb-2">Check your email</h2>
                   <p className="text-gray-600 mb-8 max-w-sm mx-auto">
-                    If an account exists for {email}, we have sent a password reset link to it.
+                    {successMessage ||
+                      `If an account exists for ${email}, we have sent a password reset link to it.`}
                   </p>
                   <Link
                     to="/login"

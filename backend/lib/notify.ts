@@ -487,33 +487,33 @@ export async function notifyLearnerApproved(data: { name: string; email: string 
 
 /** Notify learner with a password reset link. */
 export async function notifyPasswordReset(data: { name: string; email: string; token: string }): Promise<void> {
-  const subject = "[KSOSHTC] Password reset — action required";
+  const subject = "[KSOSHTC] Password reset request — secure action required";
   const name = data.name.trim();
   const resetUrl = `${webBase()}/reset-password/${data.token}`;
 
   const text = [
     `Dear ${name},`,
     "",
-    "We received a request to reset the password for your KSOSHTC learning account.",
+    "We received a request to reset the password for your KSOSHTC learner account.",
     "",
-    "For your security, this link can be used only once and will expire in one hour.",
+    "For your security, this reset link can be used only once and will expire in one hour.",
     "",
-    "Set a new password:",
+    "Please use the secure link below to set a new password:",
     resetUrl,
     "",
-    "If you did not request a password reset, you may ignore this message. Your password will remain unchanged.",
+    "If you did not make this request, please ignore this message. Your current password will remain unchanged.",
     "",
-    "Never share this link with anyone. KSOSHTC staff will never ask for your password or this link by phone or WhatsApp.",
+    "For your protection, never share this link. KSOSHTC staff will never ask for your password or reset link by phone, email, or WhatsApp.",
   ].join("\n");
 
   const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
 <p style="margin:0 0 1em;">Dear ${escapeHtml(name)},</p>
-<p style="margin:0 0 1em;">We received a request to reset the password for your <strong>KSOSHTC</strong> learning account.</p>
+<p style="margin:0 0 1em;">We received a request to reset the password for your <strong>KSOSHTC</strong> learner account.</p>
 <p style="margin:0 0 1em;">For your security, the button below can be used <strong>only once</strong> and will <strong>expire in one hour</strong>.</p>
 <p style="margin:0 0 0.75em;"><a href="${resetUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;">Set a new password</a></p>
 <p style="margin:0;font-size:13px;color:#555;word-break:break-all;"><a href="${resetUrl}" style="color:#0d6efd;">${escapeHtml(resetUrl)}</a></p>
-<p style="margin:1.25em 0 0;">If you did <strong>not</strong> request this reset, you may ignore this email. Your password will stay the same.</p>
-<p style="margin:1em 0 0;font-size:14px;color:#555;">Never share this link. KSOSHTC will never ask for your password or this link by phone or WhatsApp.</p>
+<p style="margin:1.25em 0 0;">If you did <strong>not</strong> make this request, please ignore this email. Your current password will remain unchanged.</p>
+<p style="margin:1em 0 0;font-size:14px;color:#555;">For your protection, never share this link. KSOSHTC will never ask for your password or reset link by phone, email, or WhatsApp.</p>
 </div>`;
 
   await sendEmail(data.email, subject, text, html);
