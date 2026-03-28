@@ -37,7 +37,8 @@
     "reupload:courses": "tsx scripts/reupload-courses-from-export.ts",
     "migrate:cloudinary-pdf-ext": "tsx scripts/migrate-cloudinary-pdf-extensions.ts",
     "verify:export-cloudinary": "tsx scripts/verify-export-vs-cloudinary.ts",
-    "migrate:firestore-to-mongodb": "tsx scripts/migrate-firestore-to-mongodb.ts"
+    "migrate:firestore-to-mongodb": "tsx scripts/migrate-firestore-to-mongodb.ts",
+    "check:mongo-cloudinary": "tsx scripts/check-mongo-cloudinary.ts"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
