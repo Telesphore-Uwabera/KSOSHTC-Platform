@@ -169,8 +169,11 @@ Routes: `/admin`, `/admin/courses`, `/admin/course-content`, `/admin/learners`, 
    - **`CLOUDINARY_CLOUD_NAME`**, **`CLOUDINARY_API_KEY`**, **`CLOUDINARY_API_SECRET`** – Required for admin PDF/cover uploads.
    - **`ADMIN_EMAIL`** – Admin login email.
    - **`ADMIN_PASSWORD`** – Admin login password.
-   - **`FRONTEND_URL`** – Your official domain, e.g. `https://www.kigalisafetytraining.com` (for CORS).
+   - **`FRONTEND_URL`** – Your official domain, e.g. `https://www.kigalisafetytraining.com` (for CORS). Use the same origin learners type in the browser (often **`https://www.…`**).
+   - **`PUBLIC_SITE_URL`** (optional) – If password-reset (or other) email links must point at a host with working HTTPS while the apex domain shows `ERR_SSL_PROTOCOL_ERROR`, set this to your Netlify URL with **`www`**, e.g. `https://www.kigalisafetytraining.com`. Also fix Netlify **Domain management → HTTPS** for the apex, or add a **redirect** from apex to `www`.
    - Optional: `RENDER=true`, `NODE_ENV=production`.
+
+**Password reset link shows SSL error:** The app is fine; TLS for that hostname is not. In Netlify, verify HTTPS for both apex and `www`, or set `PUBLIC_SITE_URL` to the hostname that already has a valid certificate, redeploy the API, and request a new reset email.
 
 **If register or login returns 500:** Check `MONGODB_URI` and redeploy. Open `GET https://your-service.onrender.com/health`; you should see `{"ok":true,"mongodb":"connected"}`.
 

@@ -8,6 +8,12 @@ import nodemailer from "nodemailer";
 /** Admin inbox for approvals and notifications (use ADMIN_EMAIL in .env; fallback for notifications). */
 const ADMIN_EMAIL =
   process.env.ADMIN_EMAIL?.trim() || "ksoshtc@gmail.com";
+/**
+ * Links in emails (password reset, registration, etc.) use `webBase()`.
+ * If the apex domain has no valid HTTPS but `www` does (common on Netlify), set on the API host:
+ *   PUBLIC_SITE_URL=https://www.kigalisafetytraining.com
+ * `FRONTEND_URL` is still used for CORS on the backend; it should match the origin browsers use.
+ */
 const FRONTEND_URL = process.env.FRONTEND_URL ?? "https://www.kigalisafetytraining.com";
 
 const BREVO_API_URL = "https://api.brevo.com/v3/smtp/email";
@@ -82,7 +88,11 @@ function escapeHtml(s: string): string {
 }
 
 function webBase(): string {
-  return FRONTEND_URL.replace(/\/$/, "");
+  const raw =
+    process.env.PUBLIC_SITE_URL?.trim() ||
+    process.env.FRONTEND_URL?.trim() ||
+    FRONTEND_URL;
+  return raw.replace(/\/$/, "");
 }
 
 /** Closing block for learner-facing transactional emails (registration email omits this by design). */
@@ -336,7 +346,7 @@ export async function notifyNewRegistration(data: {
 export async function notifyLearnerRegistrationReceived(data: { name: string; email: string }): Promise<void> {
   const subject = "[KSOSHTC] Welcome — your registration and next steps";
   const name = data.name.trim();
-  const web = FRONTEND_URL.replace(/\/$/, "");
+  const web = webBase();
 
   const text = [
     `Dear ${name},`,
@@ -637,7 +647,7 @@ async function submitToNetlifyForm(
   formName: string,
   data: Record<string, string>
 ): Promise<void> {
-  const url = process.env.NETLIFY_FORM_SUBMIT_URL ?? FRONTEND_URL;
+  const url = process.env.NETLIFY_FORM_SUBMIT_URL ?? webBase();
   if (!url || url === "http://localhost:8080") return;
   const body = new URLSearchParams({ "form-name": formName, ...data }).toString();
   try {
