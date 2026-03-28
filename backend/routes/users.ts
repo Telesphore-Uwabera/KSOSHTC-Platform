@@ -2,15 +2,7 @@ import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
 import type { User, UserCreate, UserPublic, LearnerSector } from "@shared/api";
-import {
-  getDb,
-  usersCollection,
-  enrollmentsCollection,
-  progressCollection,
-  submissionsCollection,
-  assignmentSubmissionsCollection,
-  passwordResetsCollection,
-} from "../lib/firestore";
+import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import {
   notifyNewRegistration,
   notifyLearnerRegistrationReceived,
@@ -22,6 +14,18 @@ import { getEnrollmentsForUser } from "./enrollments";
 import type { SubmissionDoc } from "@shared/api";
 
 const BCRYPT_ROUNDS = 10;
+
+function usersCol() {
+  return mongoCollection<User>(MONGO_COLLECTIONS.users);
+}
+function passwordResetsCol() {
+  return mongoCollection<{ id: string; email: string; token: string; expiresAt: number }>(
+    MONGO_COLLECTIONS.password_resets
+  );
+}
+function submissionsCol() {
+  return mongoCollection<SubmissionDoc>(MONGO_COLLECTIONS.submissions);
+}
 
 async function hashPassword(plain: string): Promise<string> {
   return bcrypt.hash(plain, BCRYPT_ROUNDS);
@@ -65,9 +69,9 @@ export async function postRegister(req: Request, res: Response): Promise<void> {
       return;
     }
     const sectorVal = sector && VALID_SECTORS.includes(sector) ? sector : undefined;
-    const col = usersCollection();
-    const existingSnap = await col.where("email", "==", email.trim().toLowerCase()).limit(1).get();
-    if (!existingSnap.empty) {
+    const col = usersCol();
+    const existing = await col.findOne({ email: normalizeEmail(email) });
+    if (existing) {
       res.status(409).json({ error: "An account with this email already exists." });
       return;
     }
@@ -83,11 +87,8 @@ export async function postRegister(req: Request, res: Response): Promise<void> {
       approved: false,
       createdAt: new Date().toISOString(),
     };
-    const forFirestore = Object.fromEntries(
-      Object.entries(user).filter(([, v]) => v !== undefined)
-    ) as Record<string, unknown>;
-    await col.doc(user.id).set(forFirestore);
-    // Notify admin only after successful Firestore write (best option: no email for failed or duplicate registrations)
+    const doc = Object.fromEntries(Object.entries(user).filter(([, v]) => v !== undefined)) as User;
+    await col.insertOne(doc as any);
     notifyNewRegistration({
       name: user.name,
       email: user.email,
@@ -118,7 +119,6 @@ export async function postLogin(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    // Admin login via environment variables (recommended for initial setup)
     const adminEmail = process.env.ADMIN_EMAIL ? normalizeEmail(process.env.ADMIN_EMAIL) : "";
     const adminPassword = process.env.ADMIN_PASSWORD ?? "";
     if (adminEmail && adminPassword && normalizeEmail(email) === adminEmail && password === adminPassword) {
@@ -136,20 +136,16 @@ export async function postLogin(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const col = usersCollection();
-    const snap = await col.where("email", "==", normalizeEmail(email)).limit(1).get();
-    const doc = snap.docs[0];
-    if (!doc) {
+    const user = await usersCol().findOne({ email: normalizeEmail(email) });
+    if (!user) {
       res.status(401).json({ error: "Invalid email or password." });
       return;
     }
-    const user = doc.data() as User;
     const passwordValid = await verifyPassword(password, user.password);
     if (!passwordValid) {
       res.status(401).json({ error: "Invalid email or password." });
       return;
     }
-    // Default to learner role if not set
     if (!user.role) user.role = "learner";
     res.json({ user: toPublic(user) });
   } catch (e) {
@@ -160,45 +156,47 @@ export async function postLogin(req: Request, res: Response): Promise<void> {
 
 export async function getUsers(_req: Request, res: Response): Promise<void> {
   try {
-    const snap = await usersCollection().get();
-    const list = snap.docs
-      .map((d) => toPublic(d.data() as User))
-      .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
-    res.json({ users: list });
+    const list = await usersCol()
+      .find({})
+      .sort({ createdAt: -1 })
+      .toArray();
+    res.json({ users: list.map((u) => toPublic(u)) });
   } catch (e) {
     console.error("Get users error:", e);
     res.status(500).json({ error: "Failed to list users." });
   }
 }
 
-/** GET /api/users/learners-summary – users plus enrollments with completion % (for admin learners page) */
 export async function getLearnersSummary(_req: Request, res: Response): Promise<void> {
   try {
-    const snap = await usersCollection().get();
-    const users = snap.docs
-      .map((d) => toPublic(d.data() as User))
-      .sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || ""));
+    const users = (await usersCol().find({}).sort({ createdAt: -1 }).toArray()).map((u) => toPublic(u));
     const enrollmentsByUserId: Record<string, EnrollmentWithPercent[]> = {};
     await Promise.all(
       users.map(async (u) => {
         const enrollments = await getEnrollmentsForUser(u.id);
-        const subsSnap = await submissionsCollection().where("userId", "==", u.id).get();
-        const subs = subsSnap.docs.map(d => d.data() as SubmissionDoc);
-        
-        // Add best score per assessment to each enrollment's data
-        const enriched = enrollments.map(en => {
-          const courseSubs = subs.filter(s => s.courseId === en.courseId);
-          const quizPerformance = courseSubs.reduce((acc, s) => {
-            const existing = acc[s.assessmentId];
-            if (!existing || s.percentage > existing.percentage) {
-              acc[s.assessmentId] = { score: s.score, maxScore: s.maxScore, percentage: s.percentage, passed: s.passed };
-            }
-            return acc;
-          }, {} as Record<string, { score: number, maxScore: number, percentage: number, passed: boolean }>);
-          
+        const subs = await submissionsCol().find({ userId: u.id }).toArray();
+
+        const enriched = enrollments.map((en) => {
+          const courseSubs = subs.filter((s) => s.courseId === en.courseId);
+          const quizPerformance = courseSubs.reduce(
+            (acc, s) => {
+              const existing = acc[s.assessmentId];
+              if (!existing || s.percentage > existing.percentage) {
+                acc[s.assessmentId] = {
+                  score: s.score,
+                  maxScore: s.maxScore,
+                  percentage: s.percentage,
+                  passed: s.passed,
+                };
+              }
+              return acc;
+            },
+            {} as Record<string, { score: number; maxScore: number; percentage: number; passed: boolean }>
+          );
+
           return { ...en, quizPerformance };
         });
-        
+
         enrollmentsByUserId[u.id] = enriched as any;
       })
     );
@@ -212,14 +210,13 @@ export async function getLearnersSummary(_req: Request, res: Response): Promise<
 export async function patchUserApprove(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const ref = usersCollection().doc(id);
-    const doc = await ref.get();
-    if (!doc.exists) {
+    const col = usersCol();
+    const user = await col.findOne({ id });
+    if (!user) {
       res.status(404).json({ error: "User not found." });
       return;
     }
-    await ref.update({ approved: true });
-    const user = doc.data() as User;
+    await col.updateOne({ id }, { $set: { approved: true } });
     notifyLearnerApproved({ name: user.name, email: user.email }).catch((err) =>
       console.error("[APPROVE] Notify learner failed:", err)
     );
@@ -230,7 +227,6 @@ export async function patchUserApprove(req: Request, res: Response): Promise<voi
   }
 }
 
-/** GET /api/users/:id – get one user (admin; for edit form). Excludes password in response. */
 export async function getUser(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
@@ -238,19 +234,18 @@ export async function getUser(req: Request, res: Response): Promise<void> {
       res.status(404).json({ error: "User not found." });
       return;
     }
-    const doc = await usersCollection().doc(id).get();
-    if (!doc.exists) {
+    const user = await usersCol().findOne({ id });
+    if (!user) {
       res.status(404).json({ error: "User not found." });
       return;
     }
-    res.json({ user: toPublic(doc.data() as User) });
+    res.json({ user: toPublic(user) });
   } catch (e) {
     console.error("Get user error:", e);
     res.status(500).json({ error: "Failed to load user." });
   }
 }
 
-/** POST /api/users – admin create learner. Body: name, email, password, organization?, sector?, approved? */
 export async function postUser(req: Request, res: Response): Promise<void> {
   try {
     const body = req.body as UserCreate & { approved?: boolean };
@@ -260,9 +255,9 @@ export async function postUser(req: Request, res: Response): Promise<void> {
       return;
     }
     const sectorVal = sector && VALID_SECTORS.includes(sector) ? sector : undefined;
-    const col = usersCollection();
-    const existingSnap = await col.where("email", "==", normalizeEmail(email)).limit(1).get();
-    if (!existingSnap.empty) {
+    const col = usersCol();
+    const existing = await col.findOne({ email: normalizeEmail(email) });
+    if (existing) {
       res.status(409).json({ error: "An account with this email already exists." });
       return;
     }
@@ -277,10 +272,8 @@ export async function postUser(req: Request, res: Response): Promise<void> {
       approved: approved === true,
       createdAt: new Date().toISOString(),
     };
-    const forFirestore = Object.fromEntries(
-      Object.entries(user).filter(([, v]) => v !== undefined)
-    ) as Record<string, unknown>;
-    await col.doc(user.id).set(forFirestore);
+    const doc = Object.fromEntries(Object.entries(user).filter(([, v]) => v !== undefined)) as User;
+    await col.insertOne(doc as any);
     res.status(201).json({ user: toPublic(user) });
   } catch (e) {
     console.error("Create user error:", e);
@@ -288,7 +281,6 @@ export async function postUser(req: Request, res: Response): Promise<void> {
   }
 }
 
-/** PUT /api/users/:id – admin update learner. Body: name?, email?, password?, organization?, sector?, approved? */
 export async function putUser(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
@@ -296,9 +288,9 @@ export async function putUser(req: Request, res: Response): Promise<void> {
       res.status(400).json({ error: "Cannot update admin user." });
       return;
     }
-    const ref = usersCollection().doc(id);
-    const doc = await ref.get();
-    if (!doc.exists) {
+    const col = usersCol();
+    const current = await col.findOne({ id });
+    if (!current) {
       res.status(404).json({ error: "User not found." });
       return;
     }
@@ -310,12 +302,12 @@ export async function putUser(req: Request, res: Response): Promise<void> {
       sector?: LearnerSector | "";
       approved?: boolean;
     };
-    const current = doc.data() as User;
     const email = body.email !== undefined ? body.email.trim() : current.email;
     if (body.email !== undefined) {
-      const col = usersCollection();
-      const other = await col.where("email", "==", normalizeEmail(email)).limit(2).get();
-      const duplicate = other.docs.find((d) => d.id !== id);
+      const duplicate = await col.findOne({
+        email: normalizeEmail(email),
+        id: { $ne: id },
+      });
       if (duplicate) {
         res.status(409).json({ error: "Another user already has this email." });
         return;
@@ -337,11 +329,9 @@ export async function putUser(req: Request, res: Response): Promise<void> {
     if (body.password !== undefined && body.password !== "") {
       updates.password = await hashPassword(body.password);
     }
-    const forFirestore = Object.fromEntries(
-      Object.entries(updates).filter(([, v]) => v !== undefined)
-    ) as Record<string, unknown>;
-    await ref.update(forFirestore);
-    const updated = (await ref.get()).data() as User;
+    const $set = Object.fromEntries(Object.entries(updates).filter(([, v]) => v !== undefined)) as Partial<User>;
+    await col.updateOne({ id }, { $set });
+    const updated = (await col.findOne({ id })) as User;
     const wasJustApproved = body.approved === true && !current.approved;
     if (wasJustApproved) {
       notifyLearnerApproved({ name: updated.name, email: updated.email }).catch((err) =>
@@ -355,7 +345,6 @@ export async function putUser(req: Request, res: Response): Promise<void> {
   }
 }
 
-/** DELETE /api/users/:id – admin delete learner. Also removes enrollments, progress, submissions for that user. */
 export async function deleteUser(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
@@ -363,24 +352,18 @@ export async function deleteUser(req: Request, res: Response): Promise<void> {
       res.status(400).json({ error: "Cannot delete admin user." });
       return;
     }
-    const ref = usersCollection().doc(id);
-    const doc = await ref.get();
-    if (!doc.exists) {
+    const col = usersCol();
+    const user = await col.findOne({ id });
+    if (!user) {
       res.status(404).json({ error: "User not found." });
       return;
     }
 
-    const batch = getDb().batch();
-    const enrollments = await enrollmentsCollection().where("userId", "==", id).get();
-    enrollments.docs.forEach((d) => batch.delete(d.ref));
-    const progressSnap = await progressCollection().where("userId", "==", id).get();
-    progressSnap.docs.forEach((d) => batch.delete(d.ref));
-    const submissions = await submissionsCollection().where("userId", "==", id).get();
-    submissions.docs.forEach((d) => batch.delete(d.ref));
-    const assignmentSubs = await assignmentSubmissionsCollection().where("userId", "==", id).get();
-    assignmentSubs.docs.forEach((d) => batch.delete(d.ref));
-    batch.delete(ref);
-    await batch.commit();
+    await mongoCollection(MONGO_COLLECTIONS.enrollments).deleteMany({ userId: id });
+    await mongoCollection(MONGO_COLLECTIONS.progress).deleteMany({ userId: id });
+    await mongoCollection(MONGO_COLLECTIONS.submissions).deleteMany({ userId: id });
+    await mongoCollection(MONGO_COLLECTIONS.assignment_submissions).deleteMany({ userId: id });
+    await col.deleteOne({ id });
     res.status(204).send();
   } catch (e) {
     console.error("Delete user error:", e);
@@ -388,7 +371,6 @@ export async function deleteUser(req: Request, res: Response): Promise<void> {
   }
 }
 
-/** POST /api/forgot-password – request a password reset token. Body: { email } */
 export async function postForgotPassword(req: Request, res: Response): Promise<void> {
   try {
     const { email } = req.body as { email?: string };
@@ -398,25 +380,19 @@ export async function postForgotPassword(req: Request, res: Response): Promise<v
     }
 
     const normalizedEmail = normalizeEmail(email);
-    const snap = await usersCollection().where("email", "==", normalizedEmail).limit(1).get();
-    
-    // Security: always return 200 to avoid account enumeration
-    if (snap.empty) {
+    const user = await usersCol().findOne({ email: normalizedEmail });
+
+    if (!user) {
       res.json({ ok: true, message: "If an account exists, a reset link has been sent." });
       return;
     }
 
-    const user = snap.docs[0].data() as User;
     const token = crypto.randomBytes(32).toString("hex");
-    const expiresAt = Date.now() + 60 * 60 * 1000; // 1 hour
+    const expiresAt = Date.now() + 60 * 60 * 1000;
 
-    await passwordResetsCollection().doc(token).set({
-      email: normalizedEmail,
-      token,
-      expiresAt,
-    });
+    await passwordResetsCol().insertOne({ id: token, email: normalizedEmail, token, expiresAt });
 
-    await notifyPasswordReset({ name: user.name, email: user.email, token }).catch(err => {
+    await notifyPasswordReset({ name: user.name, email: user.email, token }).catch((err) => {
       console.error("[FORGOT_PWD] Email failed:", err);
     });
 
@@ -427,7 +403,6 @@ export async function postForgotPassword(req: Request, res: Response): Promise<v
   }
 }
 
-/** POST /api/reset-password – set new password using token. Body: { token, password } */
 export async function postResetPassword(req: Request, res: Response): Promise<void> {
   try {
     const { token, password } = req.body as { token?: string; password?: string };
@@ -436,32 +411,27 @@ export async function postResetPassword(req: Request, res: Response): Promise<vo
       return;
     }
 
-    const resetRef = passwordResetsCollection().doc(token);
-    const resetSnap = await resetRef.get();
-    
-    if (!resetSnap.exists) {
+    const reset = await passwordResetsCol().findOne({ id: token });
+    if (!reset) {
       res.status(400).json({ error: "Invalid or expired reset token." });
       return;
     }
 
-    const data = resetSnap.data() as { email: string; expiresAt: number };
-    if (Date.now() > data.expiresAt) {
-      await resetRef.delete();
+    if (Date.now() > reset.expiresAt) {
+      await passwordResetsCol().deleteOne({ id: token });
       res.status(400).json({ error: "Reset token has expired." });
       return;
     }
 
-    const userSnap = await usersCollection().where("email", "==", data.email).limit(1).get();
-    if (userSnap.empty) {
+    const user = await usersCol().findOne({ email: reset.email });
+    if (!user) {
       res.status(404).json({ error: "User not found." });
       return;
     }
 
-    const userDoc = userSnap.docs[0];
     const passwordHash = await hashPassword(password);
-    
-    await userDoc.ref.update({ password: passwordHash });
-    await resetRef.delete();
+    await usersCol().updateOne({ id: user.id }, { $set: { password: passwordHash } });
+    await passwordResetsCol().deleteOne({ id: token });
 
     res.json({ ok: true, message: "Password has been successfully reset." });
   } catch (e) {

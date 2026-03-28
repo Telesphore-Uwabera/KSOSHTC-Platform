@@ -58,7 +58,8 @@ import {
 import { postEnrollment, getEnrollments, patchEnrollment } from "./routes/enrollments";
 import { getProgress, patchProgress } from "./routes/progress";
 import { postContact } from "./routes/contact";
-import { getDb, usersCollection } from "./lib/firestore";
+import { getMongoDb, mongoCollection, MONGO_COLLECTIONS } from "./lib/mongo";
+import type { LessonDoc } from "@shared/api";
 
 /** Log each request and response to the terminal (method, path, status, duration) */
 function requestLogger(req: Request, res: Response, next: NextFunction): void {
@@ -108,30 +109,19 @@ export function createServer(options?: { apiOnly?: boolean }) {
 
       console.log(`[REDIRECT_PROBE] Searching for legacy file match: ${cleanFile}`);
 
-      const db = getDb();
-      const coursesSnap = await db.collection("courses").get();
-      
-      for (const courseDoc of coursesSnap.docs) {
-        const modulesSnap = await db.collection("courses").doc(courseDoc.id).collection("modules").get();
-        for (const modDoc of modulesSnap.docs) {
-          const lessonsSnap = await db.collection("courses").doc(courseDoc.id).collection("modules").doc(modDoc.id).collection("lessons").get();
-          
-          const lesson = lessonsSnap.docs.find(d => {
-             const data = d.data();
-             const pdf = (data.pdfUrl || "").toLowerCase().replace(/[^a-zA-Z0-9]/g, "");
-             const title = (data.title || "").toLowerCase().replace(/[^a-zA-Z0-9]/g, "");
-             // Fuzzy match: either stored path or title contains the alphanumeric filename
-             return (pdf && pdf.includes(cleanFile)) || (title && title.includes(cleanFile)) || cleanFile.includes(title);
-          });
-          
-          if (lesson) {
-            const pdfUrl = lesson.data().pdfUrl;
-            if (pdfUrl && pdfUrl.startsWith("http")) {
-              console.log(`[REDIRECT_SUCCESS] Mapping legacy file ${filename} -> ${pdfUrl}`);
-              res.redirect(301, pdfUrl);
-              return;
-            }
-          }
+      const lessons = await mongoCollection<LessonDoc>(MONGO_COLLECTIONS.lessons).find({}).toArray();
+      const lesson = lessons.find((row) => {
+        const pdf = (row.pdfUrl || "").toLowerCase().replace(/[^a-zA-Z0-9]/g, "");
+        const title = (row.title || "").toLowerCase().replace(/[^a-zA-Z0-9]/g, "");
+        return (pdf && pdf.includes(cleanFile)) || (title && title.includes(cleanFile)) || cleanFile.includes(title);
+      });
+
+      if (lesson) {
+        const pdfUrl = lesson.pdfUrl;
+        if (pdfUrl && pdfUrl.startsWith("http")) {
+          console.log(`[REDIRECT_SUCCESS] Mapping legacy file ${filename} -> ${pdfUrl}`);
+          res.redirect(301, pdfUrl);
+          return;
         }
       }
     } catch (e) {
@@ -164,15 +154,13 @@ export function createServer(options?: { apiOnly?: boolean }) {
 
   app.get("/health", async (_req, res) => {
     try {
-      const db = getDb();
-      // Prove credentials work with a minimal read (otherwise health can pass but register fails with UNAUTHENTICATED)
-      await usersCollection().limit(1).get();
-      console.log("[HEALTH] Firestore OK");
-      res.status(200).json({ ok: true, firestore: "connected" });
+      await getMongoDb().command({ ping: 1 });
+      console.log("[HEALTH] MongoDB OK");
+      res.status(200).json({ ok: true, mongodb: "connected" });
     } catch (e) {
       const msg = e instanceof Error ? e.message : String(e);
-      console.error("[HEALTH] Firestore FAIL:", msg);
-      res.status(503).json({ ok: false, firestore: "error", error: msg });
+      console.error("[HEALTH] MongoDB FAIL:", msg);
+      res.status(503).json({ ok: false, mongodb: "error", error: msg });
     }
   });
 
@@ -187,7 +175,7 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.get("/api/testimonials", getTestimonials);
   app.post("/api/testimonials", postTestimonial);
 
-  // Contact form (saved to Firestore)
+  // Contact form (saved to MongoDB)
   app.post("/api/contact", postContact);
 
   // Users: register, login, list (admin), approve (admin), CRUD (admin)

@@ -11,22 +11,17 @@ import type {
   AssessmentDoc,
   QuizQuestion,
 } from "@shared/api";
-import {
-  coursesRef,
-  courseDoc,
-  modulesRef,
-  moduleDoc,
-  lessonsRef,
-  lessonDoc,
-  assessmentsRef,
-  assessmentDoc,
-  isValidCourseSlug,
-} from "../lib/course-firestore";
-import { submissionsCollection, progressCollection } from "../lib/firestore";
+import { isValidCourseSlug } from "../lib/course-constants";
+import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
+
+function omitMongoId<T extends { _id?: unknown }>(doc: T | null | undefined): Omit<T, "_id"> | null {
+  if (doc == null) return null;
+  const { _id, ...rest } = doc;
+  return rest as Omit<T, "_id">;
+}
 import type { SubmissionDoc, ProgressDoc } from "@shared/api";
 import { normalizeCloudinaryCourseUrl } from "../../shared/normalizeCloudinaryUrl";
 import { v2 as cloudinary } from "cloudinary";
-import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 
 /** All courses display duration as 3 months. */
 const DISPLAY_DURATION = "3 months";
@@ -119,13 +114,12 @@ export async function uploadCourseCover(req: Request, res: Response): Promise<vo
     
     const coverImageUrl = result.secure_url;
 
-    const ref = courseDoc(courseId);
-    const snap = await ref.get();
-    if (snap.exists) {
-      const now = new Date().toISOString();
-      const current = snap.data() as Omit<CourseDoc, "id">;
-      await ref.set({ ...current, coverImageUrl, updatedAt: now });
-    }
+    const now = new Date().toISOString();
+    await mongoCollection<CourseDoc>(MONGO_COLLECTIONS.courses).updateOne(
+      { id: courseId },
+      { $set: { coverImageUrl, updatedAt: now } }
+    );
+    coursesCache = null;
 
     res.status(201).json({ ok: true, coverImageUrl });
   } catch (e) {
@@ -135,7 +129,7 @@ export async function uploadCourseCover(req: Request, res: Response): Promise<vo
   }
 }
 
-/** GET /api/course-content/courses – list all courses from Firestore */
+/** GET /api/course-content/courses – list all courses from MongoDB */
 export async function listCourses(_req: Request, res: Response): Promise<void> {
   try {
     if (coursesCache && Date.now() - coursesCache.fetchedAt < COURSES_CACHE_TTL_MS) {
@@ -160,12 +154,13 @@ export async function listCourses(_req: Request, res: Response): Promise<void> {
 export async function getCourse(req: Request, res: Response): Promise<void> {
   try {
     const { courseId } = req.params;
-    const doc = await courseDoc(courseId).get();
-    if (!doc.exists) {
+    const doc = await mongoCollection<CourseDoc>(MONGO_COLLECTIONS.courses).findOne({ id: courseId });
+    if (!doc) {
       res.status(404).json({ error: "Course not found." });
       return;
     }
-    res.json({ id: doc.id, ...doc.data() });
+    const out = omitMongoId(doc);
+    res.json(out);
   } catch (e) {
     console.error("getCourse:", e);
     res.status(500).json({ error: "Failed to get course." });
@@ -182,13 +177,14 @@ export async function createCourse(req: Request, res: Response): Promise<void> {
       return;
     }
     const now = new Date().toISOString();
-    const ref = courseDoc(slug);
-    const existing = await ref.get();
-    if (existing.exists) {
+    const col = mongoCollection<CourseDoc>(MONGO_COLLECTIONS.courses);
+    const existing = await col.findOne({ id: slug });
+    if (existing) {
       res.status(409).json({ error: "Course with this slug already exists." });
       return;
     }
-    const data: Omit<CourseDoc, "id"> = {
+    const data: CourseDoc = {
+      id: slug,
       slug,
       title: String(body.title ?? "Untitled").trim(),
       description: String(body.description ?? "").trim(),
@@ -199,8 +195,9 @@ export async function createCourse(req: Request, res: Response): Promise<void> {
       createdAt: now,
       updatedAt: now,
     };
-    await ref.set(data);
-    res.status(201).json({ id: slug, ...data });
+    await col.insertOne(data as any);
+    coursesCache = null;
+    res.status(201).json(data);
   } catch (e) {
     console.error("createCourse:", e);
     res.status(500).json({ error: "Failed to create course." });
@@ -212,15 +209,15 @@ export async function updateCourse(req: Request, res: Response): Promise<void> {
   try {
     const { courseId } = req.params;
     const body = req.body as Partial<Pick<CourseDoc, "title" | "description" | "sector" | "duration" | "coverImageUrl" | "published" | "order">>;
-    const ref = courseDoc(courseId);
-    const snap = await ref.get();
-    if (!snap.exists) {
+    const col = mongoCollection<CourseDoc>(MONGO_COLLECTIONS.courses);
+    const snap = await col.findOne({ id: courseId });
+    if (!snap) {
       res.status(404).json({ error: "Course not found." });
       return;
     }
     const now = new Date().toISOString();
-    const current = snap.data() as Omit<CourseDoc, "id">;
-    const updated = {
+    const current = omitMongoId(snap) as CourseDoc;
+    const updated: CourseDoc = {
       ...current,
       ...(body.title !== undefined && { title: String(body.title).trim() }),
       ...(body.description !== undefined && { description: String(body.description).trim() }),
@@ -231,8 +228,9 @@ export async function updateCourse(req: Request, res: Response): Promise<void> {
       ...(body.order !== undefined && { order: Number(body.order) }),
       updatedAt: now,
     };
-    await ref.set(updated);
-    res.json({ id: courseId, ...updated });
+    await col.replaceOne({ id: courseId }, updated as any);
+    coursesCache = null;
+    res.json(updated);
   } catch (e) {
     console.error("updateCourse:", e);
     res.status(500).json({ error: "Failed to update course." });
@@ -241,16 +239,21 @@ export async function updateCourse(req: Request, res: Response): Promise<void> {
 
 /** Return total lesson + assessment count for a course (for completion %) */
 export async function getCourseTotalSteps(courseId: string): Promise<{ totalLessons: number; totalAssessments: number }> {
-  const modsSnap = await modulesRef(courseId).orderBy("order", "asc").get();
+  const mods = await mongoCollection<ModuleDoc>(MONGO_COLLECTIONS.modules)
+    .find({ courseId })
+    .sort({ order: 1 })
+    .toArray();
   let totalLessons = 0;
   let totalAssessments = 0;
-  for (const modDoc of modsSnap.docs) {
-    const [lessonsSnap, assessmentsSnap] = await Promise.all([
-      lessonsRef(courseId, modDoc.id).get(),
-      assessmentsRef(courseId, modDoc.id).get(),
+  const lessonsCol = mongoCollection<LessonDoc>(MONGO_COLLECTIONS.lessons);
+  const assessmentsCol = mongoCollection<AssessmentDoc>(MONGO_COLLECTIONS.assessments);
+  for (const m of mods) {
+    const [lc, ac] = await Promise.all([
+      lessonsCol.countDocuments({ courseId, moduleId: m.id }),
+      assessmentsCol.countDocuments({ courseId, moduleId: m.id }),
     ]);
-    totalLessons += lessonsSnap.size;
-    totalAssessments += assessmentsSnap.size;
+    totalLessons += lc;
+    totalAssessments += ac;
   }
   return { totalLessons, totalAssessments };
 }
@@ -271,12 +274,11 @@ export async function getCourseStats(req: Request, res: Response): Promise<void>
 export async function listModules(req: Request, res: Response): Promise<void> {
   try {
     const { courseId } = req.params;
-    const snap = await modulesRef(courseId).orderBy("order", "asc").get();
-    const modules: ModuleDoc[] = snap.docs.map((d) => ({
-      id: d.id,
-      courseId,
-      ...d.data(),
-    } as ModuleDoc));
+    const rows = await mongoCollection<ModuleDoc>(MONGO_COLLECTIONS.modules)
+      .find({ courseId })
+      .sort({ order: 1 })
+      .toArray();
+    const modules = rows.map((d) => omitMongoId(d) as ModuleDoc);
     res.json({ modules });
   } catch (e) {
     console.error("listModules:", e);
@@ -289,23 +291,24 @@ export async function createModule(req: Request, res: Response): Promise<void> {
   try {
     const { courseId } = req.params;
     const body = req.body as { title: string; order?: number };
-    const courseSnap = await courseDoc(courseId).get();
-    if (!courseSnap.exists) {
+    const courseSnap = await mongoCollection<CourseDoc>(MONGO_COLLECTIONS.courses).findOne({ id: courseId });
+    if (!courseSnap) {
       res.status(404).json({ error: "Course not found." });
       return;
     }
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
     const order = Number(body.order) ?? 0;
-    const data: Omit<ModuleDoc, "id"> = {
+    const data: ModuleDoc = {
+      id,
       courseId,
       title: String(body.title ?? "Untitled module").trim(),
       order,
       createdAt: now,
       updatedAt: now,
     };
-    await moduleDoc(courseId, id).set(data);
-    res.status(201).json({ id, ...data });
+    await mongoCollection<ModuleDoc>(MONGO_COLLECTIONS.modules).insertOne(data as any);
+    res.status(201).json(data);
   } catch (e) {
     console.error("createModule:", e);
     res.status(500).json({ error: "Failed to create module." });
@@ -317,22 +320,22 @@ export async function updateModule(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId } = req.params;
     const body = req.body as { title?: string; order?: number };
-    const ref = moduleDoc(courseId, moduleId);
-    const snap = await ref.get();
-    if (!snap.exists) {
+    const col = mongoCollection<ModuleDoc>(MONGO_COLLECTIONS.modules);
+    const snap = await col.findOne({ id: moduleId, courseId });
+    if (!snap) {
       res.status(404).json({ error: "Module not found." });
       return;
     }
     const now = new Date().toISOString();
-    const current = snap.data() as Omit<ModuleDoc, "id">;
-    const updated = {
+    const current = omitMongoId(snap) as ModuleDoc;
+    const updated: ModuleDoc = {
       ...current,
       ...(body.title !== undefined && { title: String(body.title).trim() }),
       ...(body.order !== undefined && { order: Number(body.order) }),
       updatedAt: now,
     };
-    await ref.set(updated);
-    res.json({ id: moduleId, ...updated });
+    await col.replaceOne({ id: moduleId, courseId }, updated as any);
+    res.json(updated);
   } catch (e) {
     console.error("updateModule:", e);
     res.status(500).json({ error: "Failed to update module." });
@@ -343,17 +346,15 @@ export async function updateModule(req: Request, res: Response): Promise<void> {
 export async function deleteModule(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId } = req.params;
-    const ref = moduleDoc(courseId, moduleId);
-    const snap = await ref.get();
-    if (!snap.exists) {
+    const modCol = mongoCollection<ModuleDoc>(MONGO_COLLECTIONS.modules);
+    const snap = await modCol.findOne({ id: moduleId, courseId });
+    if (!snap) {
       res.status(404).json({ error: "Module not found." });
       return;
     }
-    const lessonsSnap = await lessonsRef(courseId, moduleId).get();
-    for (const d of lessonsSnap.docs) await d.ref.delete();
-    const assessmentsSnap = await assessmentsRef(courseId, moduleId).get();
-    for (const d of assessmentsSnap.docs) await d.ref.delete();
-    await ref.delete();
+    await mongoCollection<LessonDoc>(MONGO_COLLECTIONS.lessons).deleteMany({ courseId, moduleId });
+    await mongoCollection<AssessmentDoc>(MONGO_COLLECTIONS.assessments).deleteMany({ courseId, moduleId });
+    await modCol.deleteOne({ id: moduleId, courseId });
     res.status(204).send();
   } catch (e) {
     console.error("deleteModule:", e);
@@ -365,13 +366,11 @@ export async function deleteModule(req: Request, res: Response): Promise<void> {
 export async function listLessons(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId } = req.params;
-    const snap = await lessonsRef(courseId, moduleId).orderBy("order", "asc").get();
-    const lessons: LessonDoc[] = snap.docs.map((d) => ({
-      id: d.id,
-      courseId,
-      moduleId,
-      ...d.data(),
-    } as LessonDoc));
+    const rows = await mongoCollection<LessonDoc>(MONGO_COLLECTIONS.lessons)
+      .find({ courseId, moduleId })
+      .sort({ order: 1 })
+      .toArray();
+    const lessons = rows.map((d) => omitMongoId(d) as LessonDoc);
     res.json({ lessons });
   } catch (e) {
     console.error("listLessons:", e);
@@ -384,14 +383,15 @@ export async function createLesson(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId } = req.params;
     const body = req.body as { title: string; order?: number; youtubeUrl?: string; pdfUrl?: string; contentHtml?: string };
-    const moduleSnap = await moduleDoc(courseId, moduleId).get();
-    if (!moduleSnap.exists) {
+    const moduleSnap = await mongoCollection<ModuleDoc>(MONGO_COLLECTIONS.modules).findOne({ id: moduleId, courseId });
+    if (!moduleSnap) {
       res.status(404).json({ error: "Module not found." });
       return;
     }
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
     const rawData = {
+      id,
       courseId,
       moduleId,
       title: String(body.title ?? "Untitled lesson").trim(),
@@ -403,10 +403,9 @@ export async function createLesson(req: Request, res: Response): Promise<void> {
       createdAt: now,
       updatedAt: now,
     };
-    // Strip undefined fields — Firestore rejects them when ignoreUndefinedProperties is not set
-    const data = Object.fromEntries(Object.entries(rawData).filter(([, v]) => v !== undefined)) as Omit<LessonDoc, "id">;
-    await lessonDoc(courseId, moduleId, id).set(data);
-    res.status(201).json({ id, ...data });
+    const data = Object.fromEntries(Object.entries(rawData).filter(([, v]) => v !== undefined)) as unknown as LessonDoc;
+    await mongoCollection<LessonDoc>(MONGO_COLLECTIONS.lessons).insertOne(data as any);
+    res.status(201).json(data);
   } catch (e) {
     const msg = e instanceof Error ? e.message : (typeof e === 'object' ? JSON.stringify(e) : String(e));
     console.error("createLesson:", msg);
@@ -419,15 +418,15 @@ export async function updateLesson(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId, lessonId } = req.params;
     const body = req.body as { title?: string; order?: number; youtubeUrl?: string; pdfUrl?: string; contentHtml?: string; published?: boolean };
-    const ref = lessonDoc(courseId, moduleId, lessonId);
-    const snap = await ref.get();
-    if (!snap.exists) {
+    const col = mongoCollection<LessonDoc>(MONGO_COLLECTIONS.lessons);
+    const snap = await col.findOne({ id: lessonId, courseId, moduleId });
+    if (!snap) {
       res.status(404).json({ error: "Lesson not found." });
       return;
     }
     const now = new Date().toISOString();
-    const current = snap.data() as Omit<LessonDoc, "id">;
-    const updated = {
+    const current = omitMongoId(snap) as LessonDoc;
+    const updated: LessonDoc = {
       ...current,
       ...(body.title !== undefined && { title: String(body.title).trim() }),
       ...(body.order !== undefined && { order: Number(body.order) }),
@@ -437,8 +436,8 @@ export async function updateLesson(req: Request, res: Response): Promise<void> {
       ...(body.published !== undefined && { published: Boolean(body.published) }),
       updatedAt: now,
     };
-    await ref.set(updated);
-    res.json({ id: lessonId, ...updated });
+    await col.replaceOne({ id: lessonId, courseId, moduleId }, updated as any);
+    res.json(updated);
   } catch (e) {
     console.error("updateLesson:", e);
     res.status(500).json({ error: "Failed to update lesson." });
@@ -449,13 +448,12 @@ export async function updateLesson(req: Request, res: Response): Promise<void> {
 export async function deleteLesson(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId, lessonId } = req.params;
-    const ref = lessonDoc(courseId, moduleId, lessonId);
-    const snap = await ref.get();
-    if (!snap.exists) {
+    const col = mongoCollection<LessonDoc>(MONGO_COLLECTIONS.lessons);
+    const r = await col.deleteOne({ id: lessonId, courseId, moduleId });
+    if (r.deletedCount === 0) {
       res.status(404).json({ error: "Lesson not found." });
       return;
     }
-    await ref.delete();
     res.status(204).send();
   } catch (e) {
     console.error("deleteLesson:", e);
@@ -467,9 +465,11 @@ export async function deleteLesson(req: Request, res: Response): Promise<void> {
 export async function listAssessments(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId } = req.params;
-    const snap = await assessmentsRef(courseId, moduleId).get();
-    const assessments: AssessmentDoc[] = snap.docs
-      .map((d) => ({ id: d.id, courseId, moduleId, ...d.data() } as AssessmentDoc))
+    const rows = await mongoCollection<AssessmentDoc>(MONGO_COLLECTIONS.assessments)
+      .find({ courseId, moduleId })
+      .toArray();
+    const assessments = rows
+      .map((d) => omitMongoId(d) as AssessmentDoc)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     res.json({ assessments });
   } catch (e) {
@@ -482,13 +482,16 @@ export async function listAssessments(req: Request, res: Response): Promise<void
 export async function getModuleItems(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId } = req.params;
-    const [lessonsSnap, assessmentsSnap] = await Promise.all([
-      lessonsRef(courseId, moduleId).orderBy("order", "asc").get(),
-      assessmentsRef(courseId, moduleId).get(),
+    const [lessonRows, assessmentRows] = await Promise.all([
+      mongoCollection<LessonDoc>(MONGO_COLLECTIONS.lessons)
+        .find({ courseId, moduleId })
+        .sort({ order: 1 })
+        .toArray(),
+      mongoCollection<AssessmentDoc>(MONGO_COLLECTIONS.assessments).find({ courseId, moduleId }).toArray(),
     ]);
-    const lessons: LessonDoc[] = lessonsSnap.docs.map((d) => ({ id: d.id, courseId, moduleId, ...d.data() } as LessonDoc));
-    const assessments: AssessmentDoc[] = assessmentsSnap.docs
-      .map((d) => ({ id: d.id, courseId, moduleId, ...d.data() } as AssessmentDoc))
+    const lessons: LessonDoc[] = lessonRows.map((d) => omitMongoId(d) as LessonDoc);
+    const assessments: AssessmentDoc[] = assessmentRows
+      .map((d) => omitMongoId(d) as AssessmentDoc)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
     const items: Array<{ type: "lesson"; data: LessonDoc } | { type: "assessment"; data: AssessmentDoc }> = [];
     for (const lesson of lessons) {
@@ -509,12 +512,16 @@ export async function getModuleItems(req: Request, res: Response): Promise<void>
 export async function getAssessment(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId, assessmentId } = req.params;
-    const doc = await assessmentDoc(courseId, moduleId, assessmentId).get();
-    if (!doc.exists) {
+    const doc = await mongoCollection<AssessmentDoc>(MONGO_COLLECTIONS.assessments).findOne({
+      id: assessmentId,
+      courseId,
+      moduleId,
+    });
+    if (!doc) {
       res.status(404).json({ error: "Assessment not found." });
       return;
     }
-    res.json({ id: doc.id, courseId, moduleId, ...doc.data() });
+    res.json(omitMongoId(doc));
   } catch (e) {
     console.error("getAssessment:", e);
     res.status(500).json({ error: "Failed to get assessment." });
@@ -533,8 +540,8 @@ export async function createAssessment(req: Request, res: Response): Promise<voi
       order?: number;
       afterLessonId?: string;
     };
-    const moduleSnap = await moduleDoc(courseId, moduleId).get();
-    if (!moduleSnap.exists) {
+    const moduleSnap = await mongoCollection<ModuleDoc>(MONGO_COLLECTIONS.modules).findOne({ id: moduleId, courseId });
+    if (!moduleSnap) {
       res.status(404).json({ error: "Module not found." });
       return;
     }
@@ -546,7 +553,8 @@ export async function createAssessment(req: Request, res: Response): Promise<voi
       options: Array.isArray(q.options) ? q.options.map((o) => String(o).trim()) : [],
       correctIndex: Math.max(0, Math.min(Number(q.correctIndex) ?? 0, (q.options?.length ?? 1) - 1)),
     }));
-    const data: Omit<AssessmentDoc, "id"> = {
+    const data: AssessmentDoc = {
+      id,
       courseId,
       moduleId,
       title: String(body.title ?? "Break quiz").trim(),
@@ -559,9 +567,8 @@ export async function createAssessment(req: Request, res: Response): Promise<voi
       createdAt: now,
       updatedAt: now,
     };
-    const ref = assessmentDoc(courseId, moduleId, id);
-    await ref.set({ id, ...data });
-    res.status(201).json({ id, ...data });
+    await mongoCollection<AssessmentDoc>(MONGO_COLLECTIONS.assessments).insertOne(data as any);
+    res.status(201).json(data);
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
     console.error("createAssessment:", msg, e);
@@ -582,14 +589,14 @@ export async function updateAssessment(req: Request, res: Response): Promise<voi
       order?: number;
       afterLessonId?: string;
     };
-    const ref = assessmentDoc(courseId, moduleId, assessmentId);
-    const snap = await ref.get();
-    if (!snap.exists) {
+    const col = mongoCollection<AssessmentDoc>(MONGO_COLLECTIONS.assessments);
+    const snap = await col.findOne({ id: assessmentId, courseId, moduleId });
+    if (!snap) {
       res.status(404).json({ error: "Assessment not found." });
       return;
     }
     const now = new Date().toISOString();
-    const current = snap.data() as Omit<AssessmentDoc, "id">;
+    const current = omitMongoId(snap) as AssessmentDoc;
     const questions: QuizQuestion[] =
       body.questions !== undefined
         ? body.questions.map((q) => ({
@@ -599,7 +606,7 @@ export async function updateAssessment(req: Request, res: Response): Promise<voi
             correctIndex: Math.max(0, Math.min(Number(q.correctIndex) ?? 0, (q.options?.length ?? 1) - 1)),
           }))
         : current.questions;
-    const updated = {
+    const updated: AssessmentDoc = {
       ...current,
       ...(body.title !== undefined && { title: String(body.title).trim() }),
       ...(body.description !== undefined && { description: body.description }),
@@ -610,8 +617,8 @@ export async function updateAssessment(req: Request, res: Response): Promise<voi
       ...(body.afterLessonId !== undefined && { afterLessonId: body.afterLessonId || undefined }),
       updatedAt: now,
     };
-    await ref.set(updated);
-    res.json({ id: assessmentId, ...updated });
+    await col.replaceOne({ id: assessmentId, courseId, moduleId }, updated as any);
+    res.json(updated);
   } catch (e) {
     console.error("updateAssessment:", e);
     res.status(500).json({ error: "Failed to update assessment." });
@@ -622,13 +629,15 @@ export async function updateAssessment(req: Request, res: Response): Promise<voi
 export async function deleteAssessment(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId, assessmentId } = req.params;
-    const ref = assessmentDoc(courseId, moduleId, assessmentId);
-    const snap = await ref.get();
-    if (!snap.exists) {
+    const r = await mongoCollection<AssessmentDoc>(MONGO_COLLECTIONS.assessments).deleteOne({
+      id: assessmentId,
+      courseId,
+      moduleId,
+    });
+    if (r.deletedCount === 0) {
       res.status(404).json({ error: "Assessment not found." });
       return;
     }
-    await ref.delete();
     res.status(204).send();
   } catch (e) {
     console.error("deleteAssessment:", e);
@@ -646,13 +655,16 @@ export async function submitAssessment(req: Request, res: Response): Promise<voi
       res.status(400).json({ error: "userId and answers (array) are required." });
       return;
     }
-    const assessRef = assessmentDoc(courseId, moduleId, assessmentId);
-    const assessSnap = await assessRef.get();
-    if (!assessSnap.exists) {
+    const assessSnap = await mongoCollection<AssessmentDoc>(MONGO_COLLECTIONS.assessments).findOne({
+      id: assessmentId,
+      courseId,
+      moduleId,
+    });
+    if (!assessSnap) {
       res.status(404).json({ error: "Assessment not found." });
       return;
     }
-    const assessment = { id: assessSnap.id, ...assessSnap.data() } as AssessmentDoc;
+    const assessment = omitMongoId(assessSnap) as AssessmentDoc;
     const questions = assessment.questions ?? [];
     let correct = 0;
     questions.forEach((q, i) => {
@@ -678,20 +690,31 @@ export async function submitAssessment(req: Request, res: Response): Promise<voi
       passed,
       submittedAt: now,
     };
-    await submissionsCollection().doc(submissionId).set(submission);
+    await mongoCollection<SubmissionDoc>(MONGO_COLLECTIONS.submissions).insertOne(submission as any);
 
     const progressId = `${userId}_${courseId}`;
-    const progressRef = progressCollection().doc(progressId);
-    const progressSnap = await progressRef.get();
-    const completedAssessmentIds = progressSnap.exists
-      ? [...((progressSnap.data() as ProgressDoc).completedAssessmentIds ?? [])]
+    const progCol = mongoCollection<ProgressDoc>(MONGO_COLLECTIONS.progress);
+    const progressSnap = await progCol.findOne({ id: progressId });
+    const completedAssessmentIds = progressSnap
+      ? [...(progressSnap.completedAssessmentIds ?? [])]
       : [];
     if (passed && !completedAssessmentIds.includes(assessmentId)) {
       completedAssessmentIds.push(assessmentId);
-      const progressData: ProgressDoc = progressSnap.exists
-        ? { ...(progressSnap.data() as ProgressDoc), completedAssessmentIds, updatedAt: now }
-        : { id: progressId, userId, courseId, completedLessonIds: [], completedAssessmentIds, updatedAt: now };
-      await progressRef.set(progressData);
+      let progressData: ProgressDoc;
+      if (progressSnap) {
+        const { _id: _mongoId, ...rest } = progressSnap as ProgressDoc & { _id?: unknown };
+        progressData = { ...rest, completedAssessmentIds, updatedAt: now };
+      } else {
+        progressData = {
+          id: progressId,
+          userId,
+          courseId,
+          completedLessonIds: [],
+          completedAssessmentIds,
+          updatedAt: now,
+        };
+      }
+      await progCol.replaceOne({ id: progressId }, progressData as any, { upsert: true });
     }
 
     res.status(201).json({ submission: { ...submission }, passed });
@@ -705,17 +728,13 @@ export async function submitAssessment(req: Request, res: Response): Promise<voi
 export async function getSubmissions(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, userId } = req.query as { courseId?: string; userId?: string };
-    let query: FirebaseFirestore.Query = submissionsCollection();
-    if (courseId) {
-      query = query.where("courseId", "==", courseId);
-    }
-    if (userId) {
-      query = query.where("userId", "==", userId);
-    }
-    const snap = await query.get();
-    const submissions = snap.docs
-      .map((d) => ({ id: d.id, ...d.data() } as SubmissionDoc))
-      .sort((a, b) => (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""));
+    const filter: Record<string, string> = {};
+    if (courseId) filter.courseId = courseId;
+    if (userId) filter.userId = userId;
+    const list = await mongoCollection<SubmissionDoc>(MONGO_COLLECTIONS.submissions)
+      .find(Object.keys(filter).length ? filter : {})
+      .toArray();
+    const submissions = list.sort((a, b) => (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""));
     res.json({ submissions });
   } catch (e) {
     console.error("getSubmissions:", e);
@@ -880,14 +899,15 @@ export async function resolveCoursePdf(req: Request, res: Response): Promise<voi
     }
 
     const cleanTitle = title.trim().toLowerCase();
-    const modulesSnap = await modulesRef(courseId).get();
-    
+    const modRows = await mongoCollection<ModuleDoc>(MONGO_COLLECTIONS.modules).find({ courseId }).toArray();
+    const lessonsC = mongoCollection<LessonDoc>(MONGO_COLLECTIONS.lessons);
+
     let fallbackPdf: string | undefined = undefined;
 
-    for (const modDoc of modulesSnap.docs) {
-      const lessonsSnap = await lessonsRef(courseId, modDoc.id).get();
-      for (const d of lessonsSnap.docs) {
-        const data = d.data();
+    for (const mod of modRows) {
+      const lessonRows = await lessonsC.find({ courseId, moduleId: mod.id }).toArray();
+      for (const row of lessonRows) {
+        const data = omitMongoId(row) as LessonDoc;
         const dTitle = (data.title || "").trim().toLowerCase();
         
         // Match: exact, contains, or fuzzy

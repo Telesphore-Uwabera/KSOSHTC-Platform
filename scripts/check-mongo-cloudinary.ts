@@ -33,13 +33,17 @@ async function main() {
   await client.connect();
   const db = client.db(dbName);
 
-  const courses = await db.collection(MONGO_COLLECTIONS.courses).countDocuments();
-  const lessons = await db.collection(MONGO_COLLECTIONS.lessons).countDocuments();
-  const modules = await db.collection(MONGO_COLLECTIONS.modules).countDocuments();
-  const assessments = await db.collection(MONGO_COLLECTIONS.assessments).countDocuments();
+  const col = (name: string) => db.collection(name).countDocuments();
+  const entries = await Promise.all(
+    Object.entries(MONGO_COLLECTIONS).map(async ([key, name]) => [key, name, await col(name)] as const)
+  );
 
   console.log(`DB: ${dbName}`);
-  console.log(`Counts: courses=${courses}, modules=${modules}, lessons=${lessons}, assessments=${assessments}`);
+  console.log("Collection counts (API collections):");
+  for (const [, name, n] of entries.sort((a, b) => a[1].localeCompare(b[1]))) {
+    console.log(`  ${name}: ${n}`);
+  }
+  console.log("(Contact form → inquiries; learner accounts → users.)");
 
   const sampleLesson = await db.collection(MONGO_COLLECTIONS.lessons).findOne({ pdfUrl: { $exists: true, $ne: "" } });
   const sampleCourse = await db.collection(MONGO_COLLECTIONS.courses).findOne({

@@ -6,18 +6,19 @@
  *
  * Usage:
  *   pnpm tsx scripts/migrate-lesson-pdfurls-to-cloudinary.ts              # dry-run
- *   pnpm tsx scripts/migrate-lesson-pdfurls-to-cloudinary.ts --apply        # write Firestore
+ *   pnpm tsx scripts/migrate-lesson-pdfurls-to-cloudinary.ts --apply        # write MongoDB
  *   pnpm tsx scripts/migrate-lesson-pdfurls-to-cloudinary.ts --strict       # only exact / tight fuzzy (fewer updates)
  *
  * Heuristic matching can map a lesson to a Cloudinary file whose index differs from the
  * legacy filename (e.g. "4.2 Cranes" → "15. Cranes"). Spot-check critical lessons after --apply.
  *
- * Requires backend/.env (CLOUDINARY_* + Firebase credentials).
+ * Requires backend/.env (CLOUDINARY_* + MONGODB_URI).
  */
 import path from "node:path";
 import { config as loadEnv } from "dotenv";
 import { v2 as cloudinary } from "cloudinary";
-import { getDb } from "../backend/lib/firestore";
+import { scriptMongoConnect } from "./lib/mongo-script";
+import { MONGO_COLLECTIONS } from "../backend/lib/mongo";
 
 loadEnv({ path: path.resolve(process.cwd(), "backend", ".env") });
 
@@ -165,7 +166,6 @@ async function main(): Promise<void> {
     api_secret: process.env.CLOUDINARY_API_SECRET,
   });
 
-  const db = getDb();
   const byCourse = new Map<string, CloudAsset[]>();
 
   for (const courseId of COURSE_IDS) {
@@ -179,79 +179,59 @@ async function main(): Promise<void> {
   let empty = 0;
   let wouldUpdate = 0;
   let unmatched = 0;
-  let batch = APPLY ? db.batch() : null;
-  let batchCount = 0;
 
-  async function flushBatch(): Promise<void> {
-    if (!APPLY || !batch || batchCount === 0) return;
-    await batch.commit();
-    batch = db.batch();
-    batchCount = 0;
-  }
+  const { client, db } = await scriptMongoConnect();
+  try {
+    const lessonsCol = db.collection(MONGO_COLLECTIONS.lessons);
+    const lessonRows = await lessonsCol.find({ courseId: { $in: [...COURSE_IDS] } }).toArray();
 
-  const coursesSnap = await db.collection("courses").get();
+    for (const row of lessonRows) {
+      const lessonId = row.id as string;
+      const courseId = row.courseId as string;
+      const data = row as { pdfUrl?: string; title?: string };
+      const pdfUrl = (data.pdfUrl ?? "").toString().trim();
+      const title = (data.title ?? "").toString();
 
-  for (const courseDoc of coursesSnap.docs) {
-    const courseId = courseDoc.id;
-    const localAssets = byCourse.get(courseId) ?? [];
+      if (!pdfUrl) {
+        empty++;
+        continue;
+      }
+      examined++;
+      if (pdfUrl.startsWith("http")) {
+        alreadyHttp++;
+        continue;
+      }
 
-    const modulesSnap = await db.collection("courses").doc(courseId).collection("modules").get();
-    for (const modDoc of modulesSnap.docs) {
-      const lessonsSnap = await db
-        .collection("courses")
-        .doc(courseId)
-        .collection("modules")
-        .doc(modDoc.id)
-        .collection("lessons")
-        .get();
-
-      for (const lessonDoc of lessonsSnap.docs) {
-        const data = lessonDoc.data();
-        const pdfUrl = (data.pdfUrl ?? "").toString().trim();
-        const title = (data.title ?? "").toString();
-
-        if (!pdfUrl) {
-          empty++;
-          continue;
-        }
-        examined++;
-        if (pdfUrl.startsWith("http")) {
-          alreadyHttp++;
-          continue;
-        }
-
-        let match = bestMatch(localAssets, title, pdfUrl);
-        let matchedFrom = courseId;
-        if (!match) {
-          const cross = bestMatchCrossCourse(byCourse, courseId, title, pdfUrl);
-          if (cross) {
-            match = cross.asset;
-            matchedFrom = cross.fromCourse;
-          }
-        }
-
-        if (!match) {
-          unmatched++;
-          console.log(`[NO MATCH] course=${courseId} lesson=${lessonDoc.id} title="${title}" pdfUrl=${pdfUrl}`);
-          continue;
-        }
-
-        wouldUpdate++;
-        const note = matchedFrom !== courseId ? ` (from ${matchedFrom})` : "";
-        console.log(
-          `[UPDATE] course=${courseId} lesson=${lessonDoc.id} "${title}"\n  ${pdfUrl}\n  -> ${match.secure_url}${note}`
-        );
-
-        if (APPLY && batch) {
-          batch.update(lessonDoc.ref, { pdfUrl: match.secure_url });
-          batchCount++;
-          if (batchCount >= 400) await flushBatch();
+      const localAssets = byCourse.get(courseId) ?? [];
+      let match = bestMatch(localAssets, title, pdfUrl);
+      let matchedFrom = courseId;
+      if (!match) {
+        const cross = bestMatchCrossCourse(byCourse, courseId, title, pdfUrl);
+        if (cross) {
+          match = cross.asset;
+          matchedFrom = cross.fromCourse;
         }
       }
-    }
-  }
 
-  await flushBatch();
+      if (!match) {
+        unmatched++;
+        console.log(`[NO MATCH] course=${courseId} lesson=${lessonId} title="${title}" pdfUrl=${pdfUrl}`);
+        continue;
+      }
+
+      wouldUpdate++;
+      const note = matchedFrom !== courseId ? ` (from ${matchedFrom})` : "";
+      console.log(
+        `[UPDATE] course=${courseId} lesson=${lessonId} "${title}"\n  ${pdfUrl}\n  -> ${match.secure_url}${note}`
+      );
+
+      if (APPLY) {
+        await lessonsCol.updateOne({ id: lessonId }, { $set: { pdfUrl: match.secure_url } });
+      }
+    }
+  } finally {
+    await client.close();
+  }
 
   console.log("\n--- summary ---");
   console.log(`lessons with pdfUrl examined (non-http): ${examined - alreadyHttp - empty}`);
@@ -260,7 +240,7 @@ async function main(): Promise<void> {
   console.log(`would update / updated: ${wouldUpdate}`);
   console.log(`unmatched: ${unmatched}`);
   console.log(
-    APPLY ? "Mode: APPLY (writes committed)" : "Mode: DRY-RUN (no writes). Pass --apply to update Firestore."
+    APPLY ? "Mode: APPLY (writes committed)" : "Mode: DRY-RUN (no writes). Pass --apply to update MongoDB."
   );
   console.log(STRICT ? "Matching: STRICT" : "Matching: lenient (use --strict for fewer, safer matches).");
 }

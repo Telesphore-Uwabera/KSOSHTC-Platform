@@ -3,14 +3,22 @@ import path from "node:path";
 import crypto from "node:crypto";
 import type { AssignmentSubmissionDoc, CourseDoc, EnrollmentDoc, User } from "@shared/api";
 import { enrollmentAllowsLearnerAccess } from "../../shared/learnerEnrollment.ts";
-import { courseDoc } from "../lib/course-firestore";
-import {
-  assignmentSubmissionsCollection,
-  enrollmentsCollection,
-  usersCollection,
-} from "../lib/firestore";
+import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { v2 as cloudinary } from "cloudinary";
 import { notifyAdminAssignmentSubmitted, notifyLearnerAssignmentGraded } from "../lib/notify";
+
+function usersCol() {
+  return mongoCollection<User>(MONGO_COLLECTIONS.users);
+}
+function enrollmentsCol() {
+  return mongoCollection<EnrollmentDoc>(MONGO_COLLECTIONS.enrollments);
+}
+function coursesCol() {
+  return mongoCollection<CourseDoc>(MONGO_COLLECTIONS.courses);
+}
+function assignmentSubsCol() {
+  return mongoCollection<AssignmentSubmissionDoc>(MONGO_COLLECTIONS.assignment_submissions);
+}
 
 /** POST /api/assignment-submissions – learner uploads a PDF for an assigned/enrolled course. */
 export async function postAssignmentSubmission(req: Request, res: Response): Promise<void> {
@@ -28,12 +36,11 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
       return;
     }
 
-    const userSnap = await usersCollection().doc(userId).get();
-    if (!userSnap.exists) {
+    const user = await usersCol().findOne({ id: userId });
+    if (!user) {
       res.status(404).json({ error: "User not found." });
       return;
     }
-    const user = userSnap.data() as User;
     if (!user.approved) {
       res.status(403).json({ error: "Account must be approved to submit work." });
       return;
@@ -43,14 +50,12 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
       return;
     }
 
-    const userEnrollments = await enrollmentsCollection().where("userId", "==", userId).get();
-    const hasAnyEnrollment = !userEnrollments.empty;
-    const enrolledInCourse = userEnrollments.docs.some((d) => {
-      const e = d.data() as EnrollmentDoc;
-      return e.courseId === courseId && enrollmentAllowsLearnerAccess(e.status);
-    });
-    const sectorAllows =
-      courseId === "safety-management" || courseId === (user.sector ?? "");
+    const userEnrollments = await enrollmentsCol().find({ userId }).toArray();
+    const hasAnyEnrollment = userEnrollments.length > 0;
+    const enrolledInCourse = userEnrollments.some(
+      (e) => e.courseId === courseId && enrollmentAllowsLearnerAccess(e.status)
+    );
+    const sectorAllows = courseId === "safety-management" || courseId === (user.sector ?? "");
     const allowed = enrolledInCourse || (!hasAnyEnrollment && sectorAllows);
     if (!allowed) {
       res.status(403).json({
@@ -60,12 +65,11 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
       return;
     }
 
-    const courseSnap = await courseDoc(courseId).get();
-    if (!courseSnap.exists) {
+    const course = await coursesCol().findOne({ id: courseId });
+    if (!course) {
       res.status(404).json({ error: "Course not found." });
       return;
     }
-    const course = { id: courseSnap.id, ...courseSnap.data() } as CourseDoc;
 
     const safeName = path.basename(filename).replace(/[^a-zA-Z0-9._\-\s+()]/g, "_");
     const ext = path.extname(safeName).toLowerCase();
@@ -109,7 +113,7 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
       marks: null,
       maxMarks: 100,
     };
-    await assignmentSubmissionsCollection().doc(id).set(doc);
+    await assignmentSubsCol().insertOne(doc as any);
 
     await notifyAdminAssignmentSubmitted({
       learnerName: user.name,
@@ -127,21 +131,16 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
   }
 }
 
-/** GET /api/assignment-submissions?userId=&courseId= – list (optional filters; omit both for all — admin). */
 export async function getAssignmentSubmissions(req: Request, res: Response): Promise<void> {
   try {
     const { userId, courseId } = req.query as { userId?: string; courseId?: string };
-    let query: FirebaseFirestore.Query = assignmentSubmissionsCollection();
-    if (courseId) {
-      query = query.where("courseId", "==", courseId);
-    }
-    if (userId) {
-      query = query.where("userId", "==", userId);
-    }
-    const snap = await query.get();
-    const submissions = snap.docs
-      .map((d) => ({ id: d.id, ...d.data() } as AssignmentSubmissionDoc))
-      .sort((a, b) => (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""));
+    const filter: Record<string, string> = {};
+    if (courseId) filter.courseId = courseId;
+    if (userId) filter.userId = userId;
+    const list = await assignmentSubsCol()
+      .find(Object.keys(filter).length ? filter : {})
+      .toArray();
+    const submissions = list.sort((a, b) => (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""));
     res.json({ submissions });
   } catch (e) {
     console.error("getAssignmentSubmissions:", e);
@@ -149,17 +148,16 @@ export async function getAssignmentSubmissions(req: Request, res: Response): Pro
   }
 }
 
-/** PATCH /api/assignment-submissions/:id – set marks / feedback (admin); emails learner when marks change. */
 export async function patchAssignmentSubmission(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const ref = assignmentSubmissionsCollection().doc(id);
-    const snap = await ref.get();
-    if (!snap.exists) {
+    const col = assignmentSubsCol();
+    const snap = await col.findOne({ id });
+    if (!snap) {
       res.status(404).json({ error: "Submission not found." });
       return;
     }
-    const prev = { id: snap.id, ...snap.data() } as AssignmentSubmissionDoc;
+    const prev = snap;
     const body = req.body as { marks?: number; maxMarks?: number; feedback?: string };
     const updates: Record<string, unknown> = {};
 
@@ -188,8 +186,7 @@ export async function patchAssignmentSubmission(req: Request, res: Response): Pr
       updates.marks = body.marks;
       updates.gradedAt = new Date().toISOString();
       const prevMarks = prev.marks;
-      shouldNotifyMarks =
-        prevMarks === undefined || prevMarks === null || prevMarks !== body.marks;
+      shouldNotifyMarks = prevMarks === undefined || prevMarks === null || prevMarks !== body.marks;
     }
 
     if (Object.keys(updates).length === 0) {
@@ -197,7 +194,7 @@ export async function patchAssignmentSubmission(req: Request, res: Response): Pr
       return;
     }
 
-    await ref.update(updates);
+    await col.updateOne({ id }, { $set: updates });
     const merged = { ...prev, ...updates } as AssignmentSubmissionDoc;
 
     if (shouldNotifyMarks && merged.learnerEmail && typeof merged.marks === "number") {

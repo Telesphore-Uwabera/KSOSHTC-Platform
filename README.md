@@ -1,6 +1,6 @@
 # KSOSHTC Platform
 
-Production-ready full-stack React app with Express backend: React Router 6 SPA, TypeScript, Vite, TailwindCSS, Firebase Firestore. Only add API endpoints when necessary (e.g. private keys, DB operations).
+Production-ready full-stack React app with Express backend: React Router 6 SPA, TypeScript, Vite, TailwindCSS, MongoDB. Only add API endpoints when necessary (e.g. private keys, DB operations).
 
 ---
 
@@ -8,7 +8,7 @@ Production-ready full-stack React app with Express backend: React Router 6 SPA, 
 
 - **PNPM** – package manager
 - **Frontend** – React 18, React Router 6, TypeScript, Vite, TailwindCSS 3, Radix UI, Lucide React
-- **Backend** – Express, Firebase Admin (Firestore)
+- **Backend** – Express, MongoDB (official driver)
 - **Testing** – Vitest
 
 ---
@@ -24,19 +24,19 @@ clients/          # React SPA
 
 backend/          # Express API
 ├── index.ts      # Loads .env from root and backend/.env
-├── lib/          # Firestore, etc.
+├── lib/          # MongoDB helpers, etc.
 └── routes/
 
 shared/api.ts     # Shared types
 ```
 
-**Storage:** Firestore holds all dynamic data (see [Database (Firestore)](#database-firestore) below). Set `GOOGLE_APPLICATION_CREDENTIALS` or `FIREBASE_SERVICE_ACCOUNT` in `.env` (see `.env.example`).
+**Storage:** MongoDB holds all dynamic data (see [Database (MongoDB)](#database-mongodb) below). Set `MONGODB_URI` in `backend/.env` (see `backend/.env.example`).
 
 ---
 
 ## Pages and backend data
 
-All pages that need dynamic data call the backend API; the backend reads/writes Firestore.
+All pages that need dynamic data call the backend API; the backend reads/writes MongoDB.
 
 | Page | Route | Backend API / data |
 |------|--------|---------------------|
@@ -44,7 +44,7 @@ All pages that need dynamic data call the backend API; the backend reads/writes 
 | **About** | `/about` | Static content |
 | **Programs** | `/programs` | Static content |
 | **Industries** | `/industries` | Static content |
-| **Contact** | `/contact` | `POST /api/contact` (saves inquiries to Firestore; name, email, phone, message required) |
+| **Contact** | `/contact` | `POST /api/contact` (saves inquiries to MongoDB; name, email, phone, message required) |
 | **Terms & Conditions** | `/terms` | Static content |
 | **Privacy Policy** | `/privacy` | Static content |
 | **Cookie Policy** | `/cookies` | Static content |
@@ -65,20 +65,25 @@ All pages that need dynamic data call the backend API; the backend reads/writes 
 
 ---
 
-## Database (Firestore)
+## Database (MongoDB)
 
-Collections used by the backend (all access via Admin SDK; no client direct access):
+Collections used by the backend (same logical model as before; accessed only from the API):
 
 | Collection | Purpose |
 |------------|---------|
-| **users** | Registrations, login, approval, sector; name, email, phone (required), organization; passwords stored as bcrypt hashes (plain-text fallback for legacy users) |
+| **users** | Registrations, login, approval, sector; name, email, phone (required), organization; passwords stored as bcrypt hashes |
 | **testimonials** | Home page “What Our Participants Say”; admin-managed |
-| **quizzes** | Per-course legacy quiz (admin editable) |
-| **courses** | Course metadata, modules, lessons, assessments (course content) |
-| **enrollments** | Learner enrollment in courses; status (active/completed) |
+| **quizzes** | Per-course final quiz (admin editable) |
+| **courses** | Course metadata |
+| **modules** | Modules per course |
+| **lessons** | Lessons per module (`pdfUrl` points to Cloudinary or other HTTPS URL) |
+| **assessments** | Break quizzes in modules |
+| **enrollments** | Learner enrollment; status (active/completed) |
 | **submissions** | Quiz/assessment submissions |
+| **assignment_submissions** | PDF assignment uploads |
 | **progress** | Per-user, per-course: completed lessons, passed assessments |
-| **inquiries** | Contact form submissions (name, email, phone, message, createdAt) |
+| **inquiries** | Contact form submissions (this is the “contact submissions” collection in Atlas) |
+| **password_resets** | Forgot-password tokens |
 
 ---
 
@@ -92,6 +97,8 @@ pnpm build        # Production build
 pnpm start        # Production server
 pnpm typecheck
 pnpm test
+pnpm run init:mongo-collections   # create empty collections + indexes in Atlas (users, inquiries, …)
+pnpm run check:mongo-cloudinary   # print document counts for every API collection
 ```
 
 - **API prefix:** `/api/`
@@ -102,64 +109,35 @@ pnpm test
 ## Environment
 
 - **Root:** `.env` at project root (see `.env.example`).
-- **Backend:** Also reads `backend/.env` if present. Use for Firebase credentials, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `FRONTEND_URL` (CORS), etc.
+- **Backend:** Also reads `backend/.env` if present. Use for `MONGODB_URI`, Cloudinary, `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `FRONTEND_URL` (CORS), etc.
 
 ### Admin email notifications (optional)
 
-When someone **registers** or submits the **Contact** form (including from the **Home** page contact section), data is saved to Firestore. Optionally:
+When someone **registers** or submits the **Contact** form (including from the **Home** page contact section), data is saved to MongoDB. Optionally:
 
-- **Admin** receives an email with registrant/contact details (name, email, phone, etc.). Set SMTP in `backend/.env`: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (and optionally `SMTP_FROM`, `SMTP_SECURE`). Example: Gmail with an [App Password](https://support.google.com/accounts/answer/185833). Notifications go to `ADMIN_EMAIL`. If SMTP is not set, no email is sent (Firestore still saves).
+- **Admin** receives an email with registrant/contact details (name, email, phone, etc.). Set SMTP in `backend/.env`: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS` (and optionally `SMTP_FROM`, `SMTP_SECURE`). Example: Gmail with an [App Password](https://support.google.com/accounts/answer/185833). Notifications go to `ADMIN_EMAIL`. If SMTP is not set, no email is sent (MongoDB still saves).
 - **Learner** receives an email when their account is **approved** (same SMTP config). Approval happens via Admin → Learners (approve) or when admin sets approved to true on edit.
 
 ### Netlify form detection (optional)
 
-The backend can POST a copy of registration and contact submissions to your Netlify site so they appear in **Netlify Forms**. Hidden forms in `index.html` (`name="registration"` and `name="contact"`) with `data-netlify="true"` are required; the backend uses `FRONTEND_URL` (or `NETLIFY_FORM_SUBMIT_URL`) to POST. Firestore remains the source of truth.
+The backend can POST a copy of registration and contact submissions to your Netlify site so they appear in **Netlify Forms**. Hidden forms in `index.html` (`name="registration"` and `name="contact"`) with `data-netlify="true"` are required; the backend uses `FRONTEND_URL` (or `NETLIFY_FORM_SUBMIT_URL`) to POST. MongoDB remains the source of truth.
 
 ---
 
-## Firebase
+## Courses (MongoDB + Cloudinary)
 
-### Firestore rules (CLI)
-
-Rules live in **`firestore.rules`** (deny client access; backend uses Admin SDK).
-
-1. Install CLI: `pnpm add -D firebase-tools`
-2. Login: `pnpm exec firebase login`
-3. Project: `.firebaserc` uses `ksohtc-188e5`; change with `pnpm exec firebase use <project-id>`
-4. Deploy rules: `pnpm run firebase:deploy-rules` or `pnpm exec firebase deploy --only firestore:rules`
-
----
-
-## Courses (Firestore)
-
-Course list and content (modules, lessons, assessments) are in Firestore; served at `/api/course-content/*`. Public **Courses** and **Course detail** pages use these APIs.
+Course list and content (modules, lessons, assessments) live in MongoDB; APIs are under `/api/course-content/*`. Public **Courses** and **Course detail** pages use these APIs.
 
 ### Where courses and PDFs live
 
-- **Firestore** stores course **metadata** only: course list, modules, lessons, and each lesson’s **`pdfUrl`** (a URL string). Firestore does **not** store the actual PDF bytes.
-- **PDF files** are stored in one of two ways:
-  - **Local:** Under `public/courses/` (e.g. `public/courses/construction/...`). The seed uses these paths to build lesson entries; `pdfUrl` points at your app’s origin (e.g. `/courses/construction/file.pdf`). Fine for development or when the app serves the files.
-  - **Cloud (recommended for production):** Upload PDFs to **Firebase Storage**. The seed can upload each PDF to Storage and save the resulting public URL in Firestore (`pdfUrl`). Learners then open PDFs from Storage. Requires Firebase **Blaze** plan and Storage enabled; see below.
+- **MongoDB** stores course metadata, modules, lessons, and each lesson’s **`pdfUrl`** (HTTPS URL string). It does **not** store PDF bytes.
+- **PDF files (production):** Upload via **Admin → Course content** or maintenance scripts; files go to **Cloudinary** (`CLOUDINARY_*` in `backend/.env`). Lesson `pdfUrl` fields point at Cloudinary `secure_url` values.
 
-You don’t have to “add courses in Firestore first”: run the seed and it creates courses (and optionally uploads PDFs to Storage). You can also add or edit courses in **Admin → Course content**.
-
-### Upload courses (seed)
-
-1. Set `GOOGLE_APPLICATION_CREDENTIALS` (or `FIREBASE_SERVICE_ACCOUNT`) in `.env`.
-2. From project root: `pnpm run seed:courses`
-3. Creates courses: construction, industrial-safety, mining, safety-management (with modules/lessons from `public/courses`). New courses are `published: true`. If the seed fails, add courses in **Admin → Course content** and publish.
-
-**Cloud PDFs (Firebase Storage):** To upload PDFs to Firebase Storage and store their URLs in Firestore, enable Storage in the Firebase Console (Blaze plan), set `storageBucket` in your Firebase config (already set in `backend/lib/firestore.ts`), then run:
-
-```bash
-UPLOAD_PDFS_TO_STORAGE=true pnpm run seed:courses
-```
-
-Ensure Storage rules allow read access for the paths you use (e.g. `courses/*`).
+Add or edit structure in **Admin → Course content**. Use `pnpm run check:mongo-cloudinary` to sanity-check counts and sample URLs locally.
 
 ### Where students learn
 
-- **Courses** (`/courses`) – list published courses from Firestore; “View materials” sends users to login, then eligibility is checked on the course/dashboard.
+- **Courses** (`/courses`) – list published courses from the API; “View materials” sends users to login, then eligibility is checked on the course/dashboard.
 - **Course detail** (`/courses/:courseId`) – description, modules, lessons (PDF, YouTube, text), module quizzes, and course quiz link; uses course-content API, progress, enrollments.
 - **Dashboard** (`/dashboard`) – for approved learners; Overview, My courses, Progress, Settings (with logout). Data from `GET /api/course-content/courses` and `GET /api/progress`.
 
@@ -169,9 +147,9 @@ Ensure Storage rules allow read access for the paths you use (e.g. `courses/*`).
 
 - **Dashboard** (`/admin`) – analytics, course usage, learner approvals (all from backend APIs).
 - **Learners** (`/admin/learners`) – list learners, approve registrations, manage enrollments (users + enrollments APIs).
-- **Testimonials** (`/admin/testimonials`) – add testimonials (Firestore).
-- **Courses & Quizzes** (`/admin/courses`) – set/edit per-course quiz (quizzes collection).
-- **Course content** (`/admin/course-content`) – edit courses, modules, lessons (YouTube, PDF, text), assessments (Firestore course-content APIs); seed/clean PDFs.
+- **Testimonials** (`/admin/testimonials`) – add testimonials (MongoDB).
+- **Courses & Quizzes** (`/admin/courses`) – set/edit per-course quiz (`quizzes` collection).
+- **Course content** (`/admin/course-content`) – edit courses, modules, lessons (YouTube, PDF, text), assessments; PDFs via Cloudinary.
 - **Settings** (`/admin/settings`) – logout (no API).
 
 Routes: `/admin`, `/admin/courses`, `/admin/course-content`, `/admin/learners`, `/admin/testimonials`, `/admin/settings`. Admin login at `/admin/login` (no link in main nav; use direct URL).
@@ -186,22 +164,17 @@ Routes: `/admin`, `/admin/courses`, `/admin/course-content`, `/admin/learners`, 
 2. **Build:** `pnpm install && pnpm run build:backend`
 3. **Start:** `node dist/backend/production.mjs` (or per `render.yaml`)
 4. **Environment variables (required):** In Render → your service → **Environment** tab, add these. Your `backend/.env` is not deployed (gitignored), so Render must have them:
-   - **`FIREBASE_SERVICE_ACCOUNT`** – Paste the full Firebase service account JSON (single line, no line breaks). Without this, register/login will return **500**. If pasting JSON on Render still causes 500s (quoting/newline issues), use **`FIREBASE_SERVICE_ACCOUNT_BASE64`** instead: run `pnpm run encode:firebase` locally (with `backend/.env` set), copy the printed base64 string, and set that as `FIREBASE_SERVICE_ACCOUNT_BASE64` on Render; remove or leave `FIREBASE_SERVICE_ACCOUNT` empty.
+   - **`MONGODB_URI`** – MongoDB Atlas (or other) connection string. Without this, the API returns **500** for most data routes.
+   - **`MONGODB_DB`** – Optional if the database name is already in the URI path (e.g. `.../ksoshtc?...`).
+   - **`CLOUDINARY_CLOUD_NAME`**, **`CLOUDINARY_API_KEY`**, **`CLOUDINARY_API_SECRET`** – Required for admin PDF/cover uploads.
    - **`ADMIN_EMAIL`** – Admin login email.
    - **`ADMIN_PASSWORD`** – Admin login password.
    - **`FRONTEND_URL`** – Your official domain, e.g. `https://www.kigalisafetytraining.com` (for CORS).
    - Optional: `RENDER=true`, `NODE_ENV=production`.
 
-**If register or login returns 500:** Add or fix `FIREBASE_SERVICE_ACCOUNT` (or `FIREBASE_SERVICE_ACCOUNT_BASE64`) in Render → Environment, then redeploy.
+**If register or login returns 500:** Check `MONGODB_URI` and redeploy. Open `GET https://your-service.onrender.com/health`; you should see `{"ok":true,"mongodb":"connected"}`.
 
-**If logs show `16 UNAUTHENTICATED: Request had invalid authentication credentials`:** The backend on Render is not using a valid Firebase service account. Register, login, testimonials, and courses will all return 500 until you set credentials:
-
-1. Locally: ensure `backend/.env` has `FIREBASE_SERVICE_ACCOUNT` (full JSON from Firebase Console → Project settings → Service accounts → Generate new private key).
-2. Run: `pnpm run encode:firebase` and copy the **single line** of base64 output (no spaces or line breaks).
-3. In Render → your backend service → **Environment**: add **`FIREBASE_SERVICE_ACCOUNT_BASE64`** and paste that value. Remove or leave empty `FIREBASE_SERVICE_ACCOUNT` if you had it (base64 is more reliable on Render).
-4. **Save** and **Redeploy**. After deploy, open `https://your-service.onrender.com/health`; you should see `{"ok":true,"firestore":"connected"}`. Then try register/login again.
-
-**Viewing backend logs on Render:** Open your service → **Logs** tab (left sidebar under the service name). Use "Live" or "All" to see stdout/stderr. After deploy, you should see `[START] Backend process starting...` and `[OK] API server running...`. Hit `GET https://your-service.onrender.com/health` to test Firestore; logs will show `[HEALTH] Firestore OK` or `[HEALTH] Firestore FAIL: <message>`.
+**Viewing backend logs on Render:** Open your service → **Logs** tab. After deploy you should see `[START] Backend process starting...` and `[MONGODB] OK` (or a clear connection error).
 
 ### Frontend (Netlify)
 

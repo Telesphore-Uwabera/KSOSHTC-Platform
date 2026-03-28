@@ -41,18 +41,23 @@ export function mongoCollection<TSchema extends Document = Document>(name: strin
   return getMongoDb().collection<TSchema>(name);
 }
 
+/** Canonical Mongo collection names for the API. */
 export const MONGO_COLLECTIONS = {
+  /** Learner and admin accounts (register / login / approve). */
   users: "users",
   testimonials: "testimonials",
   courses: "courses",
   modules: "modules",
   lessons: "lessons",
   assessments: "assessments",
+  /** Per-course final exam (admin). */
   quizzes: "quizzes",
   enrollments: "enrollments",
+  /** Module/course quiz attempts (break quizzes + marks). */
   submissions: "submissions",
   assignment_submissions: "assignment_submissions",
   progress: "progress",
+  /** Contact form submissions (name, email, phone, message). */
   inquiries: "inquiries",
   password_resets: "password_resets",
 } as const;

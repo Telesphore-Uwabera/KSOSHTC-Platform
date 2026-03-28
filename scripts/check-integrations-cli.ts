@@ -1,5 +1,5 @@
 /**
- * CLI smoke check: local backend/.env (masked) + Cloudinary Admin API + Firestore read.
+ * CLI smoke check: local backend/.env (masked) + Cloudinary Admin API + MongoDB ping.
  * Does NOT print secrets. Render cloud env must be checked in dashboard or Render API.
  *
  *   pnpm exec tsx scripts/check-integrations-cli.ts
@@ -7,7 +7,8 @@
 import path from "node:path";
 import { config as loadEnv } from "dotenv";
 import { v2 as cloudinary } from "cloudinary";
-import { getDb } from "../backend/lib/firestore";
+import { scriptMongoConnect } from "./lib/mongo-script";
+import { MONGO_COLLECTIONS } from "../backend/lib/mongo";
 
 loadEnv({ path: path.resolve(process.cwd(), "backend", ".env") });
 
@@ -26,15 +27,8 @@ async function main(): Promise<void> {
   console.log("CLOUDINARY_CLOUD_NAME:", cn || "(missing)");
   console.log("CLOUDINARY_API_KEY:", mask(ak));
   console.log("CLOUDINARY_API_SECRET:", mask(as));
-  if (process.env.FIREBASE_SERVICE_ACCOUNT_BASE64) {
-    console.log("Firebase: FIREBASE_SERVICE_ACCOUNT_BASE64 (set, not shown)");
-  } else if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    console.log("Firebase: FIREBASE_SERVICE_ACCOUNT (set, not shown)");
-  } else if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    console.log("Firebase: GOOGLE_APPLICATION_CREDENTIALS=", process.env.GOOGLE_APPLICATION_CREDENTIALS);
-  } else {
-    console.log("Firebase: (no standard env found in .env)");
-  }
+  console.log("MONGODB_URI:", process.env.MONGODB_URI ? "(set, not shown)" : "(missing)");
+  console.log("MONGODB_DB:", process.env.MONGODB_DB?.trim() || "(infer from URI or ksoshtc)");
 
   console.log("\n=== Cloudinary Admin API (uses .env credentials) ===");
   if (!cn || !ak || !as) {
@@ -54,11 +48,12 @@ async function main(): Promise<void> {
     }
   }
 
-  console.log("\n=== Firestore (uses .env / GOOGLE_APPLICATION_CREDENTIALS) ===");
+  console.log("\n=== MongoDB (MONGODB_URI from backend/.env) ===");
   try {
-    const db = getDb();
-    await db.collection("courses").limit(1).get();
-    console.log("OK — Firestore read (courses) works");
+    const { client, db } = await scriptMongoConnect();
+    const n = await db.collection(MONGO_COLLECTIONS.courses).countDocuments();
+    await client.close();
+    console.log(`OK — ping + courses count=${n}`);
   } catch (e) {
     console.log("FAIL:", e instanceof Error ? e.message : e);
   }
@@ -76,8 +71,6 @@ async function main(): Promise<void> {
     "To see env vars ON Render: Dashboard → your Web Service → Environment, or install Render CLI + `render config init` then `render services` / API."
   );
 
-  console.log("\n=== Firebase CLI (account projects) ===");
-  console.log("Run: firebase projects:list   (current project used by CLI may differ from backend .env)");
 }
 
 main().catch((e) => {

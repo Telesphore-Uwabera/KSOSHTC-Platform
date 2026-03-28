@@ -1,8 +1,12 @@
 import { Request, Response } from "express";
 import crypto from "node:crypto";
 import type { EnrollmentDoc, EnrollmentStatus } from "@shared/api";
-import { enrollmentsCollection, progressCollection } from "../lib/firestore";
+import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { getCourseTotalSteps } from "./course-content";
+
+function enrollmentsCol() {
+  return mongoCollection<EnrollmentDoc>(MONGO_COLLECTIONS.enrollments);
+}
 
 /** POST /api/enrollments – enroll a user in a course (creates enrollment if not exists) */
 export async function postEnrollment(req: Request, res: Response): Promise<void> {
@@ -13,23 +17,23 @@ export async function postEnrollment(req: Request, res: Response): Promise<void>
       res.status(400).json({ error: "userId and courseId are required." });
       return;
     }
-    const col = enrollmentsCollection();
-    const existing = await col.where("userId", "==", userId).where("courseId", "==", courseId).limit(1).get();
-    if (!existing.empty) {
-      const doc = existing.docs[0];
-      res.status(200).json({ enrollment: { id: doc.id, ...doc.data() } });
+    const col = enrollmentsCol();
+    const existing = await col.findOne({ userId, courseId });
+    if (existing) {
+      res.status(200).json({ enrollment: existing });
       return;
     }
     const now = new Date().toISOString();
     const id = crypto.randomUUID();
-    const data: Omit<EnrollmentDoc, "id"> = {
+    const data: EnrollmentDoc = {
+      id,
       userId,
       courseId,
       enrolledAt: now,
       status: "active",
     };
-    await col.doc(id).set({ id, ...data });
-    res.status(201).json({ enrollment: { id, ...data } });
+    await col.insertOne(data as any);
+    res.status(201).json({ enrollment: data });
   } catch (e) {
     console.error("postEnrollment:", e);
     res.status(500).json({ error: "Failed to enroll." });
@@ -42,42 +46,36 @@ function progressDocId(userId: string, courseId: string): string {
 
 export type EnrollmentWithPercent = EnrollmentDoc & { completionPercent: number };
 
-/** Get enrollments for a user with completion % (for admin learners view). */
 export async function getEnrollmentsForUser(userId: string): Promise<EnrollmentWithPercent[]> {
-  const snap = await enrollmentsCollection().where("userId", "==", userId).get();
-  const list = snap.docs.map((d) => ({ id: d.id, ...d.data() } as EnrollmentDoc));
+  const col = enrollmentsCol();
+  const list = await col.find({ userId }).toArray();
   const withPercent = await Promise.all(
     list.map(async (en) => {
-      const [progressSnap, steps] = await Promise.all([
-        progressCollection().doc(progressDocId(userId, en.courseId)).get(),
+      const [progressDoc, steps] = await Promise.all([
+        mongoCollection(MONGO_COLLECTIONS.progress).findOne({ id: progressDocId(userId, en.courseId) }),
         getCourseTotalSteps(en.courseId),
       ]);
       const totalSteps = steps.totalLessons + steps.totalAssessments;
-      const progress = progressSnap.data();
       const completed =
-        (progress?.completedLessonIds?.length ?? 0) + (progress?.completedAssessmentIds?.length ?? 0);
-      const completionPercent =
-        totalSteps > 0 ? Math.round((completed / totalSteps) * 100) : 0;
+        (progressDoc?.completedLessonIds?.length ?? 0) + (progressDoc?.completedAssessmentIds?.length ?? 0);
+      const completionPercent = totalSteps > 0 ? Math.round((completed / totalSteps) * 100) : 0;
       return { ...en, completionPercent };
     })
   );
   return withPercent;
 }
 
-/** GET /api/enrollments?userId= – enrollments for a user (learner); includes completionPercent when userId given */
-/** GET /api/enrollments?courseId= – enrollments for a course (admin) */
 export async function getEnrollments(req: Request, res: Response): Promise<void> {
   try {
     const { userId, courseId } = req.query as { userId?: string; courseId?: string };
-    const col = enrollmentsCollection();
+    const col = enrollmentsCol();
     if (userId) {
       const withPercent = await getEnrollmentsForUser(userId);
       res.json({ enrollments: withPercent });
       return;
     }
     if (courseId) {
-      const snap = await col.where("courseId", "==", courseId).get();
-      const list = snap.docs.map((d) => ({ id: d.id, ...d.data() } as EnrollmentDoc));
+      const list = await col.find({ courseId }).toArray();
       res.json({ enrollments: list });
       return;
     }
@@ -88,14 +86,13 @@ export async function getEnrollments(req: Request, res: Response): Promise<void>
   }
 }
 
-/** PATCH /api/enrollments/:id – update status (e.g. completed) */
 export async function patchEnrollment(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
     const body = req.body as { status?: EnrollmentStatus };
-    const ref = enrollmentsCollection().doc(id);
-    const snap = await ref.get();
-    if (!snap.exists) {
+    const col = enrollmentsCol();
+    const snap = await col.findOne({ id });
+    if (!snap) {
       res.status(404).json({ error: "Enrollment not found." });
       return;
     }
@@ -105,10 +102,10 @@ export async function patchEnrollment(req: Request, res: Response): Promise<void
         res.status(400).json({ error: "Invalid status." });
         return;
       }
-      await ref.update({ status: body.status });
+      await col.updateOne({ id }, { $set: { status: body.status } });
     }
-    const updated = (await ref.get()).data();
-    res.json({ enrollment: { id, ...updated } });
+    const updated = await col.findOne({ id });
+    res.json({ enrollment: updated });
   } catch (e) {
     console.error("patchEnrollment:", e);
     res.status(500).json({ error: "Failed to update enrollment." });

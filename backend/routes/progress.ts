@@ -1,13 +1,15 @@
 import { Request, Response } from "express";
-import crypto from "node:crypto";
 import type { ProgressDoc } from "@shared/api";
-import { progressCollection } from "../lib/firestore";
+import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
+
+function progressCol() {
+  return mongoCollection<ProgressDoc>(MONGO_COLLECTIONS.progress);
+}
 
 function progressId(userId: string, courseId: string): string {
   return [userId, courseId].join("_");
 }
 
-/** GET /api/progress?userId=&courseId= – get progress for a user in a course (or all courses if courseId omitted) */
 export async function getProgress(req: Request, res: Response): Promise<void> {
   try {
     const { userId, courseId } = req.query as { userId?: string; courseId?: string };
@@ -15,10 +17,11 @@ export async function getProgress(req: Request, res: Response): Promise<void> {
       res.status(400).json({ error: "userId is required." });
       return;
     }
+    const col = progressCol();
     if (courseId) {
       const id = progressId(userId, courseId);
-      const doc = await progressCollection().doc(id).get();
-      if (!doc.exists) {
+      const doc = await col.findOne({ id });
+      if (!doc) {
         res.json({
           progress: {
             id,
@@ -31,28 +34,27 @@ export async function getProgress(req: Request, res: Response): Promise<void> {
         });
         return;
       }
-      const data = doc.data() as ProgressDoc;
       res.json({
         progress: {
-          ...data,
-          completedAssessmentIds: data.completedAssessmentIds ?? [],
+          ...doc,
+          completedAssessmentIds: doc.completedAssessmentIds ?? [],
         },
       });
       return;
     }
-    const snapshot = await progressCollection().where("userId", "==", userId).get();
-    const progressList = snapshot.docs.map((d) => {
-      const data = d.data() as ProgressDoc;
-      return { ...data, completedAssessmentIds: data.completedAssessmentIds ?? [] };
+    const progressList = await col.find({ userId }).toArray();
+    res.json({
+      progress: progressList.map((data) => ({
+        ...data,
+        completedAssessmentIds: data.completedAssessmentIds ?? [],
+      })),
     });
-    res.json({ progress: progressList });
   } catch (e) {
     console.error("getProgress:", e);
     res.status(500).json({ error: "Failed to get progress." });
   }
 }
 
-/** PATCH /api/progress – mark lesson complete or update progress */
 export async function patchProgress(req: Request, res: Response): Promise<void> {
   try {
     const body = req.body as {
@@ -67,10 +69,10 @@ export async function patchProgress(req: Request, res: Response): Promise<void> 
       return;
     }
     const id = progressId(userId, courseId);
-    const ref = progressCollection().doc(id);
-    const snap = await ref.get();
+    const col = progressCol();
+    const snap = await col.findOne({ id });
     const now = new Date().toISOString();
-    if (!snap.exists) {
+    if (!snap) {
       const data: ProgressDoc = {
         id,
         userId,
@@ -80,11 +82,11 @@ export async function patchProgress(req: Request, res: Response): Promise<void> 
         lastLessonId: completedLessonId,
         updatedAt: now,
       };
-      await ref.set(data);
+      await col.insertOne(data as any);
       res.json({ progress: data });
       return;
     }
-    const current = snap.data() as ProgressDoc;
+    const current = snap;
     const completedLessonIds = [...(current.completedLessonIds ?? [])];
     const completedAssessmentIds = [...(current.completedAssessmentIds ?? [])];
     if (completedLessonId && !completedLessonIds.includes(completedLessonId)) {
@@ -100,7 +102,7 @@ export async function patchProgress(req: Request, res: Response): Promise<void> 
       lastLessonId: completedLessonId ?? current.lastLessonId,
       updatedAt: now,
     };
-    await ref.set(updated);
+    await col.replaceOne({ id }, updated as any);
     res.json({ progress: updated });
   } catch (e) {
     console.error("patchProgress:", e);

@@ -1,5 +1,5 @@
 import { Request, Response } from "express";
-import { inquiriesCollection } from "../lib/firestore";
+import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { notifyNewContact } from "../lib/notify";
 
 function generateId(): string {
@@ -28,8 +28,8 @@ export async function postContact(req: Request, res: Response): Promise<void> {
       createdAt: new Date().toISOString(),
     };
 
-    await inquiriesCollection().doc(doc.id).set(doc);
-    // Notify admin only after successful Firestore write
+    await mongoCollection(MONGO_COLLECTIONS.inquiries).insertOne(doc as any);
+    // Notify admin only after successful DB write
     notifyNewContact({ name: doc.name, email: doc.email, phone: doc.phone, message: doc.message }).catch((err) =>
       console.error("[CONTACT] Notify failed:", err)
     );

@@ -7,14 +7,15 @@
  *
  * Usage:
  *   pnpm tsx scripts/migrate-cloudinary-pdf-extensions.ts           # dry-run
- *   pnpm tsx scripts/migrate-cloudinary-pdf-extensions.ts --apply    # Cloudinary + Firestore
+ *   pnpm tsx scripts/migrate-cloudinary-pdf-extensions.ts --apply    # Cloudinary + MongoDB
  *
- * Requires backend/.env: CLOUDINARY_* and Firebase credentials (same as other scripts).
+ * Requires backend/.env: CLOUDINARY_* and MONGODB_URI.
  */
 import path from "node:path";
 import { config as loadEnv } from "dotenv";
 import { v2 as cloudinary } from "cloudinary";
-import { getDb } from "../backend/lib/firestore";
+import { scriptMongoConnect } from "./lib/mongo-script";
+import { MONGO_COLLECTIONS } from "../backend/lib/mongo";
 
 loadEnv({ path: path.resolve(process.cwd(), "backend", ".env") });
 
@@ -89,11 +90,10 @@ async function main(): Promise<void> {
       const { stem } = splitPublicId(t.public_id);
       console.log(`[DRY-RUN] ${t.public_id} → …/${stem}.pdf`);
     }
-    console.log("\nPass --apply to re-upload, update Firestore, and delete old assets.");
+    console.log("\nPass --apply to re-upload, update MongoDB, and delete old assets.");
     return;
   }
 
-  const db = getDb();
   /** old public_id → new secure_url (after successful upload) */
   const idToNewUrl = new Map<string, string>();
 
@@ -147,50 +147,30 @@ async function main(): Promise<void> {
     await new Promise((r) => setTimeout(r, 150));
   }
 
-  let batch = db.batch();
-  let batchCount = 0;
   let lessonsUpdated = 0;
 
-  async function flush(): Promise<void> {
-    if (batchCount === 0) return;
-    await batch.commit();
-    batch = db.batch();
-    batchCount = 0;
-  }
+  const { client, db } = await scriptMongoConnect();
+  try {
+    const lessonsCol = db.collection(MONGO_COLLECTIONS.lessons);
+    const withHttp = await lessonsCol.find({ pdfUrl: { $regex: /^https/ } }).toArray();
 
-  const coursesSnap = await db.collection("courses").get();
-  for (const cDoc of coursesSnap.docs) {
-    const courseId = cDoc.id;
-    const modulesSnap = await db.collection("courses").doc(courseId).collection("modules").get();
-    for (const mDoc of modulesSnap.docs) {
-      const lessonsSnap = await db
-        .collection("courses")
-        .doc(courseId)
-        .collection("modules")
-        .doc(mDoc.id)
-        .collection("lessons")
-        .get();
+    for (const row of withHttp) {
+      const pdfUrl = (row.pdfUrl ?? "").toString().trim();
+      if (!pdfUrl || !pdfUrl.startsWith("http")) continue;
 
-      for (const lessonDoc of lessonsSnap.docs) {
-        const data = lessonDoc.data();
-        const pdfUrl = (data.pdfUrl ?? "").toString().trim();
-        if (!pdfUrl || !pdfUrl.startsWith("http")) continue;
+      const pid = extractRawPublicIdFromUrl(pdfUrl);
+      if (!pid) continue;
+      const replacement = idToNewUrl.get(pid);
+      if (!replacement || replacement === pdfUrl) continue;
 
-        const pid = extractRawPublicIdFromUrl(pdfUrl);
-        if (!pid) continue;
-        const replacement = idToNewUrl.get(pid);
-        if (!replacement || replacement === pdfUrl) continue;
-
-        batch.update(lessonDoc.ref, { pdfUrl: replacement });
-        batchCount++;
-        lessonsUpdated++;
-        console.log(`Firestore lesson ${courseId}/${mDoc.id}/${lessonDoc.id} pdfUrl → new URL`);
-        if (batchCount >= 400) await flush();
-      }
+      const lessonId = row.id as string;
+      await lessonsCol.updateOne({ id: lessonId }, { $set: { pdfUrl: replacement } });
+      lessonsUpdated++;
+      console.log(`Mongo lesson ${lessonId} pdfUrl → new URL`);
     }
+  } finally {
+    await client.close();
   }
-
-  await flush();
 
   console.log("\n--- summary (APPLY) ---");
   console.log(`Assets re-uploaded with .pdf: ${idToNewUrl.size}`);

@@ -54,7 +54,7 @@ export type CourseId =
   | "safety-management"
   | "safety-for-all";
 
-/** Course document (Firestore) */
+/** Course document (MongoDB) */
 export interface CourseDoc {
   id: string;
   slug: CourseId;

@@ -1,16 +1,16 @@
 /**
  * Re-upload course materials from local export to Cloudinary (ksohtc/courses/<courseId>/)
- * and update Firestore lesson pdfUrl to the new secure_url.
+ * and update MongoDB lesson pdfUrl to the new secure_url.
  *
  * Uses backend/.env:
  *   - CLOUDINARY_* for uploads
- *   - GOOGLE_APPLICATION_CREDENTIALS / FIREBASE_SERVICE_ACCOUNT* for Firestore (same as backend)
+ *   - MONGODB_URI (and optional MONGODB_DB) for lesson updates
  *
  * Source folder (default): downloads/cloudinary-export/<courseId>/ (PDF files only)
  *
  * Usage:
  *   pnpm tsx scripts/reupload-courses-from-export.ts              # dry-run
- *   pnpm tsx scripts/reupload-courses-from-export.ts --apply      # upload + Firestore
+ *   pnpm tsx scripts/reupload-courses-from-export.ts --apply      # upload + MongoDB
  *   pnpm tsx scripts/reupload-courses-from-export.ts --apply --strict
  *   pnpm tsx scripts/reupload-courses-from-export.ts --apply --course=construction
  */
@@ -18,7 +18,8 @@ import fs from "node:fs";
 import path from "node:path";
 import { config as loadEnv } from "dotenv";
 import { v2 as cloudinary } from "cloudinary";
-import { getDb } from "../backend/lib/firestore";
+import { scriptMongoConnect } from "./lib/mongo-script";
+import { MONGO_COLLECTIONS } from "../backend/lib/mongo";
 
 loadEnv({ path: path.resolve(process.cwd(), "backend", ".env") });
 
@@ -192,21 +193,11 @@ async function main(): Promise<void> {
     api_secret: process.env.CLOUDINARY_API_SECRET,
   });
 
-  const db = getDb();
   let uploadOk = 0;
   let uploadFail = 0;
   let lessonUpdated = 0;
   let lessonSkipped = 0;
   let lessonNoMatch = 0;
-  let batch = APPLY ? db.batch() : null;
-  let batchCount = 0;
-
-  async function flushBatch(): Promise<void> {
-    if (!APPLY || !batch || batchCount === 0) return;
-    await batch.commit();
-    batch = db.batch();
-    batchCount = 0;
-  }
 
   const byCourse = new Map<string, CloudAsset[]>();
 
@@ -253,14 +244,16 @@ async function main(): Promise<void> {
     byCourse.set(courseId, assets);
   }
 
-  // Phase 2: match Firestore lessons (same-course first, then cross-course if score ≥ 900)
-  for (const courseId of courses) {
-    console.log(`\n=== ${courseId}: update lesson pdfUrls ===`);
-    const modulesSnap = await db.collection("courses").doc(courseId).collection("modules").get();
-    for (const modDoc of modulesSnap.docs) {
-      const lessonsSnap = await modDoc.ref.collection("lessons").get();
-      for (const lessonDoc of lessonsSnap.docs) {
-        const data = lessonDoc.data();
+  const { client, db } = await scriptMongoConnect();
+  const lessonsCol = db.collection(MONGO_COLLECTIONS.lessons);
+
+  // Phase 2: match MongoDB lessons (same-course first, then cross-course if score ≥ 900)
+  try {
+    for (const courseId of courses) {
+      console.log(`\n=== ${courseId}: update lesson pdfUrls ===`);
+      const lessonRows = await lessonsCol.find({ courseId }).toArray();
+      for (const row of lessonRows) {
+        const data = row as { id?: string; pdfUrl?: string; title?: string };
         const pdfUrl = (data.pdfUrl ?? "").toString().trim();
         const title = (data.title ?? "").toString();
         if (!pdfUrl) {
@@ -283,24 +276,21 @@ async function main(): Promise<void> {
           lessonUpdated++;
           continue;
         }
-        batch!.update(lessonDoc.ref, { pdfUrl: match.secure_url });
-        batchCount++;
+        await lessonsCol.updateOne({ id: data.id }, { $set: { pdfUrl: match.secure_url } });
         lessonUpdated++;
-        if (batchCount >= 400) await flushBatch();
       }
     }
-    await flushBatch();
+  } finally {
+    await client.close();
   }
-
-  await flushBatch();
 
   console.log("\n--- summary ---");
   console.log(`Uploads: ${uploadOk} ok, ${uploadFail} failed (${APPLY ? "live" : "dry-run placeholders"})`);
   console.log(`Lessons: ${lessonUpdated} ${APPLY ? "updated" : "would update"}, skipped (no pdfUrl or unchanged): ${lessonSkipped}, no match: ${lessonNoMatch}`);
   console.log(
     APPLY
-      ? "Done. Uses CLOUDINARY_* + Firebase credentials from backend/.env (same as production backend)."
-      : "Dry-run. Pass --apply to upload and update Firestore."
+      ? "Done. Uses CLOUDINARY_* + MONGODB_URI from backend/.env."
+      : "Dry-run. Pass --apply to upload and update MongoDB."
   );
 }
 

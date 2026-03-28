@@ -16,6 +16,6 @@ services:
       - key: RENDER
         value: true
       # Set these in Render dashboard (Environment):
-      # - GOOGLE_APPLICATION_CREDENTIALS or FIREBASE_SERVICE_ACCOUNT (Firebase)
+      # - MONGODB_URI (required; optional MONGODB_DB if not in URI path)
       # - ADMIN_EMAIL, ADMIN_PASSWORD
       # - FRONTEND_URL (your official URL, e.g. https://www.kigalisafetytraining.com for CORS)

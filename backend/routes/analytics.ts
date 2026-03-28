@@ -1,6 +1,6 @@
 import { Request, Response } from "express";
-import type { CoursePublic, CourseUsageItem } from "@shared/api";
-import { quizzesCollection, enrollmentsCollection } from "../lib/firestore";
+import type { CoursePublic, CourseUsageItem, EnrollmentDoc } from "@shared/api";
+import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 
 const COURSES: CoursePublic[] = [
   { id: "construction", title: "OSH in Construction", sector: "Construction", duration: "3 months" },
@@ -13,17 +13,17 @@ const COURSES: CoursePublic[] = [
 /** GET /api/analytics/course-usage – course usage for dashboard (main dashboard only) */
 export async function getCourseUsage(_req: Request, res: Response): Promise<void> {
   try {
+    const enrollCol = mongoCollection<EnrollmentDoc>(MONGO_COLLECTIONS.enrollments);
+    const quizCol = mongoCollection<{ courseId: string }>(MONGO_COLLECTIONS.quizzes);
     const usage: CourseUsageItem[] = [];
     for (const course of COURSES) {
-      const [quizDoc, enrollmentsSnap] = await Promise.all([
-        quizzesCollection().doc(course.id).get(),
-        enrollmentsCollection().where("courseId", "==", course.id).get(),
+      const [quizDoc, enrollmentsForCourse] = await Promise.all([
+        quizCol.findOne({ courseId: course.id }),
+        enrollCol.find({ courseId: course.id }).toArray(),
       ]);
-      const hasQuiz = quizDoc.exists;
-      const enrollmentCount = enrollmentsSnap.size;
-      const completionCount = enrollmentsSnap.docs.filter(
-        (d) => (d.data() as { status?: string }).status === "completed"
-      ).length;
+      const hasQuiz = !!quizDoc;
+      const enrollmentCount = enrollmentsForCourse.length;
+      const completionCount = enrollmentsForCourse.filter((d) => d.status === "completed").length;
       const completionRatePercent =
         enrollmentCount > 0 ? Math.round((completionCount / enrollmentCount) * 100) : 0;
       usage.push({
