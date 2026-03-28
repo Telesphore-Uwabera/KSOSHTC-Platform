@@ -359,7 +359,9 @@ export async function notifyLearnerRegistrationReceived(data: { name: string; em
     `  ${SUPPORT_PHONE_LOCAL_RW} — EMMANUEL NIYOBUHUNGIRO`,
     "",
     "Alternative (bank transfer), if you prefer:",
-    "  Bank: Equity Bank (CG account) | Account: 4003100607428 | Name: Emmanuel NIYOBUHUNGIRO",
+    "  Bank: EQUITY (Equity Bank)",
+    "  Account name: Kigali Safety OSH",
+    "  Account number: 4025201372795",
     "",
     "Once your payment is confirmed, your account will be approved and you will receive instructions to log in.",
     "",
@@ -392,7 +394,12 @@ export async function notifyLearnerRegistrationReceived(data: { name: string; em
 <p style="margin:1.25em 0 0.35em;font-weight:bold;letter-spacing:0.03em;">REGISTRATION FEE — PAYMENT (MOBILE MONEY)</p>
 <p style="margin:0 0 1em;">To unlock access to course materials, please pay the <strong>registration fee of 10,000 FRW</strong> via MoMo to:</p>
 <p style="margin:0 0 1em;padding:0.75em 1em;background:#f5f5f5;border-radius:6px;"><strong>${escapeHtml(SUPPORT_PHONE_LOCAL_RW)}</strong> — EMMANUEL NIYOBUHUNGIRO</p>
-<p style="margin:1em 0 0.35em;font-size:14px;color:#444;"><strong>Alternative (bank transfer):</strong> Equity Bank (CG account) · Account 4003100607428 · Emmanuel NIYOBUHUNGIRO</p>
+<p style="margin:1em 0 0.35em;font-size:14px;color:#444;"><strong>Alternative (bank transfer)</strong></p>
+<p style="margin:0 0 1em;padding:0.75em 1em;background:#f8f9fa;border-radius:6px;border-left:4px solid #0d6efd;line-height:1.6;">
+<strong>Bank:</strong> EQUITY (Equity Bank)<br/>
+<strong>Account name:</strong> Kigali Safety OSH<br/>
+<strong>Account number:</strong> 4025201372795
+</p>
 <p style="margin:1em 0;">Once your payment is confirmed, your account will be approved and you will receive instructions to log in.</p>
 <p style="margin:1.25em 0 0.35em;font-weight:bold;letter-spacing:0.03em;">USEFUL LINKS</p>
 <ul style="margin:0 0 1em;padding-left:1.25em;">
