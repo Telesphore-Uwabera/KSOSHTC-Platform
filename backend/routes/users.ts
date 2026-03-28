@@ -8,6 +8,7 @@ import {
   notifyLearnerRegistrationReceived,
   notifyLearnerApproved,
   notifyPasswordReset,
+  notifyPasswordResetSuccessful,
 } from "../lib/notify";
 import type { EnrollmentWithPercent } from "./enrollments";
 import { getEnrollmentsForUser } from "./enrollments";
@@ -429,9 +430,21 @@ export async function postResetPassword(req: Request, res: Response): Promise<vo
       return;
     }
 
+    const sameAsCurrent = await verifyPassword(password, user.password);
+    if (sameAsCurrent) {
+      res.status(400).json({
+        error: "Your new password must be different from your current password. Choose a new one.",
+      });
+      return;
+    }
+
     const passwordHash = await hashPassword(password);
     await usersCol().updateOne({ id: user.id }, { $set: { password: passwordHash } });
     await passwordResetsCol().deleteOne({ id: token });
+
+    notifyPasswordResetSuccessful({ name: user.name, email: user.email }).catch((err) => {
+      console.error("[RESET_PWD] Confirmation email failed:", err);
+    });
 
     res.json({ ok: true, message: "Password has been successfully reset." });
   } catch (e) {

@@ -536,6 +536,38 @@ export async function notifyPasswordReset(data: { name: string; email: string; t
   await sendEmail(data.email, subject, text, html);
 }
 
+/** Sent after the learner successfully sets a new password via the reset link. */
+export async function notifyPasswordResetSuccessful(data: { name: string; email: string }): Promise<void> {
+  const subject = "[KSOSHTC] Your password was changed";
+  const name = data.name.trim();
+  const loginUrl = `${webBase()}/login`;
+
+  const text = [
+    `Dear ${name},`,
+    "",
+    "This confirms that the password for your KSOSHTC learner account was just changed.",
+    "",
+    "If you made this change, no further action is needed. You can sign in with your new password:",
+    loginUrl,
+    "",
+    "If you did not change your password, someone else may have access to your account. Reset your password again from the login page and contact us via the website or WhatsApp if you need help.",
+    "",
+    "KSOSHTC will never ask you for your password by email, phone, or WhatsApp.",
+  ].join("\n");
+
+  const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
+<p style="margin:0 0 1em;">Dear ${escapeHtml(name)},</p>
+<p style="margin:0 0 1em;">This confirms that the password for your <strong>KSOSHTC</strong> learner account was <strong>just changed</strong>.</p>
+<p style="margin:0 0 1em;">If you made this change, no further action is needed. You can sign in with your new password:</p>
+<p style="margin:0 0 1em;"><a href="${loginUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;">Sign in</a></p>
+<p style="margin:0;font-size:14px;color:#555;word-break:break-all;"><a href="${loginUrl}" style="color:#0d6efd;">${escapeHtml(loginUrl)}</a></p>
+<p style="margin:1.25em 0 0;">If you <strong>did not</strong> change your password, someone else may have access to your account. Use <strong>Forgot password</strong> on the login page to secure it again, and contact us via the website or WhatsApp if you need help.</p>
+<p style="margin:1em 0 0;font-size:14px;color:#555;">KSOSHTC will never ask you for your password by email, phone, or WhatsApp.</p>
+</div>`;
+
+  await sendEmail(data.email, subject, text, html);
+}
+
 /** Notify admin when a learner submits assignment PDF (after Firestore + upload). */
 export async function notifyAdminAssignmentSubmitted(data: {
   learnerName: string;
