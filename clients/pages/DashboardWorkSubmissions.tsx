@@ -159,7 +159,7 @@ export default function DashboardWorkSubmissions() {
             <input
               id="ws-file"
               type="file"
-              accept=".pdf,application/pdf"
+              accept="application/pdf"
               className="w-full text-sm text-gray-600"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               required
@@ -188,8 +188,8 @@ export default function DashboardWorkSubmissions() {
         ) : (
           <ul className="space-y-3">
             {submissions.map((s) => {
-              const graded =
-                typeof s.marks === "number" && (s.maxMarks ?? 100) > 0;
+              const hasMarks =
+                typeof s.marks === "number" && Number.isFinite(s.marks);
               return (
                 <li
                   key={s.id}
@@ -200,13 +200,13 @@ export default function DashboardWorkSubmissions() {
                     <p className="text-xs text-gray-500 mt-0.5">
                       {s.courseTitle ?? s.courseId} · {new Date(s.submittedAt).toLocaleString()}
                     </p>
-                    {graded ? (
+                    {hasMarks ? (
                       <p className="text-sm text-primary font-medium mt-1">
                         Marks: {s.marks} / {s.maxMarks ?? 100}
                         {s.feedback ? ` — ${s.feedback}` : ""}
                       </p>
                     ) : (
-                      <p className="text-sm text-amber-800 mt-1">Awaiting marking</p>
+                      <p className="text-sm text-gray-600 mt-1">Submitted and under review</p>
                     )}
                   </div>
                   <a
