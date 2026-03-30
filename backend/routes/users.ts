@@ -275,6 +275,11 @@ export async function postUser(req: Request, res: Response): Promise<void> {
     };
     const doc = Object.fromEntries(Object.entries(user).filter(([, v]) => v !== undefined)) as User;
     await col.insertOne(doc as any);
+    if (user.approved) {
+      notifyLearnerApproved({ name: user.name, email: user.email }).catch((err) =>
+        console.error("[CREATE_USER] Notify learner approved failed:", err)
+      );
+    }
     res.status(201).json({ user: toPublic(user) });
   } catch (e) {
     console.error("Create user error:", e);

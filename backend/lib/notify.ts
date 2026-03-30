@@ -476,27 +476,141 @@ export async function notifyLearnerApproved(data: { name: string; email: string 
   const name = data.name.trim();
   const web = webBase();
   const loginUrl = `${web}/login`;
+  const dashboardUrl = `${web}/dashboard`;
 
   const text = [
     `Dear ${name},`,
     "",
-    "Thank you for completing your registration with KSOS HTC.",
+    "Good news — an administrator has approved your KSOS HTC learner account.",
     "",
-    "Your payment has been confirmed and your online learning account is now active. Sign in anytime to access your courses, materials, and assignments.",
+    "You can sign in anytime to access your dashboard, courses, materials, and assignments (according to your enrollments).",
     "",
     "Sign in:",
     loginUrl,
+    "",
+    "Learner dashboard:",
+    dashboardUrl,
     "",
     "If you have any questions, please use the website or WhatsApp details at the end of this email.",
   ].join("\n");
 
   const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
 <p style="margin:0 0 1em;">Dear ${escapeHtml(name)},</p>
-<p style="margin:0 0 1em;">Thank you for completing your registration with <strong>KSOS HTC</strong>.</p>
-<p style="margin:0 0 1em;">Your payment has been confirmed and your <strong>online learning account is now active</strong>. You may sign in to access your courses, materials, and assignments.</p>
+<p style="margin:0 0 1em;">Good news — an administrator has <strong>approved</strong> your <strong>KSOS HTC</strong> learner account.</p>
+<p style="margin:0 0 1em;">You may <strong>sign in</strong> to access your dashboard, courses, materials, and assignments (based on your enrollments).</p>
 <p style="margin:0 0 0.75em;"><a href="${loginUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;">Sign in to your account</a></p>
 <p style="margin:0;font-size:14px;color:#555;">Or open this link in your browser:<br><a href="${loginUrl}" style="color:#0d6efd;word-break:break-all;">${loginUrl}</a></p>
+<p style="margin:1em 0 0.75em;font-size:14px;color:#555;">Your learner dashboard:<br><a href="${dashboardUrl}" style="color:#0d6efd;word-break:break-all;">${dashboardUrl}</a></p>
 <p style="margin:1.25em 0 0;font-size:14px;color:#444;">If you need assistance, use the <strong>website</strong> and <strong>WhatsApp</strong> information below.</p>
+</div>`;
+
+  await sendEmail(data.email, subject, text, html);
+}
+
+/**
+ * Notify learner when they gain access to a course (new enrollment, or enrollment status activated).
+ * @param kind — "enrolled": newly added to the course; "activated": was pending and is now active.
+ */
+export async function notifyLearnerCourseAccess(data: {
+  name: string;
+  email: string;
+  courseTitle: string;
+  kind: "enrolled" | "activated";
+}): Promise<void> {
+  const name = data.name.trim();
+  const courseTitle = data.courseTitle.trim();
+  const web = webBase();
+  const dashboardUrl = `${web}/dashboard/courses`;
+
+  const headline =
+    data.kind === "activated"
+      ? `Your access to "${courseTitle}" is now active on KSOS HTC.`
+      : `You have been enrolled in "${courseTitle}" on KSOS HTC.`;
+
+  const subject =
+    data.kind === "activated"
+      ? `[KSOSHTC] Course access active — ${courseTitle}`
+      : `[KSOSHTC] New course — ${courseTitle}`;
+
+  const text = [
+    `Dear ${name},`,
+    "",
+    headline,
+    "",
+    "Sign in to open My courses and start or continue your learning:",
+    web + "/login",
+    "",
+    "Direct link to your courses list:",
+    dashboardUrl,
+    "",
+    "If you have questions, use the website or WhatsApp details at the end of this email.",
+  ].join("\n");
+
+  const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
+<p style="margin:0 0 1em;">Dear ${escapeHtml(name)},</p>
+<p style="margin:0 0 1em;">${escapeHtml(headline)}</p>
+<p style="margin:0 0 0.75em;"><a href="${web}/login" style="display:inline-block;background:#0d6efd;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;">Sign in</a></p>
+<p style="margin:0 0 1em;font-size:14px;color:#555;">Open <strong>My courses</strong> on your dashboard:<br><a href="${dashboardUrl}" style="color:#0d6efd;word-break:break-all;">${dashboardUrl}</a></p>
+<p style="margin:1.25em 0 0;font-size:14px;color:#444;">If you need assistance, use the <strong>website</strong> and <strong>WhatsApp</strong> information below.</p>
+</div>`;
+
+  await sendEmail(data.email, subject, text, html);
+}
+
+/** Notify learner after a module / break quiz is submitted and auto-marked on the server. */
+export async function notifyLearnerModuleQuizResult(data: {
+  name: string;
+  email: string;
+  courseTitle: string;
+  quizTitle: string;
+  score: number;
+  maxScore: number;
+  percentage: number;
+  passed: boolean;
+  courseId: string;
+}): Promise<void> {
+  const name = data.name.trim();
+  const quizTitle = data.quizTitle.trim();
+  const courseTitle = data.courseTitle.trim();
+  const web = webBase();
+  const courseUrl = `${web}/courses/${encodeURIComponent(data.courseId)}`;
+  const progressUrl = `${web}/dashboard/progress`;
+  const passLabel = data.passed ? "Passed" : "Not passed — you can review the course and try again";
+
+  const subject = `[KSOSHTC] Quiz result — ${quizTitle}`;
+
+  const text = [
+    `Dear ${name},`,
+    "",
+    "Your answers for a module quiz have been marked automatically.",
+    "",
+    `Course:     ${courseTitle}`,
+    `Quiz:       ${quizTitle}`,
+    `Score:      ${data.score} / ${data.maxScore} (${data.percentage}%)`,
+    `Result:     ${passLabel}`,
+    "",
+    "Continue learning:",
+    courseUrl,
+    "",
+    "Track progress on your dashboard:",
+    progressUrl,
+    "",
+    "Thank you for learning with KSOS HTC.",
+  ].join("\n");
+
+  const resultColor = data.passed ? "#198754" : "#b45309";
+  const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
+<p style="margin:0 0 1em;">Dear ${escapeHtml(name)},</p>
+<p style="margin:0 0 1em;">Your answers for a <strong>module quiz</strong> have been marked automatically.</p>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 1em;">
+<tr><td style="padding:6px 12px 6px 0;color:#555;">Course</td><td style="padding:6px 0;">${escapeHtml(courseTitle)}</td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;">Quiz</td><td style="padding:6px 0;"><strong>${escapeHtml(quizTitle)}</strong></td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;">Score</td><td style="padding:6px 0;"><strong style="font-size:1.1em;color:#0d6efd;">${data.score}</strong> / ${data.maxScore} <span style="color:#555;">(${data.percentage}%)</span></td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Result</td><td style="padding:6px 0;"><strong style="color:${resultColor};">${data.passed ? "Passed" : "Not passed"}</strong>${data.passed ? "" : " — review the course material and try again when ready."}</td></tr>
+</table>
+<p style="margin:0 0 0.75em;"><a href="${courseUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;">Open course</a></p>
+<p style="margin:0;font-size:14px;color:#555;">View overall progress: <a href="${progressUrl}" style="color:#0d6efd;">${progressUrl}</a></p>
+<p style="margin:1.25em 0 0;font-size:14px;color:#444;">Thank you for learning with <strong>KSOS HTC</strong>.</p>
 </div>`;
 
   await sendEmail(data.email, subject, text, html);

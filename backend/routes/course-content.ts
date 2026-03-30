@@ -10,9 +10,11 @@ import type {
   LessonDoc,
   AssessmentDoc,
   QuizQuestion,
+  User,
 } from "@shared/api";
 import { isValidCourseSlug } from "../lib/course-constants";
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
+import { notifyLearnerModuleQuizResult } from "../lib/notify";
 
 function omitMongoId<T extends { _id?: unknown }>(doc: T | null | undefined): Omit<T, "_id"> | null {
   if (doc == null) return null;
@@ -691,6 +693,25 @@ export async function submitAssessment(req: Request, res: Response): Promise<voi
       submittedAt: now,
     };
     await mongoCollection<SubmissionDoc>(MONGO_COLLECTIONS.submissions).insertOne(submission as any);
+
+    const [learner, courseDoc] = await Promise.all([
+      mongoCollection<User>(MONGO_COLLECTIONS.users).findOne({ id: userId }),
+      mongoCollection<CourseDoc>(MONGO_COLLECTIONS.courses).findOne({ id: courseId }),
+    ]);
+    const courseTitle = courseDoc?.title ?? courseId;
+    if (learner?.email && learner.role !== "admin") {
+      notifyLearnerModuleQuizResult({
+        name: learner.name,
+        email: learner.email,
+        courseTitle,
+        quizTitle: assessment.title,
+        score,
+        maxScore,
+        percentage,
+        passed,
+        courseId,
+      }).catch((err) => console.error("[QUIZ_SUBMIT] Notify learner failed:", err));
+    }
 
     const progressId = `${userId}_${courseId}`;
     const progCol = mongoCollection<ProgressDoc>(MONGO_COLLECTIONS.progress);

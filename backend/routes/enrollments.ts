@@ -1,8 +1,16 @@
 import { Request, Response } from "express";
 import crypto from "node:crypto";
-import type { EnrollmentDoc, EnrollmentStatus } from "@shared/api";
+import type { CourseDoc, EnrollmentDoc, EnrollmentStatus, User } from "@shared/api";
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
+import { notifyLearnerCourseAccess } from "../lib/notify";
 import { getCourseTotalSteps } from "./course-content";
+
+function usersCol() {
+  return mongoCollection<User>(MONGO_COLLECTIONS.users);
+}
+function coursesCol() {
+  return mongoCollection<CourseDoc>(MONGO_COLLECTIONS.courses);
+}
 
 function enrollmentsCol() {
   return mongoCollection<EnrollmentDoc>(MONGO_COLLECTIONS.enrollments);
@@ -33,6 +41,19 @@ export async function postEnrollment(req: Request, res: Response): Promise<void>
       status: "active",
     };
     await col.insertOne(data as any);
+    const [learner, course] = await Promise.all([
+      usersCol().findOne({ id: userId }),
+      coursesCol().findOne({ id: courseId }),
+    ]);
+    const courseTitle = course?.title ?? courseId;
+    if (learner?.email && learner.role !== "admin") {
+      notifyLearnerCourseAccess({
+        name: learner.name,
+        email: learner.email,
+        courseTitle,
+        kind: "enrolled",
+      }).catch((err) => console.error("[ENROLL] Notify learner failed:", err));
+    }
     res.status(201).json({ enrollment: data });
   } catch (e) {
     console.error("postEnrollment:", e);
@@ -96,6 +117,7 @@ export async function patchEnrollment(req: Request, res: Response): Promise<void
       res.status(404).json({ error: "Enrollment not found." });
       return;
     }
+    const wasNotApproved = snap.status === "not_approved";
     if (body.status !== undefined) {
       const allowed: EnrollmentStatus[] = ["not_approved", "active", "completed"];
       if (!allowed.includes(body.status)) {
@@ -105,6 +127,27 @@ export async function patchEnrollment(req: Request, res: Response): Promise<void
       await col.updateOne({ id }, { $set: { status: body.status } });
     }
     const updated = await col.findOne({ id });
+    if (
+      updated &&
+      wasNotApproved &&
+      body.status === "active" &&
+      updated.userId &&
+      updated.courseId
+    ) {
+      const [learner, course] = await Promise.all([
+        usersCol().findOne({ id: updated.userId }),
+        coursesCol().findOne({ id: updated.courseId }),
+      ]);
+      const courseTitle = course?.title ?? updated.courseId;
+      if (learner?.email && learner.role !== "admin") {
+        notifyLearnerCourseAccess({
+          name: learner.name,
+          email: learner.email,
+          courseTitle,
+          kind: "activated",
+        }).catch((err) => console.error("[ENROLL] Notify learner (activated) failed:", err));
+      }
+    }
     res.json({ enrollment: updated });
   } catch (e) {
     console.error("patchEnrollment:", e);
