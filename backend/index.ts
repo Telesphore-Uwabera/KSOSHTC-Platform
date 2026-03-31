@@ -64,6 +64,8 @@ import { postEnrollment, getEnrollments, patchEnrollment } from "./routes/enroll
 import { getProgress, patchProgress } from "./routes/progress";
 import { postContact } from "./routes/contact";
 import { getMongoDb, mongoCollection, MONGO_COLLECTIONS } from "./lib/mongo";
+import { requireAdminSession } from "./lib/adminSession";
+import { rateLimitLogin, rateLimitRegister } from "./lib/rateLimit";
 import type { LessonDoc } from "@shared/api";
 
 /** Log each request and response to the terminal (method, path, status, duration) */
@@ -178,80 +180,104 @@ export function createServer(options?: { apiOnly?: boolean }) {
 
   // Testimonials (admin-managed)
   app.get("/api/testimonials", getTestimonials);
-  app.post("/api/testimonials", postTestimonial);
+  app.post("/api/testimonials", requireAdminSession, postTestimonial);
 
   // Contact form (saved to MongoDB)
   app.post("/api/contact", postContact);
 
   // Users: register, login, list (admin), approve (admin), CRUD (admin)
-  app.post("/api/register", postRegister);
-  app.post("/api/login", postLogin);
-  app.get("/api/users", getUsers);
-  app.get("/api/users/learners-summary", getLearnersSummary);
+  app.post("/api/register", rateLimitRegister, postRegister);
+  app.post("/api/login", rateLimitLogin, postLogin);
+  app.get("/api/users", requireAdminSession, getUsers);
+  app.get("/api/users/learners-summary", requireAdminSession, getLearnersSummary);
   app.get("/api/users/:id", getUser);
-  app.patch("/api/users/:id/approve", patchUserApprove);
+  app.patch("/api/users/:id/approve", requireAdminSession, patchUserApprove);
   app.post("/api/forgot-password", postForgotPassword);
   app.post("/api/reset-password", postResetPassword);
-  app.post("/api/users", postUser);
-  app.put("/api/users/:id", putUser);
-  app.delete("/api/users/:id", deleteUser);
+  app.post("/api/users", requireAdminSession, postUser);
+  app.put("/api/users/:id", requireAdminSession, putUser);
+  app.delete("/api/users/:id", requireAdminSession, deleteUser);
 
   // Courses (list) and per-course quiz (get, create/update, delete)
   app.get("/api/courses", getCourses);
   app.get("/api/courses/:courseId/quiz", getCourseQuiz);
-  app.put("/api/courses/:courseId/quiz", putCourseQuiz);
-  app.delete("/api/courses/:courseId/quiz", deleteCourseQuiz);
-  
-  app.post("/api/admin/test-email", async (req, res) => {
-     const { email } = req.body;
-     if (!email) return res.status(400).json({ error: "Email is required." });
-     const { testEmail } = await import("./lib/notify");
-     const result = await testEmail(email);
-     if (result.success) res.json(result);
-     else res.status(500).json(result);
-  });
+  app.put("/api/courses/:courseId/quiz", requireAdminSession, putCourseQuiz);
+  app.delete("/api/courses/:courseId/quiz", requireAdminSession, deleteCourseQuiz);
+
+  app.post(
+    "/api/admin/test-email",
+    requireAdminSession,
+    async (req, res) => {
+      const { email } = req.body;
+      if (!email) return res.status(400).json({ error: "Email is required." });
+      const { testEmail } = await import("./lib/notify");
+      const result = await testEmail(email);
+      if (result.success) res.json(result);
+      else res.status(500).json(result);
+    }
+  );
 
   // Analytics (for main dashboard only)
-  app.get("/api/analytics/course-usage", getCourseUsage);
+  app.get("/api/analytics/course-usage", requireAdminSession, getCourseUsage);
 
   // Course content (Firestore): courses, modules, lessons, assessments
   app.get("/api/course-content/courses", listCourseContent);
-  app.post("/api/course-content/courses/:courseId/upload-pdf", uploadCoursePdf);
-  app.post("/api/course-content/courses/:courseId/cover-image", uploadCourseCover);
+  app.post("/api/course-content/courses/:courseId/upload-pdf", requireAdminSession, uploadCoursePdf);
+  app.post("/api/course-content/courses/:courseId/cover-image", requireAdminSession, uploadCourseCover);
   app.get("/api/course-content/courses/:courseId", getCourse);
   app.get("/api/course-content/courses/:courseId/stats", getCourseStats);
-  app.post("/api/course-content/courses", createCourse);
-  app.put("/api/course-content/courses/:courseId", updateCourse);
+  app.post("/api/course-content/courses", requireAdminSession, createCourse);
+  app.put("/api/course-content/courses/:courseId", requireAdminSession, updateCourse);
   app.get("/api/course-content/courses/:courseId/modules", listModules);
-  app.post("/api/course-content/courses/:courseId/modules", createModule);
-  app.put("/api/course-content/courses/:courseId/modules/:moduleId", updateModule);
-  app.delete("/api/course-content/courses/:courseId/modules/:moduleId", deleteModule);
+  app.post("/api/course-content/courses/:courseId/modules", requireAdminSession, createModule);
+  app.put("/api/course-content/courses/:courseId/modules/:moduleId", requireAdminSession, updateModule);
+  app.delete("/api/course-content/courses/:courseId/modules/:moduleId", requireAdminSession, deleteModule);
   app.get("/api/course-content/courses/:courseId/modules/:moduleId/lessons", listLessons);
-  app.post("/api/course-content/courses/:courseId/modules/:moduleId/lessons", createLesson);
-  app.put("/api/course-content/courses/:courseId/modules/:moduleId/lessons/:lessonId", updateLesson);
-  app.delete("/api/course-content/courses/:courseId/modules/:moduleId/lessons/:lessonId", deleteLesson);
+  app.post("/api/course-content/courses/:courseId/modules/:moduleId/lessons", requireAdminSession, createLesson);
+  app.put(
+    "/api/course-content/courses/:courseId/modules/:moduleId/lessons/:lessonId",
+    requireAdminSession,
+    updateLesson
+  );
+  app.delete(
+    "/api/course-content/courses/:courseId/modules/:moduleId/lessons/:lessonId",
+    requireAdminSession,
+    deleteLesson
+  );
   app.get("/api/course-content/courses/:courseId/modules/:moduleId/assessments", listAssessments);
   app.get("/api/course-content/courses/:courseId/modules/:moduleId/items", getModuleItems);
   app.get("/api/course-content/stream-document", streamCourseDocument);
   app.get("/api/course-content/courses/:courseId/resolve-pdf", resolveCoursePdf);
   app.get("/api/course-content/courses/:courseId/modules/:moduleId/assessments/:assessmentId", getAssessment);
-  app.post("/api/course-content/courses/:courseId/modules/:moduleId/assessments", createAssessment);
-  app.put("/api/course-content/courses/:courseId/modules/:moduleId/assessments/:assessmentId", updateAssessment);
-  app.delete("/api/course-content/courses/:courseId/modules/:moduleId/assessments/:assessmentId", deleteAssessment);
+  app.post(
+    "/api/course-content/courses/:courseId/modules/:moduleId/assessments",
+    requireAdminSession,
+    createAssessment
+  );
+  app.put(
+    "/api/course-content/courses/:courseId/modules/:moduleId/assessments/:assessmentId",
+    requireAdminSession,
+    updateAssessment
+  );
+  app.delete(
+    "/api/course-content/courses/:courseId/modules/:moduleId/assessments/:assessmentId",
+    requireAdminSession,
+    deleteAssessment
+  );
   app.post("/api/course-content/courses/:courseId/modules/:moduleId/assessments/:assessmentId/submit", submitAssessment);
   app.get("/api/submissions", getSubmissions);
 
   app.post("/api/assignment-submissions", postAssignmentSubmission);
   app.get("/api/assignment-submissions", getAssignmentSubmissions);
-  app.patch("/api/assignment-submissions/:id", patchAssignmentSubmission);
+  app.patch("/api/assignment-submissions/:id", requireAdminSession, patchAssignmentSubmission);
 
-  app.post("/api/admin-distributed-assignments", postAdminDistributedAssignment);
-  app.get("/api/admin-distributed-assignments", listAdminDistributedAssignments);
   app.get("/api/admin-distributed-assignments/for-learner", listAdminDistributedAssignmentsForLearner);
+  app.post("/api/admin-distributed-assignments", requireAdminSession, postAdminDistributedAssignment);
+  app.get("/api/admin-distributed-assignments", requireAdminSession, listAdminDistributedAssignments);
 
   app.post("/api/enrollments", postEnrollment);
   app.get("/api/enrollments", getEnrollments);
-  app.patch("/api/enrollments/:id", patchEnrollment);
+  app.patch("/api/enrollments/:id", requireAdminSession, patchEnrollment);
   app.get("/api/progress", getProgress);
   app.patch("/api/progress", patchProgress);
 

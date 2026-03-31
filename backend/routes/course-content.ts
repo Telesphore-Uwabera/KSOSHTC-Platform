@@ -15,6 +15,7 @@ import type {
 import { isValidCourseSlug } from "../lib/course-constants";
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { notifyLearnerModuleQuizResult } from "../lib/notify";
+import { isAdminSessionAuthorized } from "../lib/adminSession";
 
 function omitMongoId<T extends { _id?: unknown }>(doc: T | null | undefined): Omit<T, "_id"> | null {
   if (doc == null) return null;
@@ -752,6 +753,10 @@ export async function getSubmissions(req: Request, res: Response): Promise<void>
     const filter: Record<string, string> = {};
     if (courseId) filter.courseId = courseId;
     if (userId) filter.userId = userId;
+    if (Object.keys(filter).length === 0 && !isAdminSessionAuthorized(req)) {
+      res.status(401).json({ error: "Admin session required to list all quiz submissions." });
+      return;
+    }
     const list = await mongoCollection<SubmissionDoc>(MONGO_COLLECTIONS.submissions)
       .find(Object.keys(filter).length ? filter : {})
       .toArray();

@@ -18,32 +18,33 @@ import {
 import type { CourseDoc, ModuleDoc, LessonDoc, AssessmentDoc } from "@shared/api";
 
 import { getApiBase } from "@/lib/apiBase";
+import { adminFetch } from "@/lib/adminApi";
 
 const getCourseContentApi = () => getApiBase() + "/api/course-content";
 
 async function fetchCourse(courseId: string): Promise<CourseDoc | null> {
-  const res = await fetch(`${getCourseContentApi()}/courses/${courseId}`);
+  const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}`);
   if (!res.ok) return null;
   const data = await res.json();
   return data as CourseDoc;
 }
 
 async function fetchModules(courseId: string): Promise<ModuleDoc[]> {
-  const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules`);
+  const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules`);
   if (!res.ok) return [];
   const data = await res.json();
   return (data as { modules: ModuleDoc[] }).modules ?? [];
 }
 
 async function fetchLessons(courseId: string, moduleId: string): Promise<LessonDoc[]> {
-  const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/lessons`);
+  const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/lessons`);
   if (!res.ok) return [];
   const data = await res.json();
   return (data as { lessons: LessonDoc[] }).lessons ?? [];
 }
 
 async function fetchAssessments(courseId: string, moduleId: string): Promise<AssessmentDoc[]> {
-  const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/assessments`);
+  const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/assessments`);
   if (!res.ok) return [];
   const data = await res.json();
   return (data as { assessments: AssessmentDoc[] }).assessments ?? [];
@@ -89,7 +90,7 @@ function UploadDocumentBlock({
         r.onerror = () => reject(new Error("Failed to read file"));
         r.readAsDataURL(file);
       });
-      const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/upload-pdf`, {
+      const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/upload-pdf`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ filename: file.name, contentBase64: base64 }),
@@ -166,7 +167,7 @@ function UploadCoverBlock({
         r.onerror = () => reject(new Error("Failed to read file"));
         r.readAsDataURL(file);
       });
-      const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/cover-image`, {
+      const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/cover-image`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ contentBase64: base64, contentType }),
@@ -235,7 +236,7 @@ export default function AdminCourseContentDetail() {
 
   const addModuleMutation = useMutation({
     mutationFn: async (title: string) => {
-      const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules`, {
+      const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, order: modules.length }),
@@ -255,7 +256,7 @@ export default function AdminCourseContentDetail() {
 
   const addLessonMutation = useMutation({
     mutationFn: async ({ moduleId, title, youtubeUrl, pdfUrl, contentHtml }: { moduleId: string; title: string; youtubeUrl?: string; pdfUrl?: string; contentHtml?: string }) => {
-      const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/lessons`, {
+      const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/lessons`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, order: 0, youtubeUrl: youtubeUrl || undefined, pdfUrl: pdfUrl || undefined, contentHtml: contentHtml || "" }),
@@ -274,7 +275,7 @@ export default function AdminCourseContentDetail() {
 
   const updateLessonMutation = useMutation({
     mutationFn: async ({ moduleId, lessonId, title, youtubeUrl, pdfUrl, contentHtml }: { moduleId: string; lessonId: string; title: string; youtubeUrl?: string; pdfUrl?: string; contentHtml?: string }) => {
-      const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}`, {
+      const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title, youtubeUrl: youtubeUrl || undefined, pdfUrl: pdfUrl || undefined, contentHtml: contentHtml || "" }),
@@ -294,7 +295,7 @@ export default function AdminCourseContentDetail() {
   const deleteModuleMutation = useMutation({
     mutationFn: async (moduleId: string) => {
       if (!window.confirm("Are you sure you want to delete this module and all its contents?")) return;
-      const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}`, { method: "DELETE" });
+      const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete module");
     },
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["course-content", "modules", courseId] }),
@@ -303,7 +304,7 @@ export default function AdminCourseContentDetail() {
   const deleteLessonMutation = useMutation({
     mutationFn: async ({ moduleId, lessonId }: { moduleId: string, lessonId: string }) => {
       if (!window.confirm("Are you sure you want to delete this lesson?")) return;
-      const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}`, { method: "DELETE" });
+      const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete lesson");
     },
     onSuccess: (_, { moduleId }) => queryClient.invalidateQueries({ queryKey: ["course-content", "lessons", courseId, moduleId] }),
@@ -312,7 +313,7 @@ export default function AdminCourseContentDetail() {
   const deleteAssessmentMutation = useMutation({
     mutationFn: async ({ moduleId, assessmentId }: { moduleId: string, assessmentId: string }) => {
       if (!window.confirm("Are you sure you want to delete this assessment?")) return;
-      const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/assessments/${assessmentId}`, { method: "DELETE" });
+      const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/assessments/${assessmentId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete assessment");
     },
     onSuccess: (_, { moduleId }) => queryClient.invalidateQueries({ queryKey: ["course-content", "assessments", courseId, moduleId] }),
@@ -320,7 +321,7 @@ export default function AdminCourseContentDetail() {
 
   const updateCourseMutation = useMutation({
     mutationFn: async (title: string) => {
-      const res = await fetch(`${getCourseContentApi()}/courses/${courseId}`, {
+      const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ title }),
@@ -581,7 +582,7 @@ function ModuleBlock({
           r.onerror = reject;
           r.readAsDataURL(newLessonPdfFile);
         });
-        const res = await fetch(`${getApiBase()}/api/course-content/courses/${courseId}/upload-pdf`, {
+        const res = await adminFetch(`${getApiBase()}/api/course-content/courses/${courseId}/upload-pdf`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ filename: newLessonPdfFile.name, contentBase64: base64 }),
@@ -846,7 +847,7 @@ function AddAssessmentForm({
     setError("");
     setSaving(true);
     try {
-      const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/assessments`, {
+      const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/assessments`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -964,7 +965,7 @@ function LessonEditModal({
           r.onerror = reject;
           r.readAsDataURL(pdfFile);
         });
-        const res = await fetch(`${getApiBase()}/api/course-content/courses/${courseId}/upload-pdf`, {
+        const res = await adminFetch(`${getApiBase()}/api/course-content/courses/${courseId}/upload-pdf`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ filename: pdfFile.name, contentBase64: base64 }),

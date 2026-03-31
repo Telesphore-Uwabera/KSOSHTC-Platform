@@ -4,15 +4,16 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Save, Loader2, Trash2, Plus, ArrowLeft } from "lucide-react";
 import type { Quiz, QuizQuestion, CourseId } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
+import { adminFetch } from "@/lib/adminApi";
 
 async function fetchQuiz(courseId: string): Promise<Quiz | null> {
-  const res = await fetch(getApiBase() + `/api/courses/${courseId}/quiz`);
+  const res = await adminFetch(getApiBase() + `/api/courses/${courseId}/quiz`);
   if (!res.ok) return null;
   return res.json();
 }
 
 async function saveQuiz(courseId: string, payload: Partial<Quiz> & { questions: QuizQuestion[] }): Promise<Quiz> {
-  const res = await fetch(getApiBase() + `/api/courses/${courseId}/quiz`, {
+  const res = await adminFetch(getApiBase() + `/api/courses/${courseId}/quiz`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
@@ -25,7 +26,7 @@ async function saveQuiz(courseId: string, payload: Partial<Quiz> & { questions: 
 }
 
 async function deleteQuiz(courseId: string): Promise<void> {
-  const res = await fetch(getApiBase() + `/api/courses/${courseId}/quiz`, { method: "DELETE" });
+  const res = await adminFetch(getApiBase() + `/api/courses/${courseId}/quiz`, { method: "DELETE" });
   if (!res.ok) throw new Error("Failed to delete quiz");
 }
 

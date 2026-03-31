@@ -4,11 +4,12 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save, Loader2, Trash2, Plus, ArrowLeft, CheckCircle } from "lucide-react";
 import type { AssessmentDoc, QuizQuestion, LessonDoc } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
+import { adminFetch } from "@/lib/adminApi";
 
 const getCourseContentApi = () => getApiBase() + "/api/course-content";
 
 async function fetchAssessment(courseId: string, moduleId: string, assessmentId: string): Promise<AssessmentDoc | null> {
-  const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/assessments`);
+  const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/assessments`);
   if (!res.ok) return null;
   const data = await res.json();
   const list = (data as { assessments: AssessmentDoc[] }).assessments ?? [];
@@ -16,7 +17,7 @@ async function fetchAssessment(courseId: string, moduleId: string, assessmentId:
 }
 
 async function fetchLessons(courseId: string, moduleId: string): Promise<LessonDoc[]> {
-  const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/lessons`);
+  const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/lessons`);
   if (!res.ok) return [];
   const data = await res.json();
   return (data as { lessons: LessonDoc[] }).lessons ?? [];
@@ -72,7 +73,7 @@ export default function AdminModuleAssessment() {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/assessments/${assessmentId}`, {
+      const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/assessments/${assessmentId}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

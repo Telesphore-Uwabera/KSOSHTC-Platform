@@ -6,9 +6,10 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import type { TestimonialCreate, UserPublic } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
+import { adminFetch } from "@/lib/adminApi";
 
 async function addTestimonial(data: TestimonialCreate): Promise<unknown> {
-  const res = await fetch(getApiBase() + "/api/testimonials", {
+  const res = await adminFetch(getApiBase() + "/api/testimonials", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -21,14 +22,14 @@ async function addTestimonial(data: TestimonialCreate): Promise<unknown> {
 }
 
 async function fetchUsers(): Promise<UserPublic[]> {
-  const res = await fetch(getApiBase() + "/api/users");
+  const res = await adminFetch(getApiBase() + "/api/users");
   if (!res.ok) throw new Error("Failed to load users");
   const data = await res.json();
   return (data as { users: UserPublic[] }).users ?? [];
 }
 
 async function approveUser(id: string): Promise<void> {
-  const res = await fetch(getApiBase() + `/api/users/${id}/approve`, { method: "PATCH" });
+  const res = await adminFetch(getApiBase() + `/api/users/${id}/approve`, { method: "PATCH" });
   if (!res.ok) throw new Error("Failed to approve user");
 }
 

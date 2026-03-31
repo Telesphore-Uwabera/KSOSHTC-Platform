@@ -3,9 +3,10 @@ import { Link } from "react-router-dom";
 import { BookOpen, ChevronRight, FolderOpen, Loader2 } from "lucide-react";
 import type { CourseDoc } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
+import { adminFetch } from "@/lib/adminApi";
 
 async function fetchCourseContent(): Promise<CourseDoc[]> {
-  const res = await fetch(getApiBase() + "/api/course-content/courses");
+  const res = await adminFetch(getApiBase() + "/api/course-content/courses");
   if (!res.ok) throw new Error("Failed to load courses");
   const data = await res.json();
   return (data as { courses: CourseDoc[] }).courses ?? [];

@@ -4,6 +4,7 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { LogIn, Loader2, ShieldCheck } from "lucide-react";
 import { getStoredUser, setStoredUser } from "@/lib/auth";
+import { setAdminSessionToken } from "@/lib/adminApi";
 import { getApiBase } from "@/lib/apiBase";
 
 export default function AdminLogin() {
@@ -38,12 +39,14 @@ export default function AdminLogin() {
         return;
       }
       const user = (data as { user?: unknown }).user;
+      const adminSessionToken = (data as { adminSessionToken?: string }).adminSessionToken;
       if (user && typeof user === "object" && "id" in user) {
         const role = (user as { role?: string }).role;
         if (role !== "admin") {
           setError("Only administrators can sign in here. Use the main login page for learners.");
           return;
         }
+        setAdminSessionToken(adminSessionToken ?? null);
         setStoredUser(user as Parameters<typeof setStoredUser>[0]);
         const from = (location.state as { from?: string } | null)?.from;
         navigate(from && from.startsWith("/admin") ? from : "/admin", { replace: true });

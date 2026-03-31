@@ -4,6 +4,7 @@ import type { CourseDoc, EnrollmentDoc, EnrollmentStatus, User } from "@shared/a
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { notifyLearnerCourseAccess } from "../lib/notify";
 import { getCourseTotalSteps } from "./course-content";
+import { isAdminSessionAuthorized } from "../lib/adminSession";
 
 function usersCol() {
   return mongoCollection<User>(MONGO_COLLECTIONS.users);
@@ -96,6 +97,10 @@ export async function getEnrollments(req: Request, res: Response): Promise<void>
       return;
     }
     if (courseId) {
+      if (!isAdminSessionAuthorized(req)) {
+        res.status(401).json({ error: "Admin session required to list enrollments by course." });
+        return;
+      }
       const list = await col.find({ courseId }).toArray();
       res.json({ enrollments: list });
       return;

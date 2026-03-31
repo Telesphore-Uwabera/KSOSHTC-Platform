@@ -10,6 +10,7 @@ import {
   notifyPasswordReset,
   notifyPasswordResetSuccessful,
 } from "../lib/notify";
+import { issueAdminSessionToken } from "../lib/adminSession";
 import type { EnrollmentWithPercent } from "./enrollments";
 import { getEnrollmentsForUser } from "./enrollments";
 import type { SubmissionDoc } from "@shared/api";
@@ -133,7 +134,16 @@ export async function postLogin(req: Request, res: Response): Promise<void> {
         role: "admin",
         createdAt: now,
       };
-      res.json({ user: toPublic(adminUser) });
+      const adminSessionToken = issueAdminSessionToken();
+      if (adminSessionToken) {
+        res.json({ user: toPublic(adminUser), adminSessionToken });
+      } else {
+        res.json({
+          user: toPublic(adminUser),
+          adminSessionWarning:
+            "Set ADMIN_SESSION_SECRET in server environment to protect admin APIs with this session token.",
+        });
+      }
       return;
     }
 

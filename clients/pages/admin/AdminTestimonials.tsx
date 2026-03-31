@@ -3,9 +3,10 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { MessageSquareQuote, Save, Loader2 } from "lucide-react";
 import type { Testimonial, TestimonialCreate } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
+import { adminFetch } from "@/lib/adminApi";
 
 async function addTestimonial(data: TestimonialCreate): Promise<unknown> {
-  const res = await fetch(getApiBase() + "/api/testimonials", {
+  const res = await adminFetch(getApiBase() + "/api/testimonials", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(data),
@@ -18,7 +19,7 @@ async function addTestimonial(data: TestimonialCreate): Promise<unknown> {
 }
 
 async function fetchTestimonials(): Promise<Testimonial[]> {
-  const res = await fetch(getApiBase() + "/api/testimonials");
+  const res = await adminFetch(getApiBase() + "/api/testimonials");
   if (!res.ok) throw new Error("Failed to load testimonials");
   return res.json();
 }

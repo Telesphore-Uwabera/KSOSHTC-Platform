@@ -3,16 +3,17 @@ import { Link } from "react-router-dom";
 import { ClipboardList, Edit, Plus } from "lucide-react";
 import type { CoursePublic } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
+import { adminFetch } from "@/lib/adminApi";
 
 async function fetchCourses(): Promise<CoursePublic[]> {
-  const res = await fetch(getApiBase() + "/api/courses");
+  const res = await adminFetch(getApiBase() + "/api/courses");
   if (!res.ok) throw new Error("Failed to load courses");
   const data = await res.json();
   return (data as { courses: CoursePublic[] }).courses ?? [];
 }
 
 async function fetchQuizExists(courseId: string): Promise<boolean> {
-  const res = await fetch(getApiBase() + `/api/courses/${courseId}/quiz`);
+  const res = await adminFetch(getApiBase() + `/api/courses/${courseId}/quiz`);
   return res.ok;
 }
 

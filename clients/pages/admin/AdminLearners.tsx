@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Users, CheckCircle, Loader2, BookOpen, ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from "lucide-react";
 import type { UserPublic, EnrollmentDoc, EnrollmentStatus, CourseDoc, LearnerSector } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
+import { adminFetch } from "@/lib/adminApi";
 
 const SECTOR_OPTIONS: { value: LearnerSector | ""; label: string }[] = [
   { value: "", label: "—" },
@@ -20,25 +21,25 @@ async function fetchLearnersSummary(): Promise<{
   users: UserPublic[];
   enrollmentsByUserId: Record<string, EnrollmentWithPerformance[]>;
 }> {
-  const res = await fetch(getApiBase() + "/api/users/learners-summary");
+  const res = await adminFetch(getApiBase() + "/api/users/learners-summary");
   if (!res.ok) throw new Error("Failed to load learners");
   return res.json();
 }
 
 async function fetchCourses(): Promise<CourseDoc[]> {
-  const res = await fetch(getApiBase() + "/api/course-content/courses");
+  const res = await adminFetch(getApiBase() + "/api/course-content/courses");
   if (!res.ok) return [];
   const data = await res.json();
   return (data.courses ?? []).filter((c: CourseDoc) => c.published !== false);
 }
 
 async function approveUser(id: string): Promise<void> {
-  const res = await fetch(getApiBase() + `/api/users/${id}/approve`, { method: "PATCH" });
+  const res = await adminFetch(getApiBase() + `/api/users/${id}/approve`, { method: "PATCH" });
   if (!res.ok) throw new Error("Failed to approve user");
 }
 
 async function updateEnrollmentStatus(enrollmentId: string, status: EnrollmentStatus): Promise<void> {
-  const res = await fetch(getApiBase() + `/api/enrollments/${enrollmentId}`, {
+  const res = await adminFetch(getApiBase() + `/api/enrollments/${enrollmentId}`, {
     method: "PATCH",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ status }),
@@ -47,7 +48,7 @@ async function updateEnrollmentStatus(enrollmentId: string, status: EnrollmentSt
 }
 
 async function addEnrollment(userId: string, courseId: string): Promise<void> {
-  const res = await fetch(getApiBase() + "/api/enrollments", {
+  const res = await adminFetch(getApiBase() + "/api/enrollments", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ userId, courseId }),
@@ -59,7 +60,7 @@ async function addEnrollment(userId: string, courseId: string): Promise<void> {
 }
 
 async function createLearner(body: { name: string; email: string; password: string; organization?: string; sector?: LearnerSector; approved?: boolean }): Promise<UserPublic> {
-  const res = await fetch(getApiBase() + "/api/users", {
+  const res = await adminFetch(getApiBase() + "/api/users", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -76,7 +77,7 @@ async function updateLearner(
   id: string,
   body: { name?: string; email?: string; password?: string; organization?: string; sector?: LearnerSector | ""; approved?: boolean }
 ): Promise<UserPublic> {
-  const res = await fetch(getApiBase() + `/api/users/${id}`, {
+  const res = await adminFetch(getApiBase() + `/api/users/${id}`, {
     method: "PUT",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
@@ -90,7 +91,7 @@ async function updateLearner(
 }
 
 async function deleteLearner(id: string): Promise<void> {
-  const res = await fetch(getApiBase() + `/api/users/${id}`, { method: "DELETE" });
+  const res = await adminFetch(getApiBase() + `/api/users/${id}`, { method: "DELETE" });
   if (!res.ok) {
     const data = await res.json().catch(() => ({}));
     throw new Error((data as { error?: string }).error ?? "Failed to delete learner");

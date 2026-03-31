@@ -4,6 +4,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { User, Building2, Lock, ShieldCheck, Loader2 } from "lucide-react";
 import { setStoredUser } from "../lib/auth";
+import { setAdminSessionToken } from "@/lib/adminApi";
 import { getApiBase } from "@/lib/apiBase";
 
 /** Value sent to API: determines which courses the learner will see (sector course + safety-management). */
@@ -74,6 +75,7 @@ export default function Register() {
       }
       const user = (data as { user?: unknown }).user;
       if (user && typeof user === "object" && "id" in user) {
+        setAdminSessionToken(null);
         setStoredUser(user as Parameters<typeof setStoredUser>[0]);
         navigate("/courses");
       }

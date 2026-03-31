@@ -6,6 +6,7 @@ import { enrollmentAllowsLearnerAccess } from "../../shared/learnerEnrollment.ts
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { v2 as cloudinary } from "cloudinary";
 import { notifyAdminAssignmentSubmitted, notifyLearnerAssignmentGraded } from "../lib/notify";
+import { isAdminSessionAuthorized } from "../lib/adminSession";
 
 function usersCol() {
   return mongoCollection<User>(MONGO_COLLECTIONS.users);
@@ -137,6 +138,10 @@ export async function getAssignmentSubmissions(req: Request, res: Response): Pro
     const filter: Record<string, string> = {};
     if (courseId) filter.courseId = courseId;
     if (userId) filter.userId = userId;
+    if (Object.keys(filter).length === 0 && !isAdminSessionAuthorized(req)) {
+      res.status(401).json({ error: "Admin session required to list all assignment submissions." });
+      return;
+    }
     const list = await assignmentSubsCol()
       .find(Object.keys(filter).length ? filter : {})
       .toArray();

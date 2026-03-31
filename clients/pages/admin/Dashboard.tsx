@@ -4,29 +4,30 @@ import { Users, BarChart3, TrendingUp, ShieldCheck, MessageSquareQuote, BookOpen
 import type { CoursePublic, CourseUsageItem, Testimonial, UserPublic } from "@shared/api";
 import { Bar, BarChart, CartesianGrid, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { getApiBase } from "@/lib/apiBase";
+import { adminFetch } from "@/lib/adminApi";
 
 async function fetchCourseUsage(): Promise<CourseUsageItem[]> {
-  const res = await fetch(getApiBase() + "/api/analytics/course-usage");
+  const res = await adminFetch(getApiBase() + "/api/analytics/course-usage");
   if (!res.ok) throw new Error("Failed to load course usage");
   const data = await res.json();
   return (data as { courseUsage: CourseUsageItem[] }).courseUsage ?? [];
 }
 
 async function fetchUsers(): Promise<UserPublic[]> {
-  const res = await fetch(getApiBase() + "/api/users");
+  const res = await adminFetch(getApiBase() + "/api/users");
   if (!res.ok) throw new Error("Failed to load users");
   const data = await res.json();
   return (data as { users: UserPublic[] }).users ?? [];
 }
 
 async function fetchTestimonials(): Promise<Testimonial[]> {
-  const res = await fetch(getApiBase() + "/api/testimonials");
+  const res = await adminFetch(getApiBase() + "/api/testimonials");
   if (!res.ok) throw new Error("Failed to load testimonials");
   return res.json();
 }
 
 async function fetchCourses(): Promise<CoursePublic[]> {
-  const res = await fetch(getApiBase() + "/api/courses");
+  const res = await adminFetch(getApiBase() + "/api/courses");
   if (!res.ok) throw new Error("Failed to load courses");
   const data = await res.json();
   return (data as { courses: CoursePublic[] }).courses ?? [];
@@ -35,7 +36,7 @@ async function fetchCourses(): Promise<CoursePublic[]> {
 async function fetchQuizConfiguredCount(courses: CoursePublic[]): Promise<number> {
   const results = await Promise.all(
     courses.map(async (c) => {
-      const res = await fetch(getApiBase() + `/api/courses/${c.id}/quiz`);
+      const res = await adminFetch(getApiBase() + `/api/courses/${c.id}/quiz`);
       if (!res.ok) return 0;
       const data = await res.json().catch(() => null);
       return data && typeof data === "object" ? 1 : 0;

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { ClipboardList, ExternalLink, Loader2, Pencil } from "lucide-react";
 import type { AssignmentSubmissionDoc } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
+import { adminFetch } from "@/lib/adminApi";
 
 function buildStreamUrl(pdfUrl: string, filename: string): string {
   const base = getApiBase();
@@ -13,7 +14,7 @@ function buildStreamUrl(pdfUrl: string, filename: string): string {
 }
 
 async function fetchAll(): Promise<AssignmentSubmissionDoc[]> {
-  const res = await fetch(getApiBase() + "/api/assignment-submissions");
+  const res = await adminFetch(getApiBase() + "/api/assignment-submissions");
   if (!res.ok) throw new Error("Failed to load submissions");
   const data = await res.json();
   return data.submissions ?? [];
@@ -34,7 +35,7 @@ export default function AdminAssignmentSubmissions() {
 
   const patchMut = useMutation({
     mutationFn: async (body: { id: string; marks: number; maxMarks: number; feedback: string }) => {
-      const res = await fetch(getApiBase() + "/api/assignment-submissions/" + encodeURIComponent(body.id), {
+      const res = await adminFetch(getApiBase() + "/api/assignment-submissions/" + encodeURIComponent(body.id), {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

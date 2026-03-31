@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileSpreadsheet, Loader2, ExternalLink, Send } from "lucide-react";
 import type { AdminDistributedAssignmentDoc, CourseDoc } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
+import { adminFetch } from "@/lib/adminApi";
 
 function buildStreamUrl(pdfUrl: string, filename: string): string {
   const base = getApiBase();
@@ -13,14 +14,14 @@ function buildStreamUrl(pdfUrl: string, filename: string): string {
 }
 
 async function fetchCourses(): Promise<CourseDoc[]> {
-  const res = await fetch(getApiBase() + "/api/course-content/courses");
+  const res = await adminFetch(getApiBase() + "/api/course-content/courses");
   if (!res.ok) throw new Error("Failed to load courses");
   const data = await res.json();
   return (data.courses ?? []).filter((c: CourseDoc) => c.published !== false);
 }
 
 async function fetchList(): Promise<AdminDistributedAssignmentDoc[]> {
-  const res = await fetch(getApiBase() + "/api/admin-distributed-assignments");
+  const res = await adminFetch(getApiBase() + "/api/admin-distributed-assignments");
   if (!res.ok) throw new Error("Failed to load handouts");
   const data = await res.json();
   return data.assignments ?? [];
@@ -67,7 +68,7 @@ export default function AdminDistributedAssignments() {
         throw new Error("Title, PDF, and at least one target course are required.");
       }
       const contentBase64 = await fileToBase64(file);
-      const res = await fetch(getApiBase() + "/api/admin-distributed-assignments", {
+      const res = await adminFetch(getApiBase() + "/api/admin-distributed-assignments", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

@@ -4,6 +4,7 @@ import { ArrowLeft, LayoutDashboard, BookOpen, Users, MessageSquareQuote, BarCha
 import Header from "../../components/Header";
 import { cn } from "@/lib/utils";
 import { clearStoredUser, getStoredUser } from "@/lib/auth";
+import { setAdminSessionToken } from "@/lib/adminApi";
 
 const nav = [
   { to: "/admin", end: true, label: "Dashboard", icon: BarChart3 },
@@ -71,6 +72,7 @@ export default function AdminLayout() {
                 <button
                   type="button"
                   onClick={() => {
+                    setAdminSessionToken(null);
                     clearStoredUser();
                     navigate("/admin/login", { replace: true });
                   }}
