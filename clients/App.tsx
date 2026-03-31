@@ -35,6 +35,7 @@ const AdminLearners = lazy(() => import("./pages/admin/AdminLearners"));
 const AdminTestimonials = lazy(() => import("./pages/admin/AdminTestimonials"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminAssignmentSubmissions = lazy(() => import("./pages/admin/AdminAssignmentSubmissions"));
+const AdminDistributedAssignments = lazy(() => import("./pages/admin/AdminDistributedAssignments"));
 const TakeQuiz = lazy(() => import("./pages/TakeQuiz"));
 const TakeModuleQuiz = lazy(() => import("./pages/TakeModuleQuiz"));
 const StudentLayout = lazy(() => import("./pages/StudentLayout"));
@@ -43,6 +44,7 @@ const DashboardCourses = lazy(() => import("./pages/DashboardCourses"));
 const DashboardProgress = lazy(() => import("./pages/DashboardProgress"));
 const DashboardSettings = lazy(() => import("./pages/DashboardSettings"));
 const DashboardWorkSubmissions = lazy(() => import("./pages/DashboardWorkSubmissions"));
+const DashboardHandouts = lazy(() => import("./pages/DashboardHandouts"));
 const Terms = lazy(() => import("./pages/Terms"));
 const Privacy = lazy(() => import("./pages/Privacy"));
 const Cookies = lazy(() => import("./pages/Cookies"));
@@ -176,6 +178,7 @@ const App = () => {
                   <Route path="courses" element={<DashboardCourses />} />
                   <Route path="progress" element={<DashboardProgress />} />
                   <Route path="settings" element={<DashboardSettings />} />
+                  <Route path="handouts" element={<DashboardHandouts />} />
                   <Route path="work-submissions" element={<DashboardWorkSubmissions />} />
                 </Route>
                 <Route path="/register" element={<Register />} />
@@ -190,6 +193,7 @@ const App = () => {
                   <Route path="course-content/:courseId/modules/:moduleId/assessments/:assessmentId" element={<AdminModuleAssessment />} />
                   <Route path="learners" element={<AdminLearners />} />
                   <Route path="assignment-submissions" element={<AdminAssignmentSubmissions />} />
+                  <Route path="distribute-pdf" element={<AdminDistributedAssignments />} />
                   <Route path="testimonials" element={<AdminTestimonials />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>

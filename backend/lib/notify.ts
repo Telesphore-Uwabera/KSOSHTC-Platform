@@ -557,6 +557,68 @@ export async function notifyLearnerCourseAccess(data: {
   await sendEmail(data.email, subject, text, html);
 }
 
+/** Learner email when admin publishes a PDF handout for course(s) they follow. */
+export async function notifyLearnerAdminDistributedPdf(data: {
+  name: string;
+  email: string;
+  title: string;
+  description?: string;
+  courseLabels: string;
+}): Promise<void> {
+  const name = data.name.trim();
+  const title = data.title.trim();
+  const web = webBase();
+  const handoutsUrl = `${web}/dashboard/handouts`;
+  const submitUrl = `${web}/dashboard/work-submissions`;
+
+  const desc =
+    data.description && data.description.trim()
+      ? ["", "Details:", data.description.trim()].join("\n")
+      : "";
+  const descHtml =
+    data.description && data.description.trim()
+      ? `<p style="margin:1em 0 0;font-weight:bold;">Details</p>
+<p style="margin:0.35em 0 0;white-space:pre-wrap;font-size:14px;color:#444;">${escapeHtml(data.description.trim())}</p>`
+      : "";
+
+  const subject = `[KSOSHTC] New assignment / material — ${title}`;
+
+  const text = [
+    `Dear ${name},`,
+    "",
+    "Your instructors have shared a new PDF assignment or quiz material for your programme.",
+    "",
+    `Title: ${title}`,
+    `Relevant course(s): ${data.courseLabels}`,
+    desc,
+    "",
+    "Open Assignment PDFs on your learner dashboard to view and download the file:",
+    handoutsUrl,
+    "",
+    "You can also find the same list under Submit work:",
+    submitUrl,
+    "",
+    "Thank you for learning with KSOS HTC.",
+  ].join("\n");
+
+  const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
+<p style="margin:0 0 1em;">Dear ${escapeHtml(name)},</p>
+<p style="margin:0 0 1em;">Your instructors have shared a <strong>new PDF</strong> (assignment or quiz material) for your programme.</p>
+<p style="margin:0 0 0.35em;"><strong>Title</strong></p>
+<p style="margin:0 0 0.75em;font-size:16px;color:#0d6efd;">${escapeHtml(title)}</p>
+<p style="margin:0 0 0.35em;"><strong>Relevant course(s)</strong></p>
+<p style="margin:0 0 0.75em;">${escapeHtml(data.courseLabels)}</p>
+${descHtml}
+<p style="margin:1.25em 0 0.75em;">View and download the PDF on the <strong>Assignment PDFs</strong> page:</p>
+<p style="margin:0;"><a href="${handoutsUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;">Open Assignment PDFs</a></p>
+<p style="margin:1em 0 0;font-size:14px;color:#555;word-break:break-all;"><a href="${handoutsUrl}" style="color:#0d6efd;">${escapeHtml(handoutsUrl)}</a></p>
+<p style="margin:1em 0 0;font-size:14px;color:#555;">The same files appear under <a href="${submitUrl}" style="color:#0d6efd;">Submit work</a> in your dashboard.</p>
+<p style="margin:1.25em 0 0;font-size:14px;color:#444;">Thank you for learning with <strong>KSOS HTC</strong>.</p>
+</div>`;
+
+  await sendEmail(data.email, subject, text, html);
+}
+
 /** Notify learner after a module / break quiz is submitted and auto-marked on the server. */
 export async function notifyLearnerModuleQuizResult(data: {
   name: string;

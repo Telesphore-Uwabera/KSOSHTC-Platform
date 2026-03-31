@@ -148,6 +148,21 @@ export interface SubmissionDoc {
   submittedAt: string;
 }
 
+/**
+ * Admin-uploaded PDF (assignment / quiz handout) distributed to learners by target courses.
+ * Notifications go only to learners whose allowed courses intersect targetCourseIds.
+ */
+export interface AdminDistributedAssignmentDoc {
+  id: string;
+  title: string;
+  description?: string;
+  pdfUrl: string;
+  originalFilename: string;
+  /** e.g. construction, mining, industrial-safety, safety-management */
+  courseIds: string[];
+  createdAt: string;
+}
+
 /** PDF work submission for an enrolled course (separate from quiz SubmissionDoc). */
 export interface AssignmentSubmissionDoc {
   id: string;

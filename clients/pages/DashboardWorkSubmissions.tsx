@@ -1,11 +1,12 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileUp, Loader2, ExternalLink } from "lucide-react";
+import { FileUp, Loader2, ExternalLink, FileText } from "lucide-react";
 import type { AssignmentSubmissionDoc } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
 import { getStoredUser } from "../lib/auth";
 import { Link } from "react-router-dom";
 import { useDashboardData } from "./dashboardData";
+import { buildAdminHandoutStreamUrl, fetchLearnerHandouts } from "@/lib/learnerAdminHandouts";
 
 function buildStreamUrl(pdfUrl: string, filename: string): string {
   const base = getApiBase();
@@ -47,6 +48,12 @@ export default function DashboardWorkSubmissions() {
   const { data: submissions = [], isLoading: listLoading } = useQuery({
     queryKey: ["assignment-submissions", user?.id],
     queryFn: () => fetchMySubmissions(user!.id),
+    enabled: !!user?.id && canAccess,
+  });
+
+  const { data: handouts = [], isLoading: handoutsLoading } = useQuery({
+    queryKey: ["admin-distributed-assignments", "learner", user?.id],
+    queryFn: () => fetchLearnerHandouts(user!.id),
     enabled: !!user?.id && canAccess,
   });
 
@@ -96,8 +103,61 @@ export default function DashboardWorkSubmissions() {
     );
   }
 
+  const courseLabel = (id: string) => courses.find((c) => c.id === id)?.title ?? id;
+
   return (
     <div className="space-y-6 sm:space-y-8">
+      <div className="bg-white rounded-[30px] shadow-sm border border-gray-200 p-6 sm:p-8">
+        <h2 className="text-lg font-bold text-primary mb-1 flex items-center gap-2">
+          <FileText className="w-6 h-6" />
+          PDFs from KSOSHTC
+        </h2>
+        <p className="text-gray-600 text-sm mb-2">
+          Assignments or quiz materials your instructors shared for your courses. You are notified by email when new
+          PDFs apply to you.
+        </p>
+        <p className="text-sm mb-4">
+          <Link to="/dashboard/handouts" className="font-semibold text-primary hover:underline">
+            Open Assignment PDFs page
+          </Link>{" "}
+          for a full-screen list (same files as here).
+        </p>
+        {handoutsLoading ? (
+          <p className="text-gray-500 text-sm flex items-center gap-2">
+            <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+          </p>
+        ) : handouts.length === 0 ? (
+          <p className="text-gray-600 text-sm">No shared PDFs yet for your programme.</p>
+        ) : (
+          <ul className="space-y-3">
+            {handouts.map((h) => (
+              <li
+                key={h.id}
+                className="rounded-2xl border border-gray-100 bg-gray-50 p-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
+              >
+                <div className="min-w-0">
+                  <p className="font-semibold text-gray-900">{h.title}</p>
+                  <p className="text-xs text-gray-500 mt-0.5">
+                    {h.courseIds.map(courseLabel).join(" · ")} · {new Date(h.createdAt).toLocaleString()}
+                  </p>
+                  {h.description ? (
+                    <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">{h.description}</p>
+                  ) : null}
+                </div>
+                <a
+                  href={buildAdminHandoutStreamUrl(h.pdfUrl, h.originalFilename)}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary shrink-0"
+                >
+                  View PDF <ExternalLink className="w-4 h-4" />
+                </a>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
+
       <div className="bg-white rounded-[30px] shadow-sm border border-gray-200 p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-primary flex items-center gap-2">
           <FileUp className="w-7 h-7" />

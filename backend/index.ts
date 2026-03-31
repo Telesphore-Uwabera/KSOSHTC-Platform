@@ -55,6 +55,11 @@ import {
   getAssignmentSubmissions,
   patchAssignmentSubmission,
 } from "./routes/assignment-submissions";
+import {
+  postAdminDistributedAssignment,
+  listAdminDistributedAssignments,
+  listAdminDistributedAssignmentsForLearner,
+} from "./routes/admin-distributed-assignments";
 import { postEnrollment, getEnrollments, patchEnrollment } from "./routes/enrollments";
 import { getProgress, patchProgress } from "./routes/progress";
 import { postContact } from "./routes/contact";
@@ -239,6 +244,10 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.post("/api/assignment-submissions", postAssignmentSubmission);
   app.get("/api/assignment-submissions", getAssignmentSubmissions);
   app.patch("/api/assignment-submissions/:id", patchAssignmentSubmission);
+
+  app.post("/api/admin-distributed-assignments", postAdminDistributedAssignment);
+  app.get("/api/admin-distributed-assignments", listAdminDistributedAssignments);
+  app.get("/api/admin-distributed-assignments/for-learner", listAdminDistributedAssignmentsForLearner);
 
   app.post("/api/enrollments", postEnrollment);
   app.get("/api/enrollments", getEnrollments);

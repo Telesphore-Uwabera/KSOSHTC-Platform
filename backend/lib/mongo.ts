@@ -56,6 +56,8 @@ export const MONGO_COLLECTIONS = {
   /** Module/course quiz attempts (break quizzes + marks). */
   submissions: "submissions",
   assignment_submissions: "assignment_submissions",
+  /** Admin PDF handouts with per-course targeting + learner email notifications */
+  admin_distributed_assignments: "admin_distributed_assignments",
   progress: "progress",
   /** Contact form submissions (name, email, phone, message). */
   inquiries: "inquiries",

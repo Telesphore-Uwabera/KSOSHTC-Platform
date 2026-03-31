@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import {
   BookOpen,
   ArrowRight,
@@ -10,8 +11,13 @@ import {
   Tag,
   BookOpenCheck,
   ClipboardCheck,
+  FileText,
+  ExternalLink,
+  Loader2,
 } from "lucide-react";
 import { useDashboardData, SECTOR_LABELS } from "./dashboardData";
+import { getStoredUser } from "../lib/auth";
+import { buildAdminHandoutStreamUrl, fetchLearnerHandouts } from "@/lib/learnerAdminHandouts";
 
 const iconBySlug: Record<string, typeof HardHat> = {
   construction: HardHat,
@@ -22,6 +28,7 @@ const iconBySlug: Record<string, typeof HardHat> = {
 };
 
 export default function Dashboard() {
+  const stored = getStoredUser();
   const {
     user,
     canAccess,
@@ -34,6 +41,12 @@ export default function Dashboard() {
     statsLoading,
     error,
   } = useDashboardData();
+
+  const { data: handouts = [], isLoading: handoutsLoading } = useQuery({
+    queryKey: ["admin-distributed-assignments", "learner", stored?.id],
+    queryFn: () => fetchLearnerHandouts(stored!.id),
+    enabled: !!stored?.id && canAccess,
+  });
 
   if (!canAccess) {
     return (
@@ -48,6 +61,7 @@ export default function Dashboard() {
   }
 
   const categoryLabel = user?.sector ? (SECTOR_LABELS[user.sector] ?? user.sector) : "All categories";
+  const handoutPreview = handouts.slice(0, 3);
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -142,6 +156,57 @@ export default function Dashboard() {
           </div>
         )}
 
+        {(handoutsLoading || handouts.length > 0) && (
+          <div className="rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:p-5 mb-6">
+            <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary shrink-0" />
+                <p className="text-sm font-bold text-gray-900">Assignment PDFs from KSOSHTC</p>
+              </div>
+              <Link
+                to="/dashboard/handouts"
+                className="text-sm font-semibold text-primary hover:underline whitespace-nowrap"
+              >
+                View all
+              </Link>
+            </div>
+            {handoutsLoading ? (
+              <p className="text-gray-500 text-sm flex items-center gap-2">
+                <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+              </p>
+            ) : (
+              <>
+                <ul className="space-y-2 mb-3">
+                  {handoutPreview.map((h) => (
+                    <li
+                      key={h.id}
+                      className="flex flex-wrap items-center justify-between gap-2 text-sm bg-white/80 rounded-xl px-3 py-2 border border-gray-100"
+                    >
+                      <span className="font-medium text-gray-800 truncate min-w-0">{h.title}</span>
+                      <a
+                        href={buildAdminHandoutStreamUrl(h.pdfUrl, h.originalFilename)}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-1 text-primary font-semibold shrink-0"
+                      >
+                        PDF <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+                {handouts.length > 3 && (
+                  <p className="text-xs text-gray-600">
+                    +{handouts.length - 3} more —{" "}
+                    <Link to="/dashboard/handouts" className="font-semibold text-primary hover:underline">
+                      open Assignment PDFs
+                    </Link>
+                  </p>
+                )}
+              </>
+            )}
+          </div>
+        )}
+
         <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4 mb-6">
           <p className="text-sm font-semibold text-gray-900 mb-2">Quick stats</p>
           <p className="text-sm text-gray-600 flex flex-wrap items-center gap-x-4 gap-y-1">
@@ -166,6 +231,14 @@ export default function Dashboard() {
           >
             <BookOpen className="w-4 h-4" />
             My courses
+            <ArrowRight className="w-4 h-4" />
+          </Link>
+          <Link
+            to="/dashboard/handouts"
+            className="inline-flex items-center gap-2 border-2 border-primary text-primary font-semibold py-2.5 px-5 rounded-xl hover:bg-primary/5 transition-colors"
+          >
+            <FileText className="w-4 h-4" />
+            Assignment PDFs
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link

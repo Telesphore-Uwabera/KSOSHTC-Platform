@@ -804,7 +804,9 @@ export async function streamCourseDocument(req: Request, res: Response): Promise
 
     const p = parsed.pathname;
     const pathAllowed =
-      p.includes("/ksohtc/courses/") || p.includes("/ksohtc/assignment-submissions/");
+      p.includes("/ksohtc/courses/") ||
+      p.includes("/ksohtc/assignment-submissions/") ||
+      p.includes("/ksohtc/admin-assignments/");
     if (!pathAllowed) {
       res.status(403).json({ error: "URL path not allowed." });
       return;
