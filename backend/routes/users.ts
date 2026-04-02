@@ -158,7 +158,21 @@ export async function postLogin(req: Request, res: Response): Promise<void> {
       return;
     }
     if (!user.role) user.role = "learner";
-    res.json({ user: toPublic(user) });
+    const publicUser = toPublic(user);
+    if (user.role === "admin") {
+      const adminSessionToken = issueAdminSessionToken();
+      if (adminSessionToken) {
+        res.json({ user: publicUser, adminSessionToken });
+      } else {
+        res.json({
+          user: publicUser,
+          adminSessionWarning:
+            "Set ADMIN_SESSION_SECRET in server environment to protect admin APIs with this session token.",
+        });
+      }
+      return;
+    }
+    res.json({ user: publicUser });
   } catch (e) {
     console.error("Login error:", e);
     res.status(500).json({ error: "Login failed." });

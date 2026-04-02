@@ -43,8 +43,11 @@ export default function Login() {
         return;
       }
       const user = (data as { user?: unknown }).user;
+      const adminSessionToken = (data as { adminSessionToken?: string }).adminSessionToken;
       if (user && typeof user === "object" && "id" in user) {
-        setAdminSessionToken(null);
+        const role = (user as { role?: string }).role;
+        if (role === "admin") setAdminSessionToken(adminSessionToken ?? null);
+        else setAdminSessionToken(null);
         setStoredUser(user as Parameters<typeof setStoredUser>[0]);
         // If they tried to open a course (e.g. Safety or any) from the courses page, send them to dashboard so they access materials through the dashboard
         const redirectTo = from.startsWith("/courses/") ? "/dashboard" : from;
