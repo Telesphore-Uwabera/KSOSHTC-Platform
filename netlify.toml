@@ -12,6 +12,17 @@
 
 # Backend API is on Render. Set VITE_API_URL in Netlify env so the frontend calls it.
 
+# Canonical host matches index.html canonical, sitemap, and robots.txt (all use www).
+# Google Search Console: add a URL-prefix property for https://www.kigalisafetytraining.com/ (or a Domain
+# property for kigalisafetytraining.com) so URL Inspection matches the URLs you submit. Apex-only property +
+# inspecting www URLs shows "URL not in property".
+[[redirects]]
+  from = "/*"
+  to = "https://www.kigalisafetytraining.com/:splat"
+  status = 301
+  force = true
+  conditions = { Host = ["kigalisafetytraining.com"] }
+
 # Proxy only static course assets (e.g. /courses/construction/file.pdf) to the backend.
 # SPA routes like /, /courses, /courses/construction, /about, /contact, /terms, /privacy, /cookies,
 # /register, /login, /dashboard, /admin, etc. must NOT be proxied — they are served by the fallback below.
