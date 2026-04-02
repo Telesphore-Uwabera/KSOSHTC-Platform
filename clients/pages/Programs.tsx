@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { BookOpen, GraduationCap, Lightbulb, Rocket, CheckCircle2 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { SiteImage } from "../components/SiteImage";
 
 const programs = [
   { icon: BookOpen, title: "Format", desc: "3 months Intensive or Weekend (2 months). Theory + practice.", color: "from-primary/10 to-accent/10", border: "border-primary" },
@@ -29,7 +30,7 @@ export default function Programs() {
 
       <section className="relative text-white py-16 sm:py-20 md:py-28 min-h-[40vh] flex flex-col justify-center overflow-hidden">
         <div className="absolute inset-0">
-          <img src="/ksohtc-3.webp" alt="" className="w-full h-full object-cover hero-zoom bg-image-animate bg-image-move-endless" loading="lazy" decoding="async" aria-hidden />
+          <SiteImage src="/ksohtc-3.webp" alt="" hero priority className="w-full h-full object-cover hero-zoom bg-image-animate bg-image-move-endless" decoding="async" aria-hidden />
           <div className="absolute inset-0 bg-black/30" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-br from-primary/95 via-primary/90 to-secondary/90" />
         </div>
@@ -42,11 +43,11 @@ export default function Programs() {
       {/* What We Provide: image as full-width background, 4 cards overlaying */}
       <section className="relative py-12 sm:py-16 md:py-20 lg:py-24 min-h-[60vh] flex flex-col justify-center overflow-hidden">
         <div className="absolute inset-0">
-          <img
+          <SiteImage
             src="/ksohtc-3.webp"
             alt=""
+            hero
             className="w-full h-full object-cover bg-image-animate bg-image-move-endless"
-            loading="lazy"
             decoding="async"
             aria-hidden
           />

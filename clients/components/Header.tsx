@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
+import { SiteImage } from "@/components/SiteImage";
 import { Menu, X, Home, Info, BookOpen, Building2, GraduationCap, Mail, HardHat, Building, Pickaxe, ChevronDown, LayoutDashboard, Shield } from "lucide-react";
 
 const courseDropdownItems = [
@@ -55,11 +56,14 @@ export default function Header() {
           <div className="hidden md:flex md:items-center md:justify-center md:flex-shrink-0">
             <div className={`flex items-center gap-2 lg:gap-4 pl-3 pr-3 sm:pl-4 sm:pr-4 transition-all duration-300 ${compact ? "py-1 gap-2" : "py-2 sm:py-3"}`}>
               <Link to="/" className="flex-shrink-0 flex items-center group cursor-pointer transition-all duration-300 hover:scale-105">
-                <img
+                <SiteImage
                   src="/logo.webp"
                   alt="KSOSHTC Logo"
+                  width={512}
+                  height={512}
+                  sizes="(max-width: 768px) 96px, 160px"
                   className={`object-contain max-w-full h-auto transition-all duration-300 group-hover:rotate-3 ${compact ? "w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16" : "w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 xl:w-32 xl:h-32"}`}
-                  loading="lazy"
+                  loading="eager"
                   decoding="async"
                 />
               </Link>
@@ -143,11 +147,14 @@ export default function Header() {
           <div className="hidden md:block md:flex-1 md:min-w-0" />
 
           <Link to="/" className="md:hidden flex-shrink-0 flex items-center group cursor-pointer transition-all duration-300 hover:scale-105">
-            <img
+            <SiteImage
               src="/logo.webp"
               alt="KSOSHTC Logo"
+              width={512}
+              height={512}
+              sizes="96px"
               className={`object-contain max-w-full h-auto transition-all duration-300 group-hover:rotate-3 ${compact ? "w-14 h-14 sm:w-16 sm:h-16" : "w-20 h-20 sm:w-24 sm:h-24"}`}
-              loading="lazy"
+              loading="eager"
               decoding="async"
             />
           </Link>

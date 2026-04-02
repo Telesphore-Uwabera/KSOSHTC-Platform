@@ -19,6 +19,7 @@ import type { CourseDoc, ModuleDoc, LessonDoc, AssessmentDoc } from "@shared/api
 
 import { getApiBase } from "@/lib/apiBase";
 import { adminFetch } from "@/lib/adminApi";
+import { SiteImage } from "@/components/SiteImage";
 
 const getCourseContentApi = () => getApiBase() + "/api/course-content";
 
@@ -187,7 +188,15 @@ function UploadCoverBlock({
   return (
     <div className="flex flex-wrap items-end gap-2">
       {currentCoverUrl && (
-        <img src={currentCoverUrl} alt="Course cover" className="h-12 w-auto rounded-lg border border-gray-200 object-cover" loading="lazy" decoding="async" />
+        <SiteImage
+          src={currentCoverUrl}
+          alt="Course cover"
+          className="h-12 w-auto rounded-lg border border-gray-200 object-cover"
+          sizes="48px"
+          cloudinaryMaxWidth={256}
+          loading="lazy"
+          decoding="async"
+        />
       )}
       <input
         type="file"

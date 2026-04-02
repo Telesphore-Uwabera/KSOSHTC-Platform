@@ -4,6 +4,7 @@ import { useQuery, useMutation } from "@tanstack/react-query";
 import { ArrowLeft, FileText, ExternalLink, ClipboardList, Lock, X, AlertCircle } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { SiteImage } from "../components/SiteImage";
 import { CoursePdfJsViewer } from "../components/CoursePdfJsViewer";
 import { getStoredUser, clearStoredUser } from "../lib/auth";
 import { getApiBase } from "@/lib/apiBase";
@@ -667,11 +668,12 @@ export default function CourseDetail() {
 
       <section className="relative text-white py-12 sm:py-16 min-h-[30vh] flex flex-col justify-center overflow-hidden">
         <div className="absolute inset-0">
-          <img
+          <SiteImage
             src="/ksohtc-3.webp"
             alt=""
+            hero
+            priority
             className="w-full h-full object-cover hero-zoom bg-image-animate bg-image-move-endless"
-            loading="lazy"
             decoding="async"
             aria-hidden
           />

@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { CheckCircle2, Shield, HardHat, Building, Pickaxe, Crown, Star, Award, Sparkles, Building2, UserCheck, AlertTriangle, Users, Globe, Target } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { SiteImage } from "../components/SiteImage";
 
 export default function About() {
   useEffect(() => {
@@ -17,7 +18,15 @@ export default function About() {
       {/* Shared background for About hero + Who We Are (single image, no duplication) */}
       <div className="relative overflow-hidden text-white">
         <div className="absolute inset-0">
-          <img src="/about-emmanuel-2.webp" alt="" className="w-full h-full object-cover hero-zoom bg-image-animate bg-image-move-endless" loading="lazy" decoding="async" aria-hidden />
+          <SiteImage
+            src="/about-emmanuel-2.webp"
+            alt=""
+            hero
+            priority
+            className="w-full h-full object-cover hero-zoom bg-image-animate bg-image-move-endless"
+            decoding="async"
+            aria-hidden
+          />
           <div className="absolute inset-0 bg-black/55" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/55 to-black/70" aria-hidden="true" />
         </div>
@@ -92,7 +101,13 @@ export default function About() {
                 <h3 className="section-header text-white">Our Mission</h3>
               </div>
               <div className="relative">
-                <img src="/ksohtc-8.webp" alt="KSOSHTC mission — team on site" className="w-full h-40 object-cover" loading="lazy" decoding="async" />
+                <SiteImage
+                  src="/ksohtc-8.webp"
+                  alt="KSOSHTC mission — team on site"
+                  className="w-full h-40 object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  decoding="async"
+                />
                 <div className="img-overlay" aria-hidden="true" />
               </div>
               <div className="p-6 sm:p-8 pt-5 sm:pt-6">
@@ -123,7 +138,13 @@ export default function About() {
                 <h3 className="section-header text-white">Our Vision</h3>
               </div>
               <div className="relative">
-                <img src="/ksohtc-9.webp" alt="KSOSHTC vision — training" className="w-full h-40 object-cover" loading="lazy" decoding="async" />
+                <SiteImage
+                  src="/ksohtc-9.webp"
+                  alt="KSOSHTC vision — training"
+                  className="w-full h-40 object-cover"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  decoding="async"
+                />
                 <div className="img-overlay" aria-hidden="true" />
               </div>
               <div className="p-8">
@@ -156,7 +177,7 @@ export default function About() {
       {/* What Our Graduates Are Trained To Do — background image with overlay and text on top */}
       <section className="relative py-16 md:py-24 min-h-[50vh] flex flex-col justify-center overflow-hidden">
         <div className="absolute inset-0">
-          <img src="/ksohtc-7.webp" alt="" className="w-full h-full object-cover bg-image-animate bg-image-move-endless" loading="lazy" decoding="async" aria-hidden />
+          <SiteImage src="/ksohtc-7.webp" alt="" hero className="w-full h-full object-cover bg-image-animate bg-image-move-endless" decoding="async" aria-hidden />
           <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/70" aria-hidden="true" />
         </div>

@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import { SiteImage } from "@/components/SiteImage";
 import { MapPin, Phone, Mail, Code2, ExternalLink, Home, Info, BookOpen, Building2, MessageCircle } from "lucide-react";
 
 const FOOTER_MAP_EMBED = "https://www.google.com/maps/embed?pb=!1m17!1m12!1m3!1d4729.875635675041!2d30.103122774967193!3d-1.9845040979975614!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m2!1m1!2zMcKwNTknMDQuMiJTIDMwwrAwNicyMC41IkU!5e1!3m2!1sen!2srw!4v1772737124478!5m2!1sen!2srw";
@@ -11,9 +12,12 @@ export default function Footer() {
         <div className="max-w-4xl md:max-w-5xl lg:max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-8 sm:gap-10 lg:gap-12 items-start">
           <div className="flex flex-col items-start text-left min-w-0">
             <Link to="/" className="block">
-              <img
+              <SiteImage
                 src="/logo.webp"
                 alt="KSOSHTC Footer Logo"
+                width={512}
+                height={512}
+                sizes="(max-width: 768px) 128px, 176px"
                 className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 xl:w-44 xl:h-44 object-contain max-w-full transition-all duration-300 hover:scale-110 mb-4 sm:mb-6"
                 loading="lazy"
                 decoding="async"

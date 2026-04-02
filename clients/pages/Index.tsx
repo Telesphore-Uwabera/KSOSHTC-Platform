@@ -4,6 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { CheckCircle2, MapPin, Phone, Mail, Shield, BookOpen, HardHat, Building, Pickaxe, GraduationCap, Lightbulb, Rocket, Crown, Star, Award, Target, Sparkles, Building2, UserCheck, AlertTriangle, Users, Globe, Quote, Loader2, CheckCircle } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { SiteImage } from "../components/SiteImage";
 import type { Testimonial } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
 
@@ -94,13 +95,14 @@ export default function Index() {
         {/* Sliding hero images — crossfade */}
         <div className="absolute inset-0">
           {HERO_IMAGES.map((src, i) => (
-            <img
+            <SiteImage
               key={src}
               src={src}
               alt=""
+              hero
+              priority={i === 0}
               className={`absolute inset-0 w-full h-full object-cover bg-image-animate bg-image-move-endless transition-opacity ease-out ${i === heroIndex ? "opacity-100 z-[0]" : "opacity-0 z-0 pointer-events-none"}`}
               style={{ transitionDuration: `${HERO_FADE_DURATION_MS}ms` }}
-              loading={i === 0 ? "eager" : "lazy"}
               decoding="async"
               aria-hidden
             />
@@ -215,7 +217,7 @@ export default function Index() {
       {/* What We Provide Section — background image with overlay and text on top */}
       <section id="provide" className="relative py-16 md:py-28 min-h-[50vh] flex flex-col justify-center overflow-hidden text-white">
         <div className="absolute inset-0">
-          <img src="/ksohtc-3.webp" alt="" className="w-full h-full object-cover bg-image-animate bg-image-move-endless" loading="lazy" decoding="async" aria-hidden />
+          <SiteImage src="/ksohtc-3.webp" alt="" hero className="w-full h-full object-cover bg-image-animate bg-image-move-endless" decoding="async" aria-hidden />
           <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/70" aria-hidden="true" />
         </div>
@@ -287,7 +289,7 @@ export default function Index() {
       {/* Graduates Training Section — background image with overlay and text on top */}
       <section className="relative py-16 md:py-28 min-h-[50vh] flex flex-col justify-center overflow-hidden text-white">
         <div className="absolute inset-0">
-          <img src="/ksohtc-7.webp" alt="" className="w-full h-full object-cover bg-image-animate bg-image-move-endless" loading="lazy" decoding="async" aria-hidden />
+          <SiteImage src="/ksohtc-7.webp" alt="" hero className="w-full h-full object-cover bg-image-animate bg-image-move-endless" decoding="async" aria-hidden />
           <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/70" aria-hidden="true" />
         </div>
@@ -336,11 +338,11 @@ export default function Index() {
                 <h3 className="section-header text-white">Our Mission</h3>
               </div>
               <div className="relative">
-                <img
+                <SiteImage
                   src="/ksohtc-8.webp"
                   alt="KSOSHTC mission in action"
                   className="w-full h-36 sm:h-44 object-cover"
-                  loading="lazy"
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   decoding="async"
                 />
                 <div className="img-overlay" aria-hidden="true" />
@@ -395,11 +397,11 @@ export default function Index() {
                 <h3 className="section-header text-white">Our Vision</h3>
               </div>
               <div className="relative">
-                <img
+                <SiteImage
                   src="/ksohtc-9.webp"
                   alt="KSOSHTC training — our vision"
                   className="w-full h-36 sm:h-44 object-cover"
-                  loading="lazy"
+                  sizes="(max-width: 768px) 100vw, 50vw"
                   decoding="async"
                 />
                 <div className="img-overlay" aria-hidden="true" />
@@ -474,7 +476,14 @@ export default function Index() {
                   <p className="text-gray-700 text-sm sm:text-base leading-relaxed mb-4">&ldquo;{t.quote}&rdquo;</p>
                   <div className="flex items-center gap-3">
                     {t.avatarUrl ? (
-                      <img src={t.avatarUrl} alt="" className="w-10 h-10 rounded-full object-cover bg-gray-200" loading="lazy" decoding="async" />
+                      <SiteImage
+                        src={t.avatarUrl}
+                        alt=""
+                        className="w-10 h-10 rounded-full object-cover bg-gray-200"
+                        sizes="40px"
+                        cloudinaryMaxWidth={128}
+                        decoding="async"
+                      />
                     ) : (
                       <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
                         <UserCheck className="w-4 h-4 text-primary" />

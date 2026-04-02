@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
+import { SiteImage } from "@/components/SiteImage";
 
 /**
  * A premium branded splash screen that shows for a fixed duration (7s).
@@ -51,9 +52,13 @@ export function BrandedSplashScreen({ onComplete }: { onComplete: () => void }) 
       <div className="flex flex-col items-center gap-8 max-w-sm w-full px-8 animate-in fade-in zoom-in duration-1000">
         {/* Logo Container - Circular like the reference */}
         <div className="relative w-32 h-32 sm:w-40 sm:h-40 rounded-full bg-white p-4 shadow-2xl flex items-center justify-center border-4 border-[#D4AF37]/30 overflow-hidden group">
-          <img 
-            src="/logo.webp" 
-            alt="KSOSHTC Logo" 
+          <SiteImage
+            src="/logo.webp"
+            alt="KSOSHTC Logo"
+            width={512}
+            height={512}
+            sizes="160px"
+            priority
             className="w-full h-full object-contain mix-blend-multiply group-hover:scale-110 transition-transform duration-700"
           />
           {/* Subtle spinning glow behind logo */}
