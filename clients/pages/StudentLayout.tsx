@@ -8,7 +8,7 @@ const nav = [
   { to: "/dashboard", end: true, label: "Overview", icon: LayoutDashboard },
   { to: "/dashboard/courses", end: true, label: "My courses", icon: BookOpen },
   { to: "/dashboard/progress", end: true, label: "Progress", icon: BarChart3 },
-  { to: "/dashboard/handouts", end: true, label: "Assignment PDFs", icon: FileText },
+  { to: "/dashboard/handouts", end: true, label: "Assignments", icon: FileText },
   { to: "/dashboard/work-submissions", end: true, label: "Submit work", icon: FileUp },
   { to: "/dashboard/settings", end: true, label: "Settings", icon: Settings },
 ];

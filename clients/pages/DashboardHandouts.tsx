@@ -37,7 +37,7 @@ export default function DashboardHandouts() {
       <div className="bg-white rounded-[30px] shadow-sm border border-gray-200 p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-primary flex items-center gap-2">
           <FileText className="w-7 h-7" />
-          Assignment materials from KSOSHTC
+          Assignments from KSOSHTC
         </h1>
         <p className="text-gray-600 text-sm sm:text-base mt-2 max-w-2xl">
           Assignments and quiz materials your instructors published for your programme. Only files that match your

@@ -119,7 +119,7 @@ export default function DashboardWorkSubmissions() {
         </p>
         <p className="text-sm mb-4">
           <Link to="/dashboard/handouts" className="font-semibold text-primary hover:underline">
-            Open Assignment materials page
+            Open Assignments page
           </Link>{" "}
           for a full-screen list (same files as here).
         </p>

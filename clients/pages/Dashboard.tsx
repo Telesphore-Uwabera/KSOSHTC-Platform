@@ -161,7 +161,7 @@ export default function Dashboard() {
             <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
               <div className="flex items-center gap-2">
                 <FileText className="w-5 h-5 text-primary shrink-0" />
-                <p className="text-sm font-bold text-gray-900">Assignment PDFs from KSOSHTC</p>
+                <p className="text-sm font-bold text-gray-900">Assignments from KSOSHTC</p>
               </div>
               <Link
                 to="/dashboard/handouts"
@@ -198,7 +198,7 @@ export default function Dashboard() {
                   <p className="text-xs text-gray-600">
                     +{handouts.length - 3} more —{" "}
                     <Link to="/dashboard/handouts" className="font-semibold text-primary hover:underline">
-                      open Assignment PDFs
+                      open Assignments
                     </Link>
                   </p>
                 )}
@@ -238,7 +238,7 @@ export default function Dashboard() {
             className="inline-flex items-center gap-2 border-2 border-primary text-primary font-semibold py-2.5 px-5 rounded-xl hover:bg-primary/5 transition-colors"
           >
             <FileText className="w-4 h-4" />
-            Assignment PDFs
+            Assignments
             <ArrowRight className="w-4 h-4" />
           </Link>
           <Link
