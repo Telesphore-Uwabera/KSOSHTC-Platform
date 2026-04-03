@@ -1,26 +1,36 @@
 import { useState } from "react";
-import { Link, Navigate, useLocation, useNavigate } from "react-router-dom";
+import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { LogIn, Loader2, ShieldCheck } from "lucide-react";
 import { getStoredUser, setStoredUser } from "@/lib/auth";
-import { setAdminSessionToken } from "@/lib/adminApi";
+import { getAdminSessionToken, setAdminSessionToken } from "@/lib/adminApi";
 import { getApiBase } from "@/lib/apiBase";
 
 export default function AdminLogin() {
   const navigate = useNavigate();
   const location = useLocation();
-  const [email, setEmail] = useState("");
+  const [searchParams] = useSearchParams();
+  const [email, setEmail] = useState(() => {
+    const u = getStoredUser();
+    return u && (u as { role?: string }).role === "admin" && u.email ? u.email : "";
+  });
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
+  const sessionHint =
+    searchParams.get("reason") === "session"
+      ? "Your admin session expired or is missing. Sign in again with your admin password."
+      : "";
+
   const existing = getStoredUser();
   if (existing) {
     const role = (existing as { role?: string }).role;
-    if (role === "admin") return <Navigate to="/admin" replace />;
-    // Student/learner cannot use admin login — send to learner dashboard
-    return <Navigate to="/dashboard" replace state={{ message: "Use the learner login for your dashboard." }} />;
+    if (role !== "admin") {
+      return <Navigate to="/dashboard" replace state={{ message: "Use the learner login for your dashboard." }} />;
+    }
+    if (getAdminSessionToken()) return <Navigate to="/admin" replace />;
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -78,6 +88,9 @@ export default function AdminLogin() {
 
             <div className="p-6 sm:p-8 md:p-10">
               <form onSubmit={handleSubmit} className="space-y-6">
+                {sessionHint && (
+                  <p className="text-amber-800 text-sm bg-amber-50 border border-amber-200 px-3 py-2 rounded-lg">{sessionHint}</p>
+                )}
                 {error && <p className="text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg">{error}</p>}
                 <div>
                   <label htmlFor="admin-email" className="block text-sm font-medium text-gray-700 mb-1.5">

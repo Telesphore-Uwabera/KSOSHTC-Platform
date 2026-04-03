@@ -26,5 +26,21 @@ export function withAdminAuth(init?: RequestInit): RequestInit {
 }
 
 export function adminFetch(input: string | Request, init?: RequestInit): Promise<Response> {
-  return fetch(input, withAdminAuth(init));
+  return fetch(input, withAdminAuth(init)).then((res) => {
+    if (res.status !== 401 || typeof window === "undefined") return res;
+    const path = window.location.pathname;
+    if (!path.startsWith("/admin") || path.startsWith("/admin/login")) return res;
+    res
+      .clone()
+      .json()
+      .then((data: { error?: string }) => {
+        const msg = (data?.error ?? "").toLowerCase();
+        if (msg.includes("admin session")) {
+          setAdminSessionToken(null);
+          window.location.replace("/admin/login?reason=session");
+        }
+      })
+      .catch(() => {});
+    return res;
+  });
 }

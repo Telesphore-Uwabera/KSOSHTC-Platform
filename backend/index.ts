@@ -64,7 +64,7 @@ import { postEnrollment, getEnrollments, patchEnrollment } from "./routes/enroll
 import { getProgress, patchProgress } from "./routes/progress";
 import { postContact } from "./routes/contact";
 import { getMongoDb, mongoCollection, MONGO_COLLECTIONS } from "./lib/mongo";
-import { requireAdminSession } from "./lib/adminSession";
+import { getAdminSessionSecret, requireAdminSession } from "./lib/adminSession";
 import { rateLimitLogin, rateLimitRegister } from "./lib/rateLimit";
 import type { LessonDoc } from "@shared/api";
 
@@ -174,6 +174,11 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.get("/api/ping", (_req, res) => {
     const ping = process.env.PING_MESSAGE ?? "ping";
     res.json({ message: ping });
+  });
+
+  /** Lets the SPA know whether admin routes require a Bearer token (when ADMIN_SESSION_SECRET is set). */
+  app.get("/api/auth/admin-session-required", (_req, res) => {
+    res.json({ adminSessionRequired: !!getAdminSessionSecret() });
   });
 
   app.get("/api/demo", handleDemo);
