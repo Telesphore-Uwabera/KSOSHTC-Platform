@@ -7,6 +7,7 @@ import { getStoredUser } from "../lib/auth";
 import { Link } from "react-router-dom";
 import { useDashboardData } from "./dashboardData";
 import { buildAdminHandoutStreamUrl, fetchLearnerHandouts } from "@/lib/learnerAdminHandouts";
+import { FILE_INPUT_ACCEPT_ATTR } from "@shared/allowedUploads";
 
 function buildStreamUrl(pdfUrl: string, filename: string): string {
   const base = getApiBase();
@@ -60,7 +61,7 @@ export default function DashboardWorkSubmissions() {
   const submitMut = useMutation({
     mutationFn: async () => {
       if (!user?.id || !courseId || !title.trim() || !file) {
-        throw new Error("Choose a course, enter a title, and select a PDF.");
+        throw new Error("Choose a course, enter a title, and select a file.");
       }
       const contentBase64 = await fileToBase64(file);
       const res = await fetch(getApiBase() + "/api/assignment-submissions", {
@@ -110,15 +111,15 @@ export default function DashboardWorkSubmissions() {
       <div className="bg-white rounded-[30px] shadow-sm border border-gray-200 p-6 sm:p-8">
         <h2 className="text-lg font-bold text-primary mb-1 flex items-center gap-2">
           <FileText className="w-6 h-6" />
-          PDFs from KSOSHTC
+          Materials from KSOSHTC
         </h2>
         <p className="text-gray-600 text-sm mb-2">
           Assignments or quiz materials your instructors shared for your courses. You are notified by email when new
-          PDFs apply to you.
+          files apply to you.
         </p>
         <p className="text-sm mb-4">
           <Link to="/dashboard/handouts" className="font-semibold text-primary hover:underline">
-            Open Assignment PDFs page
+            Open Assignment materials page
           </Link>{" "}
           for a full-screen list (same files as here).
         </p>
@@ -127,7 +128,7 @@ export default function DashboardWorkSubmissions() {
             <Loader2 className="w-4 h-4 animate-spin" /> Loading…
           </p>
         ) : handouts.length === 0 ? (
-          <p className="text-gray-600 text-sm">No shared PDFs yet for your programme.</p>
+          <p className="text-gray-600 text-sm">No shared materials yet for your programme.</p>
         ) : (
           <ul className="space-y-3">
             {handouts.map((h) => (
@@ -150,7 +151,7 @@ export default function DashboardWorkSubmissions() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary shrink-0"
                 >
-                  View PDF <ExternalLink className="w-4 h-4" />
+                  Open file <ExternalLink className="w-4 h-4" />
                 </a>
               </li>
             ))}
@@ -161,10 +162,11 @@ export default function DashboardWorkSubmissions() {
       <div className="bg-white rounded-[30px] shadow-sm border border-gray-200 p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-primary flex items-center gap-2">
           <FileUp className="w-7 h-7" />
-          Submit work (PDF)
+          Submit work
         </h1>
         <p className="text-gray-600 text-sm sm:text-base mt-1">
-          Upload your completed assignment as a PDF for a course you are enrolled in. You will receive an email when marks are released.
+          Upload your completed assignment (PDF, Word, Excel, PowerPoint, images, or other supported document types) for
+          a course you are enrolled in. You will receive an email when marks are released.
         </p>
 
         <form
@@ -214,12 +216,12 @@ export default function DashboardWorkSubmissions() {
           </div>
           <div>
             <label htmlFor="ws-file" className="block text-sm font-semibold text-gray-800 mb-1">
-              PDF file
+              File
             </label>
             <input
               id="ws-file"
               type="file"
-              accept="application/pdf"
+              accept={FILE_INPUT_ACCEPT_ATTR}
               className="w-full text-sm text-gray-600"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               required
@@ -232,7 +234,7 @@ export default function DashboardWorkSubmissions() {
             className="inline-flex items-center gap-2 bg-primary text-white px-5 py-2.5 rounded-xl text-sm font-semibold hover:opacity-95 disabled:opacity-50"
           >
             {submitMut.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileUp className="w-4 h-4" />}
-            Submit PDF
+            Submit
           </button>
         </form>
       </div>
@@ -275,7 +277,7 @@ export default function DashboardWorkSubmissions() {
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary shrink-0"
                   >
-                    View PDF <ExternalLink className="w-4 h-4" />
+                    Open file <ExternalLink className="w-4 h-4" />
                   </a>
                 </li>
               );

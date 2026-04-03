@@ -6,6 +6,7 @@ import { allowedCourseIdsForLearner } from "../../shared/learnerAllowedCourses.t
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { v2 as cloudinary } from "cloudinary";
 import { notifyLearnerAdminDistributedPdf } from "../lib/notify";
+import { isAllowedUploadExtension, mimeFromExtension } from "../../shared/allowedUploads.ts";
 
 function col() {
   return mongoCollection<AdminDistributedAssignmentDoc>(MONGO_COLLECTIONS.admin_distributed_assignments);
@@ -30,7 +31,7 @@ function groupEnrollmentsByUser(rows: EnrollmentDoc[]): Map<string, EnrollmentDo
   return m;
 }
 
-/** POST /api/admin-distributed-assignments — admin uploads PDF + selects target courses; notifies matching learners. */
+/** POST /api/admin-distributed-assignments — admin uploads a document + selects target courses; notifies matching learners. */
 export async function postAdminDistributedAssignment(req: Request, res: Response): Promise<void> {
   try {
     const body = req.body as {
@@ -63,8 +64,12 @@ export async function postAdminDistributedAssignment(req: Request, res: Response
     }
 
     const safeName = path.basename(filename).replace(/[^a-zA-Z0-9._\-\s+()]/g, "_");
-    if (path.extname(safeName).toLowerCase() !== ".pdf") {
-      res.status(400).json({ error: "Only PDF files are allowed." });
+    const ext = path.extname(safeName).toLowerCase();
+    if (!isAllowedUploadExtension(ext)) {
+      res.status(400).json({
+        error:
+          "This file type is not allowed. Use PDF, Word, Excel, PowerPoint, images, or other supported document formats.",
+      });
       return;
     }
     const buf = Buffer.from(contentBase64, "base64");
@@ -79,8 +84,9 @@ export async function postAdminDistributedAssignment(req: Request, res: Response
       api_secret: process.env.CLOUDINARY_API_SECRET,
     });
     const id = crypto.randomUUID();
-    const publicId = `${path.parse(safeName).name}.pdf`;
-    const uri = `data:application/pdf;base64,${contentBase64}`;
+    const mime = mimeFromExtension(ext);
+    const publicId = `${path.parse(safeName).name}${ext}`;
+    const uri = `data:${mime};base64,${contentBase64}`;
     const result = await cloudinary.uploader.upload(uri, {
       folder: `ksohtc/admin-assignments/${id}`,
       public_id: publicId,

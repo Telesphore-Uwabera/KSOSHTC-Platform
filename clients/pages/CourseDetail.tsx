@@ -105,8 +105,30 @@ function stripSectionPrefix(title: string): string {
 const INITIAL_SECTION_CARDS = 6;
 const SECTION_CARDS_STEP = 6;
 
+/** Extension from Cloudinary URL path (e.g. `.docx`, `.pdf`). */
+function extFromMaterialUrl(url: string): string {
+  try {
+    const pathPart = new URL(url.split("?")[0]).pathname;
+    const seg = pathPart.split("/").pop() ?? "";
+    const m = seg.match(/(\.[a-z0-9]{2,8})$/i);
+    return m ? m[1].toLowerCase() : "";
+  } catch {
+    return "";
+  }
+}
+
+function streamFilenameForLesson(cloudinaryUrl: string, displayTitle: string): string {
+  const ext = extFromMaterialUrl(cloudinaryUrl);
+  const stem = (displayTitle.trim() || "Lesson")
+    .replace(/[\\/]/g, " ")
+    .replace(/[\u0000-\u001F\u007F]/g, "")
+    .trim()
+    .slice(0, 120);
+  return `${stem}${ext || ".pdf"}`;
+}
+
 /**
- * Cloudinary course files (raw or image delivery) often omit `.pdf` in the URL and may force download.
+ * Cloudinary course files (raw or image delivery) often omit a clear extension in the URL.
  * Proxy through our API for inline viewing, correct MIME, and optional explicit download.
  */
 function courseDocumentViewerSrc(pdfUrl: string, displayTitle: string): string {
@@ -123,7 +145,7 @@ function courseDocumentViewerSrc(pdfUrl: string, displayTitle: string): string {
     (absolute.includes("/raw/upload/") || absolute.includes("/image/upload/"));
 
   if (isCloudinaryCourse) {
-    const name = `${displayTitle.trim() || "Lesson"}.pdf`;
+    const name = streamFilenameForLesson(absolute, displayTitle);
     const q = new URLSearchParams({ url: absolute, filename: name });
     return `${base}/api/course-content/stream-document?${q.toString()}`;
   }
@@ -241,7 +263,7 @@ function SingleLessonCard({
               }}
               className="inline-flex items-center gap-1.5 text-primary hover:text-accent font-medium text-xs underline underline-offset-1"
             >
-              View PDF
+              Open file
               <ExternalLink className="w-3.5 h-3.5" />
             </button>
           </div>
@@ -370,13 +392,13 @@ function ModuleBlock({
                       }}
                       className="inline-flex items-center gap-1.5 text-primary hover:text-accent font-medium text-xs underline underline-offset-1 text-left"
                     >
-                      View PDF
+                      Open file
                       <ExternalLink className="w-3.5 h-3.5" />
                     </button>
                   ) : (
                     <p className="inline-flex items-center gap-2 text-gray-500 text-sm">
                       <Lock className="w-4 h-4" />
-                      Complete the break quiz above to unlock this PDF.
+                      Complete the break quiz above to unlock this file.
                     </p>
                   )}
                 </>
@@ -492,7 +514,16 @@ export default function CourseDetail() {
   const [pdfViewer, setPdfViewer] = useState<{ url: string; title: string } | null>(null);
 
   function openPdfViewer(url: string, title: string) {
-    setPdfViewer({ url, title });
+    if (!url?.trim()) return;
+    const trimmed = normalizeCloudinaryCourseUrl(url.trim());
+    const ext = extFromMaterialUrl(trimmed);
+    const treatAsPdf = ext === ".pdf" || ext === "";
+    if (treatAsPdf) {
+      setPdfViewer({ url, title });
+      return;
+    }
+    const src = courseDocumentViewerSrc(trimmed, title);
+    if (src) window.open(src, "_blank", "noopener,noreferrer");
   }
 
   useEffect(() => {

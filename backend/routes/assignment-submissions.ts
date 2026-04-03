@@ -7,6 +7,7 @@ import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { v2 as cloudinary } from "cloudinary";
 import { notifyAdminAssignmentSubmitted, notifyLearnerAssignmentGraded } from "../lib/notify";
 import { isAdminSessionAuthorized } from "../lib/adminSession";
+import { isAllowedUploadExtension, mimeFromExtension } from "../../shared/allowedUploads.ts";
 
 function usersCol() {
   return mongoCollection<User>(MONGO_COLLECTIONS.users);
@@ -21,7 +22,7 @@ function assignmentSubsCol() {
   return mongoCollection<AssignmentSubmissionDoc>(MONGO_COLLECTIONS.assignment_submissions);
 }
 
-/** POST /api/assignment-submissions – learner uploads a PDF for an assigned/enrolled course. */
+/** POST /api/assignment-submissions – learner uploads a file for an assigned/enrolled course. */
 export async function postAssignmentSubmission(req: Request, res: Response): Promise<void> {
   try {
     const body = req.body as {
@@ -47,7 +48,7 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
       return;
     }
     if (user.role === "admin") {
-      res.status(403).json({ error: "Only learners can submit assignment PDFs." });
+      res.status(403).json({ error: "Only learners can submit assignments." });
       return;
     }
 
@@ -74,8 +75,11 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
 
     const safeName = path.basename(filename).replace(/[^a-zA-Z0-9._\-\s+()]/g, "_");
     const ext = path.extname(safeName).toLowerCase();
-    if (ext !== ".pdf") {
-      res.status(400).json({ error: "Only PDF files are allowed." });
+    if (!isAllowedUploadExtension(ext)) {
+      res.status(400).json({
+        error:
+          "This file type is not allowed. Use PDF, Word, Excel, PowerPoint, images, or other supported document formats.",
+      });
       return;
     }
     const buf = Buffer.from(contentBase64, "base64");
@@ -89,8 +93,9 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
       api_key: process.env.CLOUDINARY_API_KEY,
       api_secret: process.env.CLOUDINARY_API_SECRET,
     });
-    const publicId = `${path.parse(safeName).name}.pdf`;
-    const uri = `data:application/pdf;base64,${contentBase64}`;
+    const mime = mimeFromExtension(ext);
+    const publicId = `${path.parse(safeName).name}${ext}`;
+    const uri = `data:${mime};base64,${contentBase64}`;
     const result = await cloudinary.uploader.upload(uri, {
       folder: `ksohtc/assignment-submissions/${userId}`,
       public_id: publicId,

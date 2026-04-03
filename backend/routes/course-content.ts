@@ -24,6 +24,7 @@ function omitMongoId<T extends { _id?: unknown }>(doc: T | null | undefined): Om
 }
 import type { SubmissionDoc, ProgressDoc } from "@shared/api";
 import { normalizeCloudinaryCourseUrl } from "../../shared/normalizeCloudinaryUrl";
+import { isAllowedUploadExtension, mimeFromExtension } from "../../shared/allowedUploads.ts";
 import { v2 as cloudinary } from "cloudinary";
 
 /** All courses display duration as 3 months. */
@@ -48,9 +49,10 @@ export async function uploadCoursePdf(req: Request, res: Response): Promise<void
     }
     const safeName = path.basename(filename).replace(/[^a-zA-Z0-9._\-\s+()]/g, "_");
     const ext = path.extname(safeName).toLowerCase();
-    const allowed = [".pdf"];
-    if (!allowed.includes(ext)) {
-      res.status(400).json({ error: `Only PDF course materials are allowed (got ${ext}).` });
+    if (!isAllowedUploadExtension(ext)) {
+      res.status(400).json({
+        error: `This file type is not allowed for course materials (got ${ext || "none"}). Use PDF, Office, images, or other supported formats.`,
+      });
       return;
     }
     const buf = Buffer.from(contentBase64, "base64");
@@ -58,15 +60,15 @@ export async function uploadCoursePdf(req: Request, res: Response): Promise<void
       res.status(400).json({ error: "File too large (max 50MB)." });
       return;
     }
-    
-    const uri = `data:application/pdf;base64,${contentBase64}`;
+
+    const mime = mimeFromExtension(ext);
+    const uri = `data:${mime};base64,${contentBase64}`;
     cloudinary.config({
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
       api_key: process.env.CLOUDINARY_API_KEY,
       api_secret: process.env.CLOUDINARY_API_SECRET,
     });
-    // Raw uploads: include .pdf in public_id so delivery URLs and the console show a real extension/format.
-    const publicId = `${path.parse(safeName).name}.pdf`;
+    const publicId = `${path.parse(safeName).name}${ext}`;
     const result = await cloudinary.uploader.upload(uri, {
       folder: `ksohtc/courses/${courseId}`,
       public_id: publicId,
@@ -768,11 +770,44 @@ export async function getSubmissions(req: Request, res: Response): Promise<void>
   }
 }
 
+function streamContentTypeFromFilenameAndBytes(filenameRaw: string, firstBuf: Buffer): string {
+  const ext = path.extname(filenameRaw).toLowerCase();
+  const fromName = mimeFromExtension(ext);
+  if (fromName !== "application/octet-stream") return fromName;
+  if (
+    firstBuf.length >= 4 &&
+    firstBuf[0] === 0x25 &&
+    firstBuf[1] === 0x50 &&
+    firstBuf[2] === 0x44 &&
+    firstBuf[3] === 0x46
+  ) {
+    return "application/pdf";
+  }
+  if (firstBuf.length >= 3 && firstBuf[0] === 0xff && firstBuf[1] === 0xd8 && firstBuf[2] === 0xff) {
+    return "image/jpeg";
+  }
+  if (
+    firstBuf.length >= 8 &&
+    firstBuf[0] === 0x89 &&
+    firstBuf[1] === 0x50 &&
+    firstBuf[2] === 0x4e &&
+    firstBuf[3] === 0x47
+  ) {
+    return "image/png";
+  }
+  if (firstBuf.length >= 6 && firstBuf[0] === 0x47 && firstBuf[1] === 0x49 && firstBuf[2] === 0x46) {
+    return "image/gif";
+  }
+  if (firstBuf.length >= 4 && firstBuf[0] === 0x50 && firstBuf[1] === 0x4b) {
+    return "application/octet-stream";
+  }
+  return "application/octet-stream";
+}
+
 /**
  * GET /api/course-content/stream-document?url=&filename=&download=1
- * Streams Cloudinary PDFs (course materials + learner assignment uploads) with correct headers.
- * Verifies %PDF magic — non-PDF assets are rejected.
- * Use download=1 for Content-Disposition: attachment (explicit download). Default is inline for in-page viewing.
+ * Streams Cloudinary raw/image assets (course materials, assignment uploads, handouts) with correct headers.
+ * Use download=1 for Content-Disposition: attachment (explicit download). Default is inline when possible.
  */
 export async function streamCourseDocument(req: Request, res: Response): Promise<void> {
   try {
@@ -850,28 +885,22 @@ export async function streamCourseDocument(req: Request, res: Response): Promise
       if (n.done) break;
       if (n.value?.length) firstBuf = Buffer.concat([firstBuf, Buffer.from(n.value)]);
     }
-    const isPdf =
-      firstBuf.length >= 4 &&
-      firstBuf[0] === 0x25 &&
-      firstBuf[1] === 0x50 &&
-      firstBuf[2] === 0x44 &&
-      firstBuf[3] === 0x46;
-    if (!isPdf) {
-      await reader.cancel().catch(() => {});
-      res.status(415).json({ error: "Course materials must be PDF files only." });
-      return;
-    }
+    const contentType = streamContentTypeFromFilenameAndBytes(filenameRaw || "file.bin", firstBuf);
 
     const baseName = (filenameRaw || "lesson")
       .replace(/[\\/]/g, " ")
       .replace(/[\u0000-\u001F\u007F]/g, "")
       .trim()
       .slice(0, 180) || "lesson";
-    const withExt = /\.[a-z0-9]{2,8}$/i.test(baseName) ? baseName : `${baseName}.pdf`;
+    const hasExt = /\.[a-z0-9]{2,8}$/i.test(baseName);
+    const fallbackExt =
+      path.extname(filenameRaw || "").toLowerCase() ||
+      (contentType === "application/pdf" ? ".pdf" : contentType.startsWith("image/") ? ".jpg" : ".bin");
+    const withExt = hasExt ? baseName : `${baseName}${fallbackExt}`;
     const asciiFallback = withExt.replace(/[^\x20-\x7E]/g, "_");
 
     const disposition = wantDownload ? "attachment" : "inline";
-    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Type", contentType);
     res.setHeader(
       "Content-Disposition",
       `${disposition}; filename="${asciiFallback.replace(/\\/g, "\\\\").replace(/"/g, '\\"')}"; filename*=UTF-8''${encodeURIComponent(withExt)}`

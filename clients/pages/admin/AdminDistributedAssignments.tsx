@@ -4,6 +4,7 @@ import { FileSpreadsheet, Loader2, ExternalLink, Send } from "lucide-react";
 import type { AdminDistributedAssignmentDoc, CourseDoc } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
 import { adminFetch } from "@/lib/adminApi";
+import { FILE_INPUT_ACCEPT_ATTR } from "@shared/allowedUploads";
 
 function buildStreamUrl(pdfUrl: string, filename: string): string {
   const base = getApiBase();
@@ -65,7 +66,7 @@ export default function AdminDistributedAssignments() {
         .filter(([, on]) => on)
         .map(([id]) => id);
       if (!title.trim() || !file || courseIds.length === 0) {
-        throw new Error("Title, PDF, and at least one target course are required.");
+        throw new Error("Title, a file, and at least one target course are required.");
       }
       const contentBase64 = await fileToBase64(file);
       const res = await adminFetch(getApiBase() + "/api/admin-distributed-assignments", {
@@ -109,11 +110,12 @@ export default function AdminDistributedAssignments() {
       <div className="bg-white rounded-[30px] shadow-sm border border-gray-200 p-6 sm:p-8">
         <h1 className="text-2xl sm:text-3xl font-bold text-primary flex items-center gap-2">
           <FileSpreadsheet className="w-7 h-7" />
-          Distribute assignment / quiz (PDF)
+          Distribute assignment / quiz
         </h1>
         <p className="text-gray-600 text-sm sm:text-base mt-1">
-          Upload a PDF and choose which courses it applies to. Only learners who may access those courses (by
-          enrollment or sector rules) are emailed and see the file under Submit work.
+          Upload a document (PDF, Word, Excel, PowerPoint, images, etc.) and choose which courses it applies to. Only
+          learners who may access those courses (by enrollment or sector rules) are emailed and see the file under
+          Submit work.
         </p>
 
         <form
@@ -180,12 +182,12 @@ export default function AdminDistributedAssignments() {
           </div>
           <div>
             <label htmlFor="ada-file" className="block text-sm font-semibold text-gray-800 mb-1">
-              PDF file
+              File
             </label>
             <input
               id="ada-file"
               type="file"
-              accept="application/pdf"
+              accept={FILE_INPUT_ACCEPT_ATTR}
               className="w-full text-sm text-gray-600"
               onChange={(e) => setFile(e.target.files?.[0] ?? null)}
               required
@@ -234,7 +236,7 @@ export default function AdminDistributedAssignments() {
                   rel="noopener noreferrer"
                   className="inline-flex items-center gap-1.5 text-primary font-semibold shrink-0"
                 >
-                  Open PDF <ExternalLink className="w-4 h-4" />
+                  Open file <ExternalLink className="w-4 h-4" />
                 </a>
               </li>
             ))}

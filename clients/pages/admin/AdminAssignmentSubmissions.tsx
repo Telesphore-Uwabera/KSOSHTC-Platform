@@ -72,7 +72,7 @@ export default function AdminAssignmentSubmissions() {
           Assignment submissions
         </h1>
         <p className="text-gray-600 text-sm sm:text-base mt-1">
-          Open each PDF, then record marks and optional feedback. Learners are emailed when marks are set or changed.
+          Open each submission, then record marks and optional feedback. Learners are emailed when marks are set or changed.
         </p>
       </div>
 
@@ -97,7 +97,7 @@ export default function AdminAssignmentSubmissions() {
                 <th className="py-2 pr-3">Course</th>
                 <th className="py-2 pr-3">Title</th>
                 <th className="py-2 pr-3">Marks</th>
-                <th className="py-2 pr-3">PDF</th>
+                <th className="py-2 pr-3">File</th>
                 <th className="py-2 pr-2 w-24">Grade</th>
               </tr>
             </thead>

@@ -20,6 +20,7 @@ import type { CourseDoc, ModuleDoc, LessonDoc, AssessmentDoc } from "@shared/api
 import { getApiBase } from "@/lib/apiBase";
 import { adminFetch } from "@/lib/adminApi";
 import { SiteImage } from "@/components/SiteImage";
+import { FILE_INPUT_ACCEPT_ATTR, isAllowedUploadExtension } from "@shared/allowedUploads";
 
 const getCourseContentApi = () => getApiBase() + "/api/course-content";
 
@@ -70,10 +71,9 @@ function UploadDocumentBlock({
       setError("Please select a file.");
       return;
     }
-    const ext = "." + file.name.split(".").pop()?.toLowerCase();
-    const allowed = [".pdf"];
-    if (!allowed.includes(ext)) {
-      setError(`Only PDF files are allowed for course materials (got ${ext}).`);
+    const ext = "." + (file.name.split(".").pop()?.toLowerCase() ?? "");
+    if (!isAllowedUploadExtension(ext)) {
+      setError(`This file type is not allowed for course materials (got ${ext || "none"}).`);
       return;
     }
 
@@ -112,7 +112,7 @@ function UploadDocumentBlock({
     <div className="flex flex-wrap items-end gap-2">
       <input
         type="file"
-        accept=".pdf,application/pdf"
+        accept={FILE_INPUT_ACCEPT_ATTR}
         onChange={(e) => { setFile(e.target.files?.[0] ?? null); setError(""); setSuccess(""); }}
         className="text-sm text-gray-600 file:mr-2 file:py-2 file:px-3 file:rounded-lg file:border-0 file:bg-primary file:text-white file:font-semibold file:cursor-pointer"
       />
@@ -123,7 +123,7 @@ function UploadDocumentBlock({
         className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-semibold text-sm hover:bg-primary/90 disabled:opacity-50"
       >
         {uploading ? <Loader2 className="w-4 h-4 animate-spin" /> : <FileText className="w-4 h-4" />}
-        {uploading ? "Uploading…" : "Upload PDF"}
+        {uploading ? "Uploading…" : "Upload file"}
       </button>
       {error && <p className="text-red-600 text-sm w-full font-medium">{error}</p>}
       {success && <p className="text-green-700 text-sm w-full font-medium">{success}</p>}
@@ -580,6 +580,11 @@ function ModuleBlock({
   const handleAddLesson = async () => {
     let pdfUrl: string | undefined;
     if (newLessonPdfFile) {
+      const ext = "." + (newLessonPdfFile.name.split(".").pop()?.toLowerCase() ?? "");
+      if (!isAllowedUploadExtension(ext)) {
+        alert(`This file type is not allowed (got ${ext || "none"}).`);
+        return;
+      }
       setUploadingPdf(true);
       try {
         const base64 = await new Promise<string>((resolve, reject) => {
@@ -596,11 +601,11 @@ function ModuleBlock({
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ filename: newLessonPdfFile.name, contentBase64: base64 }),
         });
-        if (!res.ok) throw new Error("PDF upload failed");
+        if (!res.ok) throw new Error("File upload failed");
         const data = await res.json();
         pdfUrl = data.pdfUrl;
       } catch (err) {
-        alert("Failed to upload PDF: " + (err as Error).message);
+        alert("Failed to upload file: " + (err as Error).message);
         setUploadingPdf(false);
         return;
       }
@@ -736,7 +741,7 @@ function ModuleBlock({
                       <label className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Documents/Materials (Optional)</label>
                       <input
                         type="file"
-                        accept=".pdf,application/pdf"
+                        accept={FILE_INPUT_ACCEPT_ATTR}
                         onChange={(e) => setNewLessonPdfFile(e.target.files?.[0] ?? null)}
                         className="w-full text-xs text-gray-600 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-primary/10 file:text-primary file:font-bold file:cursor-pointer hover:file:bg-primary/20 transition-all"
                       />
@@ -963,6 +968,11 @@ function LessonEditModal({
   const handleSave = async () => {
     let finalPdfUrl = pdfUrl;
     if (pdfFile) {
+      const ext = "." + (pdfFile.name.split(".").pop()?.toLowerCase() ?? "");
+      if (!isAllowedUploadExtension(ext)) {
+        alert(`This file type is not allowed (got ${ext || "none"}).`);
+        return;
+      }
       setUploadingPdf(true);
       try {
         const base64 = await new Promise<string>((resolve, reject) => {
@@ -983,7 +993,7 @@ function LessonEditModal({
         const data = await res.json();
         finalPdfUrl = data.pdfUrl;
       } catch (err) {
-        alert("Failed to upload PDF: " + (err as Error).message);
+        alert("Failed to upload file: " + (err as Error).message);
         setUploadingPdf(false);
         return;
       }
@@ -1030,12 +1040,12 @@ function LessonEditModal({
             {!pdfUrl || pdfFile ? (
               <input
                 type="file"
-                accept=".pdf,application/pdf"
+                accept={FILE_INPUT_ACCEPT_ATTR}
                 onChange={(e) => setPdfFile(e.target.files?.[0] ?? null)}
                 className="w-full text-sm text-gray-600 file:mr-2 file:py-1.5 file:px-3 file:rounded-lg file:border-0 file:bg-gray-100 file:text-gray-700 file:font-semibold file:cursor-pointer hover:file:bg-gray-200"
               />
             ) : null}
-            <div className="text-xs text-gray-500 mt-1">Replace with a PDF only, or remove the current file.</div>
+            <div className="text-xs text-gray-500 mt-1">Replace with a supported document, or remove the current file.</div>
           </div>
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Extra content (optional text)</label>

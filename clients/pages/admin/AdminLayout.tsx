@@ -12,7 +12,7 @@ const nav = [
   { to: "/admin/course-content", end: true, label: "Course content", icon: FolderOpen },
   { to: "/admin/learners", end: true, label: "Learners", icon: Users },
   { to: "/admin/assignment-submissions", end: true, label: "Assignments", icon: ClipboardList },
-  { to: "/admin/distribute-pdf", end: true, label: "Distribute PDF", icon: FileSpreadsheet },
+  { to: "/admin/distribute-pdf", end: true, label: "Distribute files", icon: FileSpreadsheet },
   { to: "/admin/testimonials", end: true, label: "Testimonials", icon: MessageSquareQuote },
   { to: "/admin/settings", end: true, label: "Settings", icon: Settings },
 ];
