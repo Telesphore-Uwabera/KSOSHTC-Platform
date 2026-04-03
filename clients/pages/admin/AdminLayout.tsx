@@ -1,11 +1,10 @@
 import { Link, Outlet, NavLink, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { useEffect, useRef, useState } from "react";
+import { useRef } from "react";
 import { ArrowLeft, LayoutDashboard, BookOpen, Users, MessageSquareQuote, BarChart3, FolderOpen, Settings, ClipboardList, LogOut, FileSpreadsheet } from "lucide-react";
 import Header from "../../components/Header";
 import { cn } from "@/lib/utils";
 import { clearStoredUser, getStoredUser } from "@/lib/auth";
-import { getAdminSessionToken, setAdminSessionToken } from "@/lib/adminApi";
-import { getApiBase } from "@/lib/apiBase";
+import { clearAdminSessionPolicy, getAdminSessionToken, serverExpectsAdminBearer, setAdminSessionToken } from "@/lib/adminApi";
 
 const nav = [
   { to: "/admin", end: true, label: "Dashboard", icon: BarChart3 },
@@ -24,31 +23,6 @@ export default function AdminLayout() {
   const adminVerifiedRef = useRef(false);
   const user = getStoredUser();
   const isAdmin = user && (user as { role?: string }).role === "admin";
-  const [sessionGate, setSessionGate] = useState<"ok" | "wait">("wait");
-
-  useEffect(() => {
-    if (!isAdmin) {
-      setSessionGate("ok");
-      return;
-    }
-    let cancelled = false;
-    fetch(`${getApiBase()}/api/auth/admin-session-required`)
-      .then((r) => r.json())
-      .then((data: { adminSessionRequired?: boolean }) => {
-        if (cancelled) return;
-        if (data.adminSessionRequired === true && !getAdminSessionToken()) {
-          navigate("/admin/login", { replace: true, state: { from: location.pathname } });
-          return;
-        }
-        setSessionGate("ok");
-      })
-      .catch(() => {
-        if (!cancelled) setSessionGate("ok");
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [isAdmin, navigate, location.pathname]);
 
   if (!user || !isAdmin) adminVerifiedRef.current = false;
   if (!adminVerifiedRef.current) {
@@ -56,12 +30,8 @@ export default function AdminLayout() {
     adminVerifiedRef.current = true;
   }
 
-  if (sessionGate === "wait") {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600 text-sm">Loading admin…</p>
-      </div>
-    );
+  if (isAdmin && !getAdminSessionToken() && serverExpectsAdminBearer()) {
+    return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
   }
 
   return (
@@ -107,6 +77,7 @@ export default function AdminLayout() {
                   type="button"
                   onClick={() => {
                     setAdminSessionToken(null);
+                    clearAdminSessionPolicy();
                     clearStoredUser();
                     navigate("/admin/login", { replace: true });
                   }}

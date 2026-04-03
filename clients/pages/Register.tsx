@@ -4,7 +4,7 @@ import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { User, Building2, Lock, ShieldCheck, Loader2 } from "lucide-react";
 import { setStoredUser } from "../lib/auth";
-import { setAdminSessionToken } from "@/lib/adminApi";
+import { clearAdminSessionPolicy, setAdminSessionToken } from "@/lib/adminApi";
 import { getApiBase } from "@/lib/apiBase";
 
 /** Value sent to API: determines which courses the learner will see (sector course + safety-management). */
@@ -76,6 +76,7 @@ export default function Register() {
       const user = (data as { user?: unknown }).user;
       if (user && typeof user === "object" && "id" in user) {
         setAdminSessionToken(null);
+        clearAdminSessionPolicy();
         setStoredUser(user as Parameters<typeof setStoredUser>[0]);
         navigate("/courses");
       }
@@ -137,8 +138,10 @@ export default function Register() {
                         onChange={(e) => setEmail(e.target.value)}
                         placeholder="your@email.com"
                         required
+                        autoComplete="email"
                         className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
                       />
+                      <p className="mt-1.5 text-xs text-gray-500">One account per email; duplicates are not allowed.</p>
                     </div>
                     <div>
                       <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1.5">

@@ -48,6 +48,18 @@ function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
 }
 
+/** Match learner by email regardless of legacy stored casing (older rows may not be lowercased). */
+function findUserByEmail(col: ReturnType<typeof usersCol>, email: string) {
+  const emailNorm = normalizeEmail(email);
+  return col.findOne({
+    $expr: { $eq: [{ $toLower: "$email" }, emailNorm] },
+  } as Parameters<typeof col.findOne>[0]);
+}
+
+function isMongoDuplicateKeyError(e: unknown): boolean {
+  return typeof e === "object" && e !== null && (e as { code?: number }).code === 11000;
+}
+
 function toPublic(u: User): UserPublic {
   const { password: _, ...rest } = u;
   return rest;
@@ -72,7 +84,8 @@ export async function postRegister(req: Request, res: Response): Promise<void> {
     }
     const sectorVal = sector && VALID_SECTORS.includes(sector) ? sector : undefined;
     const col = usersCol();
-    const existing = await col.findOne({ email: normalizeEmail(email) });
+    const emailNorm = normalizeEmail(email);
+    const existing = await findUserByEmail(col, email);
     if (existing) {
       res.status(409).json({ error: "An account with this email already exists." });
       return;
@@ -80,7 +93,7 @@ export async function postRegister(req: Request, res: Response): Promise<void> {
     const passwordHash = await hashPassword(password);
     const user: User = {
       id: generateId(),
-      email: email.trim(),
+      email: emailNorm,
       password: passwordHash,
       name: name.trim(),
       phone: phoneVal,
@@ -90,7 +103,15 @@ export async function postRegister(req: Request, res: Response): Promise<void> {
       createdAt: new Date().toISOString(),
     };
     const doc = Object.fromEntries(Object.entries(user).filter(([, v]) => v !== undefined)) as User;
-    await col.insertOne(doc as any);
+    try {
+      await col.insertOne(doc as any);
+    } catch (e) {
+      if (isMongoDuplicateKeyError(e)) {
+        res.status(409).json({ error: "An account with this email already exists." });
+        return;
+      }
+      throw e;
+    }
     notifyNewRegistration({
       name: user.name,
       email: user.email,
@@ -105,6 +126,10 @@ export async function postRegister(req: Request, res: Response): Promise<void> {
     }).catch((err) => console.error("[REGISTER] Learner payment email failed:", err));
     res.status(201).json({ user: toPublic(user) });
   } catch (e) {
+    if (isMongoDuplicateKeyError(e)) {
+      res.status(409).json({ error: "An account with this email already exists." });
+      return;
+    }
     const msg = e instanceof Error ? e.message : String(e);
     const stack = e instanceof Error ? e.stack : "";
     console.error("[REGISTER]", msg);
@@ -147,7 +172,7 @@ export async function postLogin(req: Request, res: Response): Promise<void> {
       return;
     }
 
-    const user = await usersCol().findOne({ email: normalizeEmail(email) });
+    const user = await findUserByEmail(usersCol(), email);
     if (!user) {
       res.status(401).json({ error: "Invalid email or password." });
       return;
@@ -281,7 +306,8 @@ export async function postUser(req: Request, res: Response): Promise<void> {
     }
     const sectorVal = sector && VALID_SECTORS.includes(sector) ? sector : undefined;
     const col = usersCol();
-    const existing = await col.findOne({ email: normalizeEmail(email) });
+    const emailNorm = normalizeEmail(email);
+    const existing = await findUserByEmail(col, email);
     if (existing) {
       res.status(409).json({ error: "An account with this email already exists." });
       return;
@@ -289,7 +315,7 @@ export async function postUser(req: Request, res: Response): Promise<void> {
     const passwordHash = await hashPassword(password);
     const user: User = {
       id: generateId(),
-      email: email.trim(),
+      email: emailNorm,
       password: passwordHash,
       name: name.trim(),
       organization: organization?.trim(),
@@ -298,7 +324,15 @@ export async function postUser(req: Request, res: Response): Promise<void> {
       createdAt: new Date().toISOString(),
     };
     const doc = Object.fromEntries(Object.entries(user).filter(([, v]) => v !== undefined)) as User;
-    await col.insertOne(doc as any);
+    try {
+      await col.insertOne(doc as any);
+    } catch (e) {
+      if (isMongoDuplicateKeyError(e)) {
+        res.status(409).json({ error: "An account with this email already exists." });
+        return;
+      }
+      throw e;
+    }
     if (user.approved) {
       notifyLearnerApproved({ name: user.name, email: user.email }).catch((err) =>
         console.error("[CREATE_USER] Notify learner approved failed:", err)
@@ -306,6 +340,10 @@ export async function postUser(req: Request, res: Response): Promise<void> {
     }
     res.status(201).json({ user: toPublic(user) });
   } catch (e) {
+    if (isMongoDuplicateKeyError(e)) {
+      res.status(409).json({ error: "An account with this email already exists." });
+      return;
+    }
     console.error("Create user error:", e);
     res.status(500).json({ error: "Failed to create learner." });
   }
@@ -332,12 +370,13 @@ export async function putUser(req: Request, res: Response): Promise<void> {
       sector?: LearnerSector | "";
       approved?: boolean;
     };
-    const email = body.email !== undefined ? body.email.trim() : current.email;
+    const email =
+      body.email !== undefined ? normalizeEmail(body.email) : current.email;
     if (body.email !== undefined) {
       const duplicate = await col.findOne({
-        email: normalizeEmail(email),
         id: { $ne: id },
-      });
+        $expr: { $eq: [{ $toLower: "$email" }, email] },
+      } as Record<string, unknown>);
       if (duplicate) {
         res.status(409).json({ error: "Another user already has this email." });
         return;
@@ -410,7 +449,7 @@ export async function postForgotPassword(req: Request, res: Response): Promise<v
     }
 
     const normalizedEmail = normalizeEmail(email);
-    const user = await usersCol().findOne({ email: normalizedEmail });
+    const user = await findUserByEmail(usersCol(), email);
 
     if (!user) {
       res.json({ ok: true, message: "If an account exists, a reset link has been sent." });
@@ -453,7 +492,7 @@ export async function postResetPassword(req: Request, res: Response): Promise<vo
       return;
     }
 
-    const user = await usersCol().findOne({ email: reset.email });
+    const user = await findUserByEmail(usersCol(), reset.email);
     if (!user) {
       res.status(404).json({ error: "User not found." });
       return;

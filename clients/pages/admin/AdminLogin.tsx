@@ -4,7 +4,7 @@ import Header from "../../components/Header";
 import Footer from "../../components/Footer";
 import { LogIn, Loader2, ShieldCheck } from "lucide-react";
 import { getStoredUser, setStoredUser } from "@/lib/auth";
-import { getAdminSessionToken, setAdminSessionToken } from "@/lib/adminApi";
+import { getAdminSessionToken, setAdminSessionPolicyFromLogin, setAdminSessionToken } from "@/lib/adminApi";
 import { getApiBase } from "@/lib/apiBase";
 
 export default function AdminLogin() {
@@ -50,6 +50,7 @@ export default function AdminLogin() {
       }
       const user = (data as { user?: unknown }).user;
       const adminSessionToken = (data as { adminSessionToken?: string }).adminSessionToken;
+      const adminSessionWarning = (data as { adminSessionWarning?: string }).adminSessionWarning;
       if (user && typeof user === "object" && "id" in user) {
         const role = (user as { role?: string }).role;
         if (role !== "admin") {
@@ -57,6 +58,7 @@ export default function AdminLogin() {
           return;
         }
         setAdminSessionToken(adminSessionToken ?? null);
+        setAdminSessionPolicyFromLogin({ adminSessionToken, adminSessionWarning }, role);
         setStoredUser(user as Parameters<typeof setStoredUser>[0]);
         const from = (location.state as { from?: string } | null)?.from;
         navigate(from && from.startsWith("/admin") ? from : "/admin", { replace: true });

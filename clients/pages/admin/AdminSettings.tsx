@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router-dom";
 import { LogOut, Shield } from "lucide-react";
 import { clearStoredUser, getStoredUser } from "@/lib/auth";
-import { setAdminSessionToken } from "@/lib/adminApi";
+import { clearAdminSessionPolicy, setAdminSessionToken } from "@/lib/adminApi";
 
 export default function AdminSettings() {
   const navigate = useNavigate();
@@ -9,6 +9,7 @@ export default function AdminSettings() {
 
   const handleLogout = () => {
     setAdminSessionToken(null);
+    clearAdminSessionPolicy();
     clearStoredUser();
     navigate("/admin/login", { replace: true });
   };
