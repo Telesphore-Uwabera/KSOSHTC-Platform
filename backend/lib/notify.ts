@@ -557,7 +557,7 @@ export async function notifyLearnerCourseAccess(data: {
   await sendEmail(data.email, subject, text, html);
 }
 
-/** Learner email when admin publishes a PDF handout for course(s) they follow. */
+/** Learner email when admin publishes a distributed handout (any allowed file type) for course(s) they follow. */
 export async function notifyLearnerAdminDistributedPdf(data: {
   name: string;
   email: string;
@@ -586,13 +586,13 @@ export async function notifyLearnerAdminDistributedPdf(data: {
   const text = [
     `Dear ${name},`,
     "",
-    "Your instructors have shared a new PDF assignment or quiz material for your programme.",
+    "Your instructors have shared new assignment or quiz material for your programme.",
     "",
     `Title: ${title}`,
     `Relevant course(s): ${data.courseLabels}`,
     desc,
     "",
-    "Open Assignment PDFs on your learner dashboard to view and download the file:",
+    "Open the assignment file from the Assignments page on your learner dashboard:",
     handoutsUrl,
     "",
     "You can also find the same list under Submit work:",
@@ -603,14 +603,14 @@ export async function notifyLearnerAdminDistributedPdf(data: {
 
   const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
 <p style="margin:0 0 1em;">Dear ${escapeHtml(name)},</p>
-<p style="margin:0 0 1em;">Your instructors have shared a <strong>new PDF</strong> (assignment or quiz material) for your programme.</p>
+<p style="margin:0 0 1em;">Your instructors have shared <strong>new assignment or quiz material</strong> for your programme.</p>
 <p style="margin:0 0 0.35em;"><strong>Title</strong></p>
 <p style="margin:0 0 0.75em;font-size:16px;color:#0d6efd;">${escapeHtml(title)}</p>
 <p style="margin:0 0 0.35em;"><strong>Relevant course(s)</strong></p>
 <p style="margin:0 0 0.75em;">${escapeHtml(data.courseLabels)}</p>
 ${descHtml}
-<p style="margin:1.25em 0 0.75em;">View and download the PDF on the <strong>Assignment PDFs</strong> page:</p>
-<p style="margin:0;"><a href="${handoutsUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;">Open Assignment PDFs</a></p>
+<p style="margin:1.25em 0 0.75em;">View and open the assignment file on the <strong>Assignments</strong> page:</p>
+<p style="margin:0;"><a href="${handoutsUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;">Open assignment file</a></p>
 <p style="margin:1em 0 0;font-size:14px;color:#555;word-break:break-all;"><a href="${handoutsUrl}" style="color:#0d6efd;">${escapeHtml(handoutsUrl)}</a></p>
 <p style="margin:1em 0 0;font-size:14px;color:#555;">The same files appear under <a href="${submitUrl}" style="color:#0d6efd;">Submit work</a> in your dashboard.</p>
 <p style="margin:1.25em 0 0;font-size:14px;color:#444;">Thank you for learning with <strong>KSOS HTC</strong>.</p>
