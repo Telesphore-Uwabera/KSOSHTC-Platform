@@ -127,17 +127,26 @@ export default function CertificateVerification() {
                  'Safety in Surface Mining',
                  'Underground Mining Hazards',
                  'Heavy Machinery Safety',
-                 'Emergency Response in Mines'
+                 'Emergency Response in Mines',
+                 'General Safety & Environment'
                ] : cert.courses?.toLowerCase().includes('construction') ? [
                  'Working at Heights',
                  'Electrical Safety',
                  'Excavation & Trenching',
-                 'Construction PPE & Hazards'
-               ] : [
+                 'Construction PPE & Hazards',
+                 'General Safety & Environment'
+               ] : cert.courses?.toLowerCase().includes('industrial') ? [
                  'Machine Guarding',
                  'Chemical Safety (HAZMAT)',
                  'Fire Prevention',
-                 'Factory OSH Standards'
+                 'Factory OSH Standards',
+                 'General Safety & Environment'
+               ] : [
+                 'Introduction to Workplace OSH',
+                 'Hazard Identification',
+                 'Fire Safety & Prevention',
+                 'Personal Protective Equipment',
+                 'General Safety & Environment'
                ]).map((topic, i) => (
                  <div key={i} className="flex items-center gap-3 text-gray-700 font-bold text-sm">
                    <div className="h-2 w-2 bg-[#004d40] rounded-full shrink-0"></div>
