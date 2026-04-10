@@ -11,6 +11,7 @@ import { Loader2, Printer, Plus, History, Trash2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { adminFetch } from "@/lib/adminApi";
 
 export default function AdminCertificate() {
   const [formData, setFormData] = useState({
@@ -27,11 +28,7 @@ export default function AdminCertificate() {
   const { data: certificates, isLoading } = useQuery({
     queryKey: ["certificates"],
     queryFn: async () => {
-      const res = await fetch(`${getApiBase()}/api/certificates`, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("admin_session_token")}`,
-        },
-      });
+      const res = await adminFetch(`${getApiBase()}/api/certificates`);
       if (!res.ok) throw new Error("Failed to fetch certificates");
       return res.json();
     },
@@ -39,15 +36,17 @@ export default function AdminCertificate() {
 
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
-      const res = await fetch(`${getApiBase()}/api/certificates`, {
+      const res = await adminFetch(`${getApiBase()}/api/certificates`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          Authorization: `Bearer ${localStorage.getItem("admin_session_token")}`,
         },
         body: JSON.stringify(data),
       });
-      if (!res.ok) throw new Error("Failed to create certificate");
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Failed to create certificate" }));
+        throw new Error(err.error || "Failed to create certificate");
+      }
       return res.json();
     },
     onSuccess: (data) => {

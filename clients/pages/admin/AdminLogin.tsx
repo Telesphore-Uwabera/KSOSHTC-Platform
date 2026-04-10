@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Link, Navigate, useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import Header from "../../components/Header";
 import Footer from "../../components/Footer";
-import { LogIn, Loader2, ShieldCheck } from "lucide-react";
+import { LogIn, Loader2, ShieldCheck, Eye, EyeOff } from "lucide-react";
 import { getStoredUser, setStoredUser } from "@/lib/auth";
 import { getAdminSessionToken, setAdminSessionPolicyFromLogin, setAdminSessionToken } from "@/lib/adminApi";
 import { getApiBase } from "@/lib/apiBase";
@@ -18,6 +18,7 @@ export default function AdminLogin() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const sessionHint =
     searchParams.get("reason") === "session"
@@ -112,15 +113,24 @@ export default function AdminLogin() {
                   <label htmlFor="admin-password" className="block text-sm font-medium text-gray-700 mb-1.5">
                     Password
                   </label>
-                  <input
-                    id="admin-password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    required
-                    className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all"
-                  />
+                  <div className="relative">
+                    <input
+                      id="admin-password"
+                      type={showPassword ? "text" : "password"}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="••••••••"
+                      required
+                      className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-secondary focus:ring-2 focus:ring-secondary/20 transition-all pr-12"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
                 </div>
                 <button
                   type="submit"
@@ -155,4 +165,3 @@ export default function AdminLogin() {
     </div>
   );
 }
-

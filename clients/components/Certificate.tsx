@@ -130,7 +130,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
         {/* Center: Website */}
         <div className="flex items-center justify-center gap-2 w-1/3">
            <Globe className="h-3 w-3 text-white/80" />
-           <p className="text-white text-[10px] font-bold tracking-widest">www.ksoshtc.com</p>
+           <p className="text-white text-[10px] font-bold tracking-widest uppercase">www.kigalisafetytraining.com</p>
         </div>
 
         {/* Right: Slogan */}
