@@ -48,6 +48,7 @@ export async function createCertificate(req: Request, res: Response): Promise<vo
       return;
     }
 
+    const col = mongoCollection<Certificate>(MONGO_COLLECTIONS.certificates);
     const year = new Date(dateIssued).getFullYear();
     const certificateId = await getNextCertificateId(year);
 
