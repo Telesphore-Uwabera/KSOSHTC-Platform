@@ -63,7 +63,7 @@ import {
 import { postEnrollment, getEnrollments, patchEnrollment } from "./routes/enrollments";
 import { getProgress, patchProgress } from "./routes/progress";
 import { postContact } from "./routes/contact";
-import { createCertificate, getCertificate, getAllCertificates, updateCertificate, deleteCertificate } from "./routes/certificates";
+import { createCertificate, getCertificate, getAllCertificates, updateCertificate, deleteCertificate, sendEmailCertificate } from "./routes/certificates";
 import { getMongoDb, mongoCollection, MONGO_COLLECTIONS } from "./lib/mongo";
 import { getAdminSessionSecret, requireAdminSession } from "./lib/adminSession";
 import { rateLimitLogin, rateLimitRegister } from "./lib/rateLimit";
@@ -293,6 +293,7 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.get("/api/certificates/:id", getCertificate);
   app.patch("/api/certificates/:id", requireAdminSession, updateCertificate);
   app.delete("/api/certificates/:id", requireAdminSession, deleteCertificate);
+  app.post("/api/certificates/:id/send-email", requireAdminSession, sendEmailCertificate);
 
   return app;
 }

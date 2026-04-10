@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import crypto from "node:crypto";
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
+import { notifyLearnerCertificateIssued } from "../lib/notify";
 
 export interface Certificate {
   id: string;
@@ -8,8 +9,8 @@ export interface Certificate {
   courses: string;
   dateIssued: string;
   duration: string;
-  email: string;
   certificateId: string;
+  email: string;
   createdAt: string;
 }
 
@@ -118,5 +119,35 @@ export async function deleteCertificate(req: Request, res: Response): Promise<vo
   } catch (e) {
     console.error("Delete certificate error:", e);
     res.status(500).json({ error: "Failed to delete certificate" });
+  }
+}
+
+export async function sendEmailCertificate(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const col = mongoCollection<Certificate>(MONGO_COLLECTIONS.certificates);
+    const cert = await col.findOne({ id });
+
+    if (!cert) {
+      res.status(404).json({ error: "Certificate not found" });
+      return;
+    }
+
+    if (!cert.email || !cert.email.includes("@")) {
+      res.status(400).json({ error: "Learner does not have a valid email address recorded." });
+      return;
+    }
+
+    await notifyLearnerCertificateIssued({
+      name: cert.learnerName,
+      email: cert.email,
+      courseTitle: cert.courses,
+      certificateId: cert.certificateId,
+    });
+
+    res.json({ message: `Congratulatory email sent to ${cert.email}` });
+  } catch (e) {
+    console.error("Email certificate error:", e);
+    res.status(500).json({ error: "Failed to send email" });
   }
 }

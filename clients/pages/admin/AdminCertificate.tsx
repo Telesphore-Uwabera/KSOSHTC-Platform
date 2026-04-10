@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Certificate } from "@/components/Certificate";
 import { getApiBase } from "@/lib/apiBase";
-import { Loader2, Printer, Plus, History, Trash2, Edit2 } from "lucide-react";
+import { Loader2, Printer, Plus, History, Trash2, Edit2, Mail } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -19,7 +19,7 @@ export default function AdminCertificate() {
     courses: "",
     dateIssued: format(new Date(), "yyyy-MM-dd"),
     duration: "3 months",
-    email: "ksoshtc@gmail.com",
+    email: "",
   });
   const [isPreview, setIsPreview] = useState(false);
   const [generatedCert, setGeneratedCert] = useState<any>(null);
@@ -93,6 +93,21 @@ export default function AdminCertificate() {
       toast.success("Certificate deleted successfully");
       queryClient.invalidateQueries({ queryKey: ["certificates"] });
     },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const sendEmailMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await adminFetch(`${getApiBase()}/api/certificates/${id}/send-email`, {
+        method: "POST",
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({ error: "Failed to send email" }));
+        throw new Error(err.error || "Failed to send email");
+      }
+      return res.json();
+    },
+    onSuccess: (data) => toast.success(data.message),
     onError: (error) => toast.error(error.message),
   });
 
@@ -245,12 +260,14 @@ export default function AdminCertificate() {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="email">Institute Email</Label>
+                <Label htmlFor="email">Student Email</Label>
                 <Input 
                   id="email" 
+                  type="email"
+                  placeholder="student@example.com"
+                  required
                   value={formData.email}
-                  readOnly
-                  className="bg-muted"
+                  onChange={(e) => setFormData({...formData, email: e.target.value})}
                 />
               </div>
 <div className="flex gap-2">
@@ -346,6 +363,19 @@ export default function AdminCertificate() {
                             }}
                           >
                             <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            title="Send Congratulations Email"
+                            disabled={sendEmailMutation.isPending}
+                            onClick={() => {
+                              if (window.confirm(`Send professional congratulatory email to ${cert.email}?`)) {
+                                sendEmailMutation.mutate(cert.id);
+                              }
+                            }}
+                          >
+                            {sendEmailMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4 text-green-600" />}
                           </Button>
                         </div>
                       </TableCell>
