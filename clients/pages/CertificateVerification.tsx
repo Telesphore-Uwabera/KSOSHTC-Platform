@@ -64,36 +64,27 @@ export default function CertificateVerification() {
       <div className="max-w-[1240px] mx-auto p-4 flex flex-col items-center w-full">
         
         {/* Responsive Certificate Container */}
-        <div className="w-full flex justify-center overflow-hidden mb-8 md:mb-12">
-           <div className="relative" style={{ 
+        <div className="w-full flex justify-center overflow-hidden mb-6">
+           <div style={{ 
              width: '1122px', 
              height: '793px',
-             // Responsive scale using CSS variables/media queries would be better, 
-             // but we'll use a responsive wrapping class system
-           }}>
-             <div className="origin-top-left transform scale-[0.28] sm:scale-[0.45] md:scale-[0.65] lg:scale-[1.0] transition-transform duration-300">
-               <div className="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden">
-                 <Certificate data={cert} />
-               </div>
-             </div>
-             
-             {/* Spacer to give the scaled element proper layout space */}
-             <div className="hidden sm:block" style={{ height: '0' }} />
+             transformOrigin: 'top center',
+           }} className="transform scale-[0.3] sm:scale-[0.5] md:scale-[0.7] lg:scale-100 transition-transform duration-300">
+              <div className="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden">
+                <Certificate data={cert} />
+              </div>
            </div>
-           
-           {/* Height compensation for the outer relative container to avoid huge gaps */}
-           <style dangerouslySetInnerHTML={{ __html: `
-             @media (max-width: 639px) { .responsive-cert-wrapper { height: 230px; } }
-             @media (min-width: 640px) and (max-width: 767px) { .responsive-cert-wrapper { height: 360px; } }
-             @media (min-width: 768px) and (max-width: 1023px) { .responsive-cert-wrapper { height: 520px; } }
-             @media (min-width: 1024px) { .responsive-cert-wrapper { height: 793px; } }
-           `}} />
         </div>
 
-        {/* Outer container height correction wrapper */}
-        <div className="responsive-cert-wrapper w-full flex justify-center -mt-[560px] sm:-mt-[430px] md:-mt-[270px] lg:mt-0">
-           {/* This is a structural fix for scale() ghost space */}
-        </div>
+        {/* Height adjustment to pull content up (replaces the ghost space logic) */}
+        <style dangerouslySetInnerHTML={{ __html: `
+          @media (max-width: 639px) { .responsive-cert-spacer { margin-top: -540px; } }
+          @media (min-width: 640px) and (max-width: 767px) { .responsive-cert-spacer { margin-top: -380px; } }
+          @media (min-width: 768px) and (max-width: 1023px) { .responsive-cert-spacer { margin-top: -220px; } }
+          @media (min-width: 1024px) { .responsive-cert-spacer { margin-top: 0px; } }
+        `}} />
+        
+        <div className="responsive-cert-spacer w-full h-1" />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
           <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm transition-all hover:shadow-md">
