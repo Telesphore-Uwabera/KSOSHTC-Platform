@@ -4,6 +4,7 @@ import { Mail, Globe, Shield } from "lucide-react";
 
 interface CertificateProps {
   data: {
+    title: string;
     learnerName: string;
     courses: string;
     dateIssued: string;
@@ -54,7 +55,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
         {/* Recipient */}
         <div className="mb-8 text-center">
           <h2 className="text-[#1a1a1a] text-6xl font-serif italic font-bold tracking-tight">
-             Mr. {data.learnerName || "Telesphore Uwabera"}
+             {data.title} {data.learnerName || "Telesphore Uwabera"}
           </h2>
         </div>
 

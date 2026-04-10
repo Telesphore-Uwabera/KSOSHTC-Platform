@@ -5,6 +5,7 @@ import { notifyLearnerCertificateIssued } from "../lib/notify";
 
 export interface Certificate {
   id: string;
+  title: string;
   learnerName: string;
   courses: string;
   dateIssued: string;
@@ -16,7 +17,7 @@ export interface Certificate {
 
 export async function createCertificate(req: Request, res: Response): Promise<void> {
   try {
-    const { learnerName, courses, dateIssued, duration, email } = req.body;
+    const { title, learnerName, courses, dateIssued, duration, email } = req.body;
     
     if (!learnerName || !courses || !dateIssued) {
       res.status(400).json({ error: "Missing required fields" });
@@ -33,6 +34,7 @@ export async function createCertificate(req: Request, res: Response): Promise<vo
 
     const newCertificate: Certificate = {
       id: crypto.randomUUID(),
+      title: title || "Mr.",
       learnerName,
       courses,
       dateIssued,

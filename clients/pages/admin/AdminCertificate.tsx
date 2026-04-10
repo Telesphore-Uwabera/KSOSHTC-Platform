@@ -15,6 +15,7 @@ import { adminFetch } from "@/lib/adminApi";
 
 export default function AdminCertificate() {
   const [formData, setFormData] = useState({
+    title: "Mr.",
     learnerName: "",
     courses: "",
     dateIssued: format(new Date(), "yyyy-MM-dd"),
@@ -113,11 +114,12 @@ export default function AdminCertificate() {
 
   const resetForm = () => {
     setFormData({
+      title: "Mr.",
       learnerName: "",
       courses: "",
       dateIssued: format(new Date(), "yyyy-MM-dd"),
       duration: "3 months",
-      email: "ksoshtc@gmail.com",
+      email: "",
     });
     setIsEditing(false);
     setCurrentId(null);
@@ -214,15 +216,36 @@ export default function AdminCertificate() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="learnerName">Learner Full Name</Label>
-                <Input 
-                  id="learnerName" 
-                  placeholder="e.g. Mr. Ephrem HAKUZIMANA"
-                  required
-                  value={formData.learnerName}
-                  onChange={(e) => setFormData({...formData, learnerName: e.target.value})}
-                />
+              <div className="grid grid-cols-4 gap-4">
+                <div className="col-span-1 space-y-2">
+                  <Label htmlFor="title">Title</Label>
+                  <Select 
+                    value={formData.title} 
+                    onValueChange={(value) => setFormData({...formData, title: value})}
+                  >
+                    <SelectTrigger id="title">
+                      <SelectValue placeholder="Title" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Mr.">Mr.</SelectItem>
+                      <SelectItem value="Mrs.">Mrs.</SelectItem>
+                      <SelectItem value="Miss.">Miss.</SelectItem>
+                      <SelectItem value="Dr.">Dr.</SelectItem>
+                      <SelectItem value="Prof.">Prof.</SelectItem>
+                      <SelectItem value="Sir.">Sir.</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="col-span-3 space-y-2">
+                  <Label htmlFor="learnerName">Learner Full Name</Label>
+                  <Input 
+                    id="learnerName" 
+                    placeholder="Ephrem HAKUZIMANA"
+                    required
+                    value={formData.learnerName}
+                    onChange={(e) => setFormData({...formData, learnerName: e.target.value})}
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="courses">Courses Completed</Label>
@@ -317,7 +340,7 @@ export default function AdminCertificate() {
                   {certificates?.map((cert: any) => (
                     <TableRow key={cert.id}>
                       <TableCell className="font-mono text-xs">{cert.certificateId}</TableCell>
-                      <TableCell className="font-medium">{cert.learnerName}</TableCell>
+                      <TableCell className="font-medium">{cert.title} {cert.learnerName}</TableCell>
                       <TableCell className="text-xs">{cert.courses}</TableCell>
                       <TableCell>{format(new Date(cert.dateIssued), "MMM dd, yyyy")}</TableCell>
                       <TableCell className="text-right">
@@ -341,6 +364,7 @@ export default function AdminCertificate() {
                               setIsEditing(true);
                               setCurrentId(cert.id);
                               setFormData({
+                                title: cert.title || "Mr.",
                                 learnerName: cert.learnerName,
                                 courses: cert.courses,
                                 dateIssued: format(new Date(cert.dateIssued), "yyyy-MM-dd"),
