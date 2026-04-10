@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
 import { getApiBase } from "@/lib/apiBase";
 import { Certificate } from "@/components/Certificate";
-import { Loader2, ShieldCheck, AlertCircle, Home } from "lucide-react";
+import { Loader2, ShieldCheck, AlertCircle, Home, Download, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 export default function CertificateVerification() {
@@ -18,6 +18,46 @@ export default function CertificateVerification() {
     },
     enabled: !!id,
   });
+
+  const handleDownload = () => {
+    const printContent = document.getElementById("certificate-print-area");
+    if (!printContent) return;
+
+    const printArea = printContent.outerHTML;
+
+    const printWindow = window.open('', '_blank');
+    if (!printWindow) return;
+
+    printWindow.document.write(`
+      <html>
+        <head>
+          <title>Certificate - ${cert.learnerName}</title>
+          <style>
+            @media print {
+              @page { size: landscape; margin: 0; }
+              body { margin: 0; padding: 0; }
+              #certificate-print-area { border: none !important; box-shadow: none !important; width: 1122px; height: 793px; }
+            }
+            body { margin: 0; display: flex; justify-content: center; align-items: flex-start; background: #fff; }
+          </style>
+          <link rel="preconnect" href="https://fonts.googleapis.com">
+          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+          <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+          <script src="https://cdn.tailwindcss.com"></script>
+        </head>
+        <body>
+          ${printArea}
+          <script>
+            window.onload = () => {
+              window.print();
+              setTimeout(() => { window.close(); }, 500);
+            };
+          </script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
   if (isLoading) {
     return (
@@ -54,9 +94,14 @@ export default function CertificateVerification() {
           <div className="bg-white p-3 rounded-2xl shadow-xl">
              <ShieldCheck className="h-16 w-16 text-[#004d40]" />
           </div>
-          <div className="text-center md:text-left">
+          <div className="text-center md:text-left flex-1">
             <h1 className="text-4xl font-black tracking-tight mb-1 uppercase">Certificate Verified</h1>
             <p className="text-green-100 text-lg opacity-90">This is an authentic Kigali Safety OSH Training Center certificate.</p>
+          </div>
+          <div className="flex flex-col sm:flex-row gap-3">
+            <Button onClick={handleDownload} className="bg-white text-[#004d40] hover:bg-white/90 font-bold shadow-lg">
+              <Download className="mr-2 h-5 w-5" /> Download PDF
+            </Button>
           </div>
         </div>
       </div>

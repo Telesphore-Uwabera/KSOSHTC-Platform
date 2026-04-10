@@ -890,7 +890,7 @@ export async function notifyLearnerCertificateIssued(data: {
     `Course:          ${data.courseTitle}`,
     `Certificate ID:  ${data.certificateId}`,
     "",
-    "You can view and verify your digital certificate anytime using the official link below:",
+    "You can view, verify, and download your digital certificate as a PDF using the official link below:",
     verifyUrl,
     "",
     "This certificate recognizes your hard work and commitment to occupational safety and health standards. We hope this achievement supports your professional growth and contributes to a safer workplace for all.",
@@ -914,9 +914,9 @@ export async function notifyLearnerCertificateIssued(data: {
   <p style="margin:0 0 0.5em;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;color:#666;">Certificate ID</p>
   <p style="margin:0;font-family:monospace;font-weight:bold;font-size:16px;">${escapeHtml(data.certificateId)}</p>
 </div>
-<p style="margin:0 0 1.5em;text-align:center;">Click the button below to view and verify your digital certificate:</p>
+<p style="margin:0 0 1.5em;text-align:center;">Click the button below to view, verify, and <strong>download</strong> your digital certificate as a PDF:</p>
 <p style="text-align:center;margin:0 0 1.5em;">
-  <a href="${verifyUrl}" style="display:inline-block;background-color:#004d40;color:#ffffff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);">View My Certificate</a>
+  <a href="${verifyUrl}" style="display:inline-block;background-color:#004d40;color:#ffffff;padding:14px 28px;border-radius:6px;text-decoration:none;font-weight:bold;font-size:16px;box-shadow:0 4px 6px rgba(0,0,0,0.1);">Download My Certificate</a>
 </p>
 <p style="margin:0 0 1em;font-size:14px;color:#555;text-align:center;">Or copy this link to your browser:<br/><a href="${verifyUrl}" style="color:#004d40;word-break:break-all;">${verifyUrl}</a></p>
 <hr style="border:0;border-top:1px solid #eee;margin:25px 0;" />
