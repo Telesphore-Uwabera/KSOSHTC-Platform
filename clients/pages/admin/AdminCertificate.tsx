@@ -37,6 +37,15 @@ export default function AdminCertificate() {
     },
   });
 
+  const { data: nextIdData } = useQuery({
+    queryKey: ["nextId", formData.dateIssued.split('-')[0]],
+    queryFn: async () => {
+      const year = formData.dateIssued.split('-')[0];
+      const res = await adminFetch(`${getApiBase()}/api/certificates/next-id?year=${year}`);
+      return res.json();
+    }
+  });
+
   const createMutation = useMutation({
     mutationFn: async (data: typeof formData) => {
       const res = await adminFetch(`${getApiBase()}/api/certificates`, {
@@ -263,15 +272,25 @@ export default function AdminCertificate() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="dateIssued">Date</Label>
-                <Input 
-                  id="dateIssued" 
-                  type="date"
-                  required
-                  value={formData.dateIssued}
-                  onChange={(e) => setFormData({...formData, dateIssued: e.target.value})}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="dateIssued">Date of Issuance</Label>
+                  <Input 
+                    id="dateIssued" 
+                    type="date"
+                    required
+                    value={formData.dateIssued}
+                    onChange={(e) => setFormData({...formData, dateIssued: e.target.value})}
+                  />
+                </div>
+                {!isEditing && (
+                  <div className="space-y-2">
+                    <Label className="text-muted-foreground">Generated ID (Expected)</Label>
+                    <div className="h-10 px-3 py-2 rounded-md border border-input bg-muted font-mono text-sm flex items-center">
+                      {nextIdData?.nextId || "..."}
+                    </div>
+                  </div>
+                )}
               </div>
               <div className="space-y-2">
                 <Label htmlFor="duration">Duration</Label>

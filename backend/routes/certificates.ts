@@ -15,6 +15,30 @@ export interface Certificate {
   createdAt: string;
 }
 
+async function getNextCertificateId(year: number): Promise<string> {
+  const col = mongoCollection<Certificate>(MONGO_COLLECTIONS.certificates);
+  const pattern = `${year}-KS-`;
+  
+  // Find the certificate with the highest sequence number for this year
+  const lastCert = await col.find({ 
+    certificateId: { $regex: `^${pattern}` } 
+  })
+  .sort({ certificateId: -1 })
+  .limit(1)
+  .toArray();
+
+  let nextNumber = 1;
+  if (lastCert.length > 0) {
+    const lastId = lastCert[0].certificateId;
+    const lastNumberStr = lastId.split('-').pop();
+    if (lastNumberStr) {
+      nextNumber = parseInt(lastNumberStr, 10) + 1;
+    }
+  }
+
+  return `${pattern}${String(nextNumber).padStart(5, '0')}`;
+}
+
 export async function createCertificate(req: Request, res: Response): Promise<void> {
   try {
     const { title, learnerName, courses, dateIssued, duration, email } = req.body;
@@ -24,13 +48,8 @@ export async function createCertificate(req: Request, res: Response): Promise<vo
       return;
     }
 
-    const col = mongoCollection<Certificate>(MONGO_COLLECTIONS.certificates);
-    
-    // Generate a unique certificate ID if not provided
-    // Pattern: Year-KS-Counter
     const year = new Date(dateIssued).getFullYear();
-    const count = await col.countDocuments({ dateIssued: { $regex: `^${year}` } });
-    const certificateId = `${year}-KS-${String(count + 1).padStart(5, '0')}`;
+    const certificateId = await getNextCertificateId(year);
 
     const newCertificate: Certificate = {
       id: crypto.randomUUID(),
@@ -151,5 +170,16 @@ export async function sendEmailCertificate(req: Request, res: Response): Promise
   } catch (e) {
     console.error("Email certificate error:", e);
     res.status(500).json({ error: "Failed to send email" });
+  }
+}
+
+export async function getNextId(req: Request, res: Response): Promise<void> {
+  try {
+    const year = parseInt(req.query.year as string) || new Date().getFullYear();
+    const nextId = await getNextCertificateId(year);
+    res.json({ nextId });
+  } catch (e) {
+    console.error("Get next ID error:", e);
+    res.status(500).json({ error: "Failed to fetch next ID" });
   }
 }
