@@ -77,3 +77,46 @@ export async function getAllCertificates(req: Request, res: Response): Promise<v
     res.status(500).json({ error: "Failed to fetch certificates" });
   }
 }
+
+export async function updateCertificate(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const update = req.body;
+    const col = mongoCollection<Certificate>(MONGO_COLLECTIONS.certificates);
+    
+    const result = await col.findOneAndUpdate(
+      { id },
+      { $set: update },
+      { returnDocument: 'after' }
+    );
+
+    if (!result) {
+      res.status(404).json({ error: "Certificate not found" });
+      return;
+    }
+
+    res.json(result);
+  } catch (e) {
+    console.error("Update certificate error:", e);
+    res.status(500).json({ error: "Failed to update certificate" });
+  }
+}
+
+export async function deleteCertificate(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const col = mongoCollection<Certificate>(MONGO_COLLECTIONS.certificates);
+    
+    const result = await col.deleteOne({ id });
+
+    if (result.deletedCount === 0) {
+      res.status(404).json({ error: "Certificate not found" });
+      return;
+    }
+
+    res.json({ message: "Certificate deleted successfully" });
+  } catch (e) {
+    console.error("Delete certificate error:", e);
+    res.status(500).json({ error: "Failed to delete certificate" });
+  }
+}

@@ -7,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { Certificate } from "@/components/Certificate";
 import { getApiBase } from "@/lib/apiBase";
-import { Loader2, Printer, Plus, History, Trash2 } from "lucide-react";
+import { Loader2, Printer, Plus, History, Trash2, Edit2 } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -23,6 +23,8 @@ export default function AdminCertificate() {
   });
   const [isPreview, setIsPreview] = useState(false);
   const [generatedCert, setGeneratedCert] = useState<any>(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [currentId, setCurrentId] = useState<string | null>(null);
   const queryClient = useQueryClient();
 
   const { data: certificates, isLoading } = useQuery({
@@ -38,9 +40,7 @@ export default function AdminCertificate() {
     mutationFn: async (data: typeof formData) => {
       const res = await adminFetch(`${getApiBase()}/api/certificates`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       });
       if (!res.ok) {
@@ -54,11 +54,59 @@ export default function AdminCertificate() {
       setGeneratedCert(data);
       setIsPreview(true);
       queryClient.invalidateQueries({ queryKey: ["certificates"] });
+      resetForm();
     },
     onError: (error) => {
       toast.error(error.message);
     },
   });
+
+  const updateMutation = useMutation({
+    mutationFn: async (data: typeof formData) => {
+      const res = await adminFetch(`${getApiBase()}/api/certificates/${currentId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      if (!res.ok) throw new Error("Failed to update certificate");
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Certificate updated successfully!");
+      setIsEditing(false);
+      setCurrentId(null);
+      resetForm();
+      queryClient.invalidateQueries({ queryKey: ["certificates"] });
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const deleteMutation = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await adminFetch(`${getApiBase()}/api/certificates/${id}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) throw new Error("Failed to delete certificate");
+      return res.json();
+    },
+    onSuccess: () => {
+      toast.success("Certificate deleted successfully");
+      queryClient.invalidateQueries({ queryKey: ["certificates"] });
+    },
+    onError: (error) => toast.error(error.message),
+  });
+
+  const resetForm = () => {
+    setFormData({
+      learnerName: "",
+      courses: "",
+      dateIssued: format(new Date(), "yyyy-MM-dd"),
+      duration: "3 months",
+      email: "ksoshtc@gmail.com",
+    });
+    setIsEditing(false);
+    setCurrentId(null);
+  };
 
   const handlePrint = () => {
     const printContent = document.getElementById("certificate-print-area");
@@ -100,7 +148,11 @@ export default function AdminCertificate() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    createMutation.mutate(formData);
+    if (isEditing) {
+      updateMutation.mutate(formData);
+    } else {
+      createMutation.mutate(formData);
+    }
   };
 
   if (isPreview && generatedCert) {
@@ -133,7 +185,7 @@ export default function AdminCertificate() {
           <h1 className="text-3xl font-bold">Certificate Management</h1>
           <p className="text-muted-foreground">Generate and manage training certificates.</p>
         </div>
-        <Button onClick={() => setGeneratedCert(null)}>
+        <Button onClick={() => { setGeneratedCert(null); resetForm(); }}>
            <Plus className="mr-2 h-4 w-4" /> New Certificate
         </Button>
       </div>
@@ -201,9 +253,22 @@ export default function AdminCertificate() {
                   className="bg-muted"
                 />
               </div>
-              <Button type="submit" className="w-full" disabled={createMutation.isPending}>
-                {createMutation.isPending ? <Loader2 className="animate-spin mr-2 h-4 w-4" /> : "Generate & Preview"}
-              </Button>
+<div className="flex gap-2">
+                <Button type="submit" className="flex-1" disabled={createMutation.isPending || updateMutation.isPending}>
+                  {(createMutation.isPending || updateMutation.isPending) ? (
+                    <Loader2 className="animate-spin mr-2 h-4 w-4" />
+                  ) : isEditing ? (
+                    "Update Certificate"
+                  ) : (
+                    "Generate & Preview"
+                  )}
+                </Button>
+                {isEditing && (
+                  <Button type="button" variant="outline" onClick={resetForm}>
+                    Cancel
+                  </Button>
+                )}
+              </div>
             </form>
           </CardContent>
         </Card>
@@ -239,16 +304,50 @@ export default function AdminCertificate() {
                       <TableCell className="text-xs">{cert.courses}</TableCell>
                       <TableCell>{format(new Date(cert.dateIssued), "MMM dd, yyyy")}</TableCell>
                       <TableCell className="text-right">
-                        <Button 
-                          variant="ghost" 
-                          size="icon"
-                          onClick={() => {
-                            setGeneratedCert(cert);
-                            setIsPreview(true);
-                          }}
-                        >
-                          <Printer className="h-4 w-4" />
-                        </Button>
+                        <div className="flex justify-end gap-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            title="Preview/Print"
+                            onClick={() => {
+                              setGeneratedCert(cert);
+                              setIsPreview(true);
+                            }}
+                          >
+                            <Printer className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            title="Edit"
+                            onClick={() => {
+                              setIsEditing(true);
+                              setCurrentId(cert.id);
+                              setFormData({
+                                learnerName: cert.learnerName,
+                                courses: cert.courses,
+                                dateIssued: format(new Date(cert.dateIssued), "yyyy-MM-dd"),
+                                duration: cert.duration,
+                                email: cert.email,
+                              });
+                              window.scrollTo({ top: 0, behavior: "smooth" });
+                            }}
+                          >
+                            <Edit2 className="h-4 w-4 text-blue-600" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon"
+                            title="Delete"
+                            onClick={() => {
+                              if (window.confirm("Are you sure you want to delete this certificate record?")) {
+                                deleteMutation.mutate(cert.id);
+                              }
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
