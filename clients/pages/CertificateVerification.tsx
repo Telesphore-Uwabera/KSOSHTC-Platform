@@ -48,7 +48,7 @@ export default function CertificateVerification() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f3f4f6] pb-20">
+    <div className="min-h-screen bg-[#f3f4f6] pb-20 overflow-x-hidden">
       <div className="bg-[#004d40] text-white py-12 px-4 shadow-lg mb-12">
         <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-6">
           <div className="bg-white p-3 rounded-2xl shadow-xl">
@@ -61,36 +61,67 @@ export default function CertificateVerification() {
         </div>
       </div>
 
-      <div className="max-w-[1240px] mx-auto p-4 flex flex-col items-center">
-        <div className="bg-white rounded-3xl shadow-2xl p-4 md:p-12 border border-gray-100 scale-[0.55] md:scale-[0.8] lg:scale-100 origin-top overflow-hidden">
-          <Certificate data={cert} />
+      <div className="max-w-[1240px] mx-auto p-4 flex flex-col items-center w-full">
+        
+        {/* Responsive Certificate Container */}
+        <div className="w-full flex justify-center overflow-hidden mb-8 md:mb-12">
+           <div className="relative" style={{ 
+             width: '1122px', 
+             height: '793px',
+             // Responsive scale using CSS variables/media queries would be better, 
+             // but we'll use a responsive wrapping class system
+           }}>
+             <div className="origin-top-left transform scale-[0.28] sm:scale-[0.45] md:scale-[0.65] lg:scale-[1.0] transition-transform duration-300">
+               <div className="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden">
+                 <Certificate data={cert} />
+               </div>
+             </div>
+             
+             {/* Spacer to give the scaled element proper layout space */}
+             <div className="hidden sm:block" style={{ height: '0' }} />
+           </div>
+           
+           {/* Height compensation for the outer relative container to avoid huge gaps */}
+           <style dangerouslySetInnerHTML={{ __html: `
+             @media (max-width: 639px) { .responsive-cert-wrapper { height: 230px; } }
+             @media (min-width: 640px) and (max-width: 767px) { .responsive-cert-wrapper { height: 360px; } }
+             @media (min-width: 768px) and (max-width: 1023px) { .responsive-cert-wrapper { height: 520px; } }
+             @media (min-width: 1024px) { .responsive-cert-wrapper { height: 793px; } }
+           `}} />
         </div>
 
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl">
-          <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm transition-all hover:shadow-md">
+        {/* Outer container height correction wrapper */}
+        <div className="responsive-cert-wrapper w-full flex justify-center -mt-[560px] sm:-mt-[430px] md:-mt-[270px] lg:mt-0">
+           {/* This is a structural fix for scale() ghost space */}
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
+          <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm transition-all hover:shadow-md">
             <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Registry</h2>
             <div className="space-y-4">
                <div>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Student Name</p>
-                  <p className="text-lg font-bold text-gray-800">{cert.learnerName}</p>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Student Name</p>
+                  <p className="text-lg font-black text-[#004d40] leading-tight">{cert.learnerName}</p>
                </div>
                <div>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Certificate ID</p>
-                  <code className="block bg-gray-50 p-3 rounded-lg text-[#004d40] font-mono text-xs break-all border border-gray-100">
-                    {cert.certificateId}
-                  </code>
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Certificate ID</p>
+                  <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-200">
+                    <code className="text-[#004d40] font-black font-mono text-sm break-all">
+                      {cert.certificateId}
+                    </code>
+                  </div>
                </div>
                <div>
-                  <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Status</p>
-                  <div className="flex items-center text-green-600 font-bold gap-1">
+                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-black border border-green-100">
                      <ShieldCheck className="h-4 w-4" /> Validated Original
                   </div>
                </div>
             </div>
           </div>
 
-          <div className="bg-white p-8 rounded-2xl border border-gray-200 shadow-sm transition-all hover:shadow-md">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 uppercase border-b pb-2">Studied Curriculum</h2>
+          <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm transition-all hover:shadow-md">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 uppercase border-b pb-2 tracking-tight">Studied Curriculum</h2>
             <div className="space-y-3">
                {(cert.courses?.toLowerCase().includes('mining') ? [
                  'Safety in Surface Mining',
@@ -109,8 +140,8 @@ export default function CertificateVerification() {
                  'Factory OSH Standards'
                ]).map((topic, i) => (
                  <div key={i} className="flex items-center gap-3 text-gray-700 font-bold text-sm">
-                   <div className="h-2 w-2 bg-[#004d40] rounded-full"></div>
-                   {topic}
+                   <div className="h-2 w-2 bg-[#004d40] rounded-full shrink-0"></div>
+                   <span className="leading-tight">{topic}</span>
                  </div>
                ))}
             </div>
