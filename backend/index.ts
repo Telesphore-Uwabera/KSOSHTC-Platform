@@ -63,6 +63,7 @@ import {
 import { postEnrollment, getEnrollments, patchEnrollment } from "./routes/enrollments";
 import { getProgress, patchProgress } from "./routes/progress";
 import { postContact } from "./routes/contact";
+import { createCertificate, getCertificate, getAllCertificates } from "./routes/certificates";
 import { getMongoDb, mongoCollection, MONGO_COLLECTIONS } from "./lib/mongo";
 import { getAdminSessionSecret, requireAdminSession } from "./lib/adminSession";
 import { rateLimitLogin, rateLimitRegister } from "./lib/rateLimit";
@@ -285,6 +286,11 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.patch("/api/enrollments/:id", requireAdminSession, patchEnrollment);
   app.get("/api/progress", getProgress);
   app.patch("/api/progress", patchProgress);
+
+  // Certificates
+  app.post("/api/certificates", requireAdminSession, createCertificate);
+  app.get("/api/certificates", requireAdminSession, getAllCertificates);
+  app.get("/api/certificates/:id", getCertificate);
 
   return app;
 }

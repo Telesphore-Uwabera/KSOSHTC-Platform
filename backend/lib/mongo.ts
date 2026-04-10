@@ -62,5 +62,6 @@ export const MONGO_COLLECTIONS = {
   /** Contact form submissions (name, email, phone, message). */
   inquiries: "inquiries",
   password_resets: "password_resets",
+  certificates: "certificates",
 } as const;
 

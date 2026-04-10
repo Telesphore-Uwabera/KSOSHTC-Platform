@@ -36,6 +36,8 @@ const AdminTestimonials = lazy(() => import("./pages/admin/AdminTestimonials"));
 const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminAssignmentSubmissions = lazy(() => import("./pages/admin/AdminAssignmentSubmissions"));
 const AdminDistributedAssignments = lazy(() => import("./pages/admin/AdminDistributedAssignments"));
+const AdminCertificate = lazy(() => import("./pages/admin/AdminCertificate"));
+const CertificateVerification = lazy(() => import("./pages/CertificateVerification"));
 const TakeQuiz = lazy(() => import("./pages/TakeQuiz"));
 const TakeModuleQuiz = lazy(() => import("./pages/TakeModuleQuiz"));
 const StudentLayout = lazy(() => import("./pages/StudentLayout"));
@@ -183,6 +185,7 @@ const App = () => {
                 </Route>
                 <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />
+                <Route path="/verify-certificate/:id" element={<CertificateVerification />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
@@ -194,6 +197,7 @@ const App = () => {
                   <Route path="learners" element={<AdminLearners />} />
                   <Route path="assignment-submissions" element={<AdminAssignmentSubmissions />} />
                   <Route path="distribute-pdf" element={<AdminDistributedAssignments />} />
+                  <Route path="certificate" element={<AdminCertificate />} />
                   <Route path="testimonials" element={<AdminTestimonials />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>
