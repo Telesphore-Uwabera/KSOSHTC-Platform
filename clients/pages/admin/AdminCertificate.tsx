@@ -160,35 +160,41 @@ export default function AdminCertificate() {
       const res = await fetch(`${getApiBase()}/api/course-content/courses/${slug}/modules`);
       const data = await res.json();
       
+      const newItems: any[] = [];
+
       if (data.modules) {
-        const newItems = data.modules.map((m: any) => ({
-          title: m.title,
-          score: 100,
-          date: formData.dateIssued,
-          hours: 6.0,
-          note: ""
-        }));
+        for (const m of data.modules) {
+          const lRes = await fetch(`${getApiBase()}/api/course-content/courses/${slug}/modules/${m.id}/lessons`);
+          const lData = await lRes.json();
+          if (lData.lessons) {
+            lData.lessons.forEach((l: any) => {
+              newItems.push({ title: l.title, score: "", date: formData.dateIssued, hours: 6.0, note: "" });
+            });
+          }
+        }
         
         // Also add core safety items
         if (slug !== "safety-management") {
           const genRes = await fetch(`${getApiBase()}/api/course-content/courses/safety-management/modules`);
           const genData = await genRes.json();
           if (genData.modules) {
-            newItems.push(...genData.modules.map((m: any) => ({
-              title: m.title,
-              score: 100,
-              date: formData.dateIssued,
-              hours: 6.0,
-              note: ""
-            })));
+            for (const m of genData.modules) {
+              const lRes = await fetch(`${getApiBase()}/api/course-content/courses/safety-management/modules/${m.id}/lessons`);
+              const lData = await lRes.json();
+              if (lData.lessons) {
+                lData.lessons.forEach((l: any) => {
+                  newItems.push({ title: l.title, score: "", date: formData.dateIssued, hours: 6.0, note: "" });
+                });
+              }
+            }
           }
         }
 
         setFormData(prev => ({ ...prev, transcript: newItems }));
-        toast.success("Curriculum modules imported to transcript");
+        toast.success("Lessons imported. Please add scores manually.");
       }
     } catch (e) {
-      toast.error("Failed to import curriculum");
+      toast.error("Failed to import lessons");
     }
   };
 

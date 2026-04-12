@@ -147,7 +147,7 @@ export default function CertificateVerification() {
           {/* Transcript Header */}
           <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-2 border-gray-100 pb-8 mb-8 gap-6">
             <div className="flex items-center gap-4">
-              <div className="w-16 h-16 bg-[#004d40] rounded-full flex items-center justify-center text-white font-black text-2xl">KS</div>
+              <img src="/logo.webp" alt="KSOSHTC Logo" className="h-16 w-auto object-contain" />
               <div>
                 <h2 className="text-3xl font-black text-[#004d40] tracking-tighter uppercase leading-none">KSOSHTC</h2>
                 <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Occupational Safety & Health Training</p>
