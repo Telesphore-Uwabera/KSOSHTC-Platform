@@ -12,6 +12,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { format } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { adminFetch } from "@/lib/adminApi";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 export default function AdminCertificate() {
   const [formData, setFormData] = useState({
@@ -243,42 +245,46 @@ export default function AdminCertificate() {
     }
   };
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
     const printContent = document.getElementById("certificate-print-area");
     if (!printContent) return;
 
-    const originalContents = document.body.innerHTML;
-    const printArea = printContent.outerHTML;
+    try {
+      const oldTransform = printContent.parentElement ? printContent.parentElement.style.transform : '';
+      if (printContent.parentElement && oldTransform.includes("scale")) {
+          printContent.parentElement.style.transform = "scale(1)";
+      }
 
-    document.body.innerHTML = `
-      <html>
-        <head>
-          <title>Certificate - ${generatedCert?.learnerName}</title>
-          <style>
-            @media print {
-              @page { size: landscape; margin: 0; }
-              body { margin: 0; padding: 0; }
-              #certificate-print-area { transform: scale(1); border: none; }
-            }
-          </style>
-          <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-          <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
-          <script src="https://cdn.tailwindcss.com"></script>
-        </head>
-        <body>
-          ${printArea}
-          <script>
-            window.onload = () => {
-              window.print();
-              setTimeout(() => {
-                window.location.reload();
-              }, 500);
-            };
-          </script>
-        </body>
-      </html>
-    `;
+      const canvas = await html2canvas(printContent, {
+        scale: 2, 
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#e9e4d1'
+      });
+
+      if (printContent.parentElement && oldTransform) {
+          printContent.parentElement.style.transform = oldTransform;
+      }
+
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`KSOSHTC_Certificate_${generatedCert?.certificateId || 'Draft'}.pdf`);
+
+      toast.success("Certificate downloaded successfully");
+    } catch (err) {
+      console.error("Failed to generate PDF", err);
+      toast.error("Failed to download PDF. Please try again.");
+    }
   };
 
   const handleSubmit = (e: React.FormEvent) => {

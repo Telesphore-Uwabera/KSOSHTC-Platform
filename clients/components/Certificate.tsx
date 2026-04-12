@@ -135,9 +135,9 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
         </div>
 
         {/* Right: Slogan */}
-        <div className="flex items-center justify-end gap-2 w-1/3 text-right">
-           <Shield className="h-3 w-3 text-white/80" />
-           <p className="text-white text-[10px] italic font-bold tracking-widest uppercase">Safety today, prosperity tomorrow.</p>
+        <div className="flex items-center justify-end gap-2 text-right whitespace-nowrap">
+           <Shield className="h-3 w-3 text-white/80 shrink-0" />
+           <p className="text-white text-[10px] italic font-bold tracking-widest uppercase whitespace-nowrap">Safety today, prosperity tomorrow.</p>
         </div>
 
       </div>

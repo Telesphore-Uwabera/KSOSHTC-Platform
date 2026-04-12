@@ -7,6 +7,8 @@ import { Certificate } from "@/components/Certificate";
 import { Loader2, ShieldCheck, AlertCircle, Home, Download, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 
 export default function CertificateVerification() {
   const { id } = useParams();
@@ -31,44 +33,47 @@ export default function CertificateVerification() {
     enabled: !!cert,
   });
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     const printContent = document.getElementById("certificate-print-area");
     if (!printContent) return;
 
-    const printArea = printContent.outerHTML;
+    try {
+      // Temporarily revert the scale to get actual pixel dimensions rather than minified viewport width sizes on mobile
+      const oldTransform = printContent.parentElement ? printContent.parentElement.style.transform : '';
+      if (printContent.parentElement && oldTransform.includes("scale")) {
+          printContent.parentElement.style.transform = "scale(1)";
+      }
 
-    const printWindow = window.open('', '_blank');
-    if (!printWindow) return;
+      const canvas = await html2canvas(printContent, {
+        scale: 2, 
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#e9e4d1'
+      });
 
-    printWindow.document.write(`
-      <html>
-        <head>
-          <title>Certificate - ${cert.learnerName}</title>
-          <style>
-            @media print {
-              @page { size: landscape; margin: 0; }
-              body { margin: 0; padding: 0; }
-              #certificate-print-area { border: none !important; box-shadow: none !important; width: 1122px; height: 793px; }
-            }
-            body { margin: 0; display: flex; justify-content: center; align-items: flex-start; background: #fff; }
-          </style>
-          <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-          <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
-          <script src="https://cdn.tailwindcss.com"></script>
-        </head>
-        <body>
-          ${printArea}
-          <script>
-            window.onload = () => {
-              window.print();
-              setTimeout(() => { window.close(); }, 500);
-            };
-          </script>
-        </body>
-      </html>
-    `);
-    printWindow.document.close();
+      if (printContent.parentElement && oldTransform) {
+          printContent.parentElement.style.transform = oldTransform;
+      }
+
+      const imgData = canvas.toDataURL('image/jpeg', 1.0);
+
+      const pdf = new jsPDF({
+        orientation: 'landscape',
+        unit: 'mm',
+        format: 'a4'
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      
+      pdf.addImage(imgData, 'JPEG', 0, 0, pdfWidth, pdfHeight);
+      pdf.save(`KSOSHTC_Certificate_${cert.certificateId}.pdf`);
+
+    } catch (err) {
+      console.error("Failed to generate PDF", err);
+      // Fallback in case of module failure during build
+      alert("Generating PDF, if nothing happened, please ensure it finished loading.");
+    }
   };
 
   if (isLoading) {
@@ -217,7 +222,7 @@ export default function CertificateVerification() {
                   <tr className="bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b">
                     <th className="py-2 px-4">Program Title</th>
                     <th className="py-2 px-4 text-center">Hours</th>
-                    <th className="py-2 px-4 text-center">Score</th>
+                    <th className="py-2 px-4 text-center">Score (%)</th>
                     <th className="py-2 px-4 text-center">GPA</th>
                     <th className="py-2 px-4 text-right">Issue Date</th>
                   </tr>
@@ -243,7 +248,7 @@ export default function CertificateVerification() {
                 <thead>
                   <tr className="bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b">
                     <th className="py-2 px-4">Course Title</th>
-                    <th className="py-2 px-4 text-center">Score</th>
+                    <th className="py-2 px-4 text-center">Score (%)</th>
                     <th className="py-2 px-4 text-center">Issue Date</th>
                     <th className="py-2 px-4 text-center">Hours</th>
                   </tr>
