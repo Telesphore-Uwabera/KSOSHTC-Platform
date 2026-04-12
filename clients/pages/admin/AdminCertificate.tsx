@@ -289,8 +289,8 @@ export default function AdminCertificate() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="grid grid-cols-4 gap-4">
-                <div className="col-span-1 space-y-2">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div className="md:col-span-1 space-y-2">
                   <Label htmlFor="title">Title</Label>
                   <Select 
                     value={formData.title} 
@@ -309,7 +309,7 @@ export default function AdminCertificate() {
                     </SelectContent>
                   </Select>
                 </div>
-                <div className="col-span-3 space-y-2">
+                <div className="md:col-span-3 space-y-2">
                   <Label htmlFor="learnerName">Learner Full Name</Label>
                   <Input 
                     id="learnerName" 
@@ -336,7 +336,7 @@ export default function AdminCertificate() {
                   </SelectContent>
                 </Select>
               </div>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="dateIssued">Date of Issuance</Label>
                   <Input 
@@ -377,16 +377,15 @@ export default function AdminCertificate() {
                 />
               </div>
 
-              {/* Transcript Management Section */}
               <div className="space-y-4 border rounded-lg p-4 bg-gray-50/50">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                    <h3 className="font-bold text-gray-900">Academic Transcript</h3>
                    <Button type="button" variant="outline" size="sm" onClick={handleImportCurriculum}>
                      Import from Modules
                    </Button>
                 </div>
 
-                <div className="grid grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                   <div className="space-y-1">
                     <Label className="text-xs">Total Hours</Label>
                     <Input 
@@ -414,13 +413,14 @@ export default function AdminCertificate() {
 
                 <div className="space-y-2">
                   <Label className="text-xs">Course Details (for scanner to see)</Label>
-                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2 custom-scrollbar">
                     {formData.transcript.map((item, idx) => (
-                      <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded border group relative">
-                        <div className="col-span-4">
+                      <div key={idx} className="grid grid-cols-1 md:grid-cols-12 gap-2 md:items-center bg-white p-2 sm:p-3 rounded border group relative">
+                        <div className="md:col-span-4">
                           <Input 
                             placeholder="Course Title" 
                             className="text-xs h-8" 
+
                             value={item.title}
                             onChange={(e) => {
                               const newT = [...formData.transcript];
@@ -429,10 +429,10 @@ export default function AdminCertificate() {
                             }}
                           />
                         </div>
-                        <div className="col-span-2">
+                        <div className="md:col-span-2">
                           <Input 
                             type="number" 
-                            placeholder="Score" 
+                            placeholder="Score (%)" 
                             className="text-xs h-8" 
                             value={item.score}
                             onChange={(e) => {
@@ -442,7 +442,7 @@ export default function AdminCertificate() {
                             }}
                           />
                         </div>
-                        <div className="col-span-3">
+                        <div className="md:col-span-3">
                           <Input 
                             type="date" 
                             className="text-xs h-8" 
@@ -454,7 +454,7 @@ export default function AdminCertificate() {
                             }}
                           />
                         </div>
-                        <div className="col-span-2">
+                        <div className="md:col-span-2">
                           <Input 
                             type="number" 
                             placeholder="Hrs" 
@@ -467,7 +467,7 @@ export default function AdminCertificate() {
                             }}
                           />
                         </div>
-                        <div className="col-span-1">
+                        <div className="md:col-span-1 flex justify-end">
                           <Button 
                             type="button" 
                             variant="ghost" 
@@ -532,98 +532,100 @@ export default function AdminCertificate() {
                 <Loader2 className="animate-spin h-8 w-8 text-primary" />
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Cert ID</TableHead>
-                    <TableHead>Learner</TableHead>
-                    <TableHead>Course</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {certificates?.map((cert: any) => (
-                    <TableRow key={cert.id}>
-                      <TableCell className="font-mono text-xs">{cert.certificateId}</TableCell>
-                      <TableCell className="font-medium">{cert.title} {cert.learnerName}</TableCell>
-                      <TableCell className="text-xs">{cert.courses}</TableCell>
-                      <TableCell>{format(new Date(cert.dateIssued), "MMM dd, yyyy")}</TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            title="Preview/Print"
-                            onClick={() => {
-                              setGeneratedCert(cert);
-                              setIsPreview(true);
-                            }}
-                          >
-                            <Printer className="h-4 w-4" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            title="Edit"
-                            onClick={() => {
-                              setIsEditing(true);
-                              setCurrentId(cert.id);
-                              setFormData({
-                                title: cert.title || "Mr.",
-                                learnerName: cert.learnerName,
-                                courses: cert.courses,
-                                dateIssued: format(new Date(cert.dateIssued), "yyyy-MM-dd"),
-                                duration: cert.duration,
-                                email: cert.email,
-                                totalHours: cert.totalHours || 120,
-                                averageScore: cert.averageScore || 90,
-                                gpa: cert.gpa || "3.60",
-                                transcript: cert.transcript || [],
-                              });
-                              window.scrollTo({ top: 0, behavior: "smooth" });
-                            }}
-                          >
-                            <Edit2 className="h-4 w-4 text-blue-600" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            title="Delete"
-                            onClick={() => {
-                              if (window.confirm("Are you sure you want to delete this certificate record?")) {
-                                deleteMutation.mutate(cert.id);
-                              }
-                            }}
-                          >
-                            <Trash2 className="h-4 w-4 text-red-600" />
-                          </Button>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            title="Send Congratulations Email"
-                            disabled={sendEmailMutation.isPending}
-                            onClick={() => {
-                              if (window.confirm(`Send professional congratulatory email to ${cert.email}?`)) {
-                                sendEmailMutation.mutate(cert.id);
-                              }
-                            }}
-                          >
-                            {sendEmailMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4 text-green-600" />}
-                          </Button>
-                        </div>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                  {certificates?.length === 0 && (
+              <div className="overflow-x-auto w-full">
+                <Table>
+                  <TableHeader>
                     <TableRow>
-                      <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                        No certificates issued yet.
-                      </TableCell>
+                      <TableHead>Cert ID</TableHead>
+                      <TableHead>Learner</TableHead>
+                      <TableHead>Course</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead className="text-right">Action</TableHead>
                     </TableRow>
-                  )}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {certificates?.map((cert: any) => (
+                      <TableRow key={cert.id}>
+                        <TableCell className="font-mono text-xs">{cert.certificateId}</TableCell>
+                        <TableCell className="font-medium">{cert.title} {cert.learnerName}</TableCell>
+                        <TableCell className="text-xs">{cert.courses}</TableCell>
+                        <TableCell>{format(new Date(cert.dateIssued), "MMM dd, yyyy")}</TableCell>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              title="Preview/Print"
+                              onClick={() => {
+                                setGeneratedCert(cert);
+                                setIsPreview(true);
+                              }}
+                            >
+                              <Printer className="h-4 w-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              title="Edit"
+                              onClick={() => {
+                                setIsEditing(true);
+                                setCurrentId(cert.id);
+                                setFormData({
+                                  title: cert.title || "Mr.",
+                                  learnerName: cert.learnerName,
+                                  courses: cert.courses,
+                                  dateIssued: format(new Date(cert.dateIssued), "yyyy-MM-dd"),
+                                  duration: cert.duration,
+                                  email: cert.email,
+                                  totalHours: cert.totalHours || 120,
+                                  averageScore: cert.averageScore || 90,
+                                  gpa: cert.gpa || "3.60",
+                                  transcript: cert.transcript || [],
+                                });
+                                window.scrollTo({ top: 0, behavior: "smooth" });
+                              }}
+                            >
+                              <Edit2 className="h-4 w-4 text-blue-600" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              title="Delete"
+                              onClick={() => {
+                                if (window.confirm("Are you sure you want to delete this certificate record?")) {
+                                  deleteMutation.mutate(cert.id);
+                                }
+                              }}
+                            >
+                              <Trash2 className="h-4 w-4 text-red-600" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              title="Send Congratulations Email"
+                              disabled={sendEmailMutation.isPending}
+                              onClick={() => {
+                                if (window.confirm(`Send professional congratulatory email to ${cert.email}?`)) {
+                                  sendEmailMutation.mutate(cert.id);
+                                }
+                              }}
+                            >
+                              {sendEmailMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4 text-green-600" />}
+                            </Button>
+                          </div>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                    {certificates?.length === 0 && (
+                      <TableRow>
+                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                          No certificates issued yet.
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
