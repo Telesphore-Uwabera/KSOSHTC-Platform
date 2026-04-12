@@ -97,7 +97,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
           {/* Center: Stamp */}
           <div className="flex justify-center items-center h-full w-[30%]">
              <div className="z-20 pointer-events-none shrink-0 flex items-center justify-center">
-                <img src="/certificate/stamp_transparent.webp" alt="Stamp" style={{ width: '180px', height: 'auto', display: 'block' }} />
+                <img src="/certificate/stamp.webp" alt="Stamp" style={{ width: '180px', height: 'auto', display: 'block' }} />
              </div>
           </div>
 
