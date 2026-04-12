@@ -3,6 +3,14 @@ import crypto from "node:crypto";
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { notifyLearnerCertificateIssued } from "../lib/notify";
 
+export interface TranscriptItem {
+  title: string;
+  score: number;
+  date: string;
+  hours: number;
+  note?: string;
+}
+
 export interface Certificate {
   id: string;
   title: string;
@@ -13,6 +21,11 @@ export interface Certificate {
   certificateId: string;
   email: string;
   createdAt: string;
+  // Transcript Extensions
+  totalHours?: number;
+  averageScore?: number;
+  gpa?: string;
+  transcript?: TranscriptItem[];
 }
 
 async function getNextCertificateId(year: number): Promise<string> {
@@ -41,7 +54,7 @@ async function getNextCertificateId(year: number): Promise<string> {
 
 export async function createCertificate(req: Request, res: Response): Promise<void> {
   try {
-    const { title, learnerName, courses, dateIssued, duration, email } = req.body;
+    const { title, learnerName, courses, dateIssued, duration, email, totalHours, averageScore, gpa, transcript } = req.body;
     
     if (!learnerName || !courses || !dateIssued) {
       res.status(400).json({ error: "Missing required fields" });
@@ -62,6 +75,10 @@ export async function createCertificate(req: Request, res: Response): Promise<vo
       email: email || "ksoshtc@gmail.com",
       certificateId,
       createdAt: new Date().toISOString(),
+      totalHours,
+      averageScore,
+      gpa,
+      transcript,
     };
 
     await col.insertOne(newCertificate as any);

@@ -21,6 +21,10 @@ export default function AdminCertificate() {
     dateIssued: format(new Date(), "yyyy-MM-dd"),
     duration: "3 months",
     email: "",
+    totalHours: 120,
+    averageScore: 90,
+    gpa: "3.60",
+    transcript: [] as any[],
   });
   const [isPreview, setIsPreview] = useState(false);
   const [generatedCert, setGeneratedCert] = useState<any>(null);
@@ -129,9 +133,63 @@ export default function AdminCertificate() {
       dateIssued: format(new Date(), "yyyy-MM-dd"),
       duration: "3 months",
       email: "",
+      totalHours: 120,
+      averageScore: 90,
+      gpa: "3.60",
+      transcript: [],
     });
     setIsEditing(false);
     setCurrentId(null);
+  };
+
+  const handleImportCurriculum = async () => {
+    if (!formData.courses) {
+      toast.error("Please select a course first");
+      return;
+    }
+    
+    try {
+      // Find course slug
+      const title = formData.courses.toLowerCase();
+      let slug = "";
+      if (title.includes("construction")) slug = "construction";
+      else if (title.includes("industrial")) slug = "industrial-safety";
+      else if (title.includes("mining")) slug = "mining";
+      else slug = "safety-management";
+
+      const res = await fetch(`${getApiBase()}/api/course-content/courses/${slug}/modules`);
+      const data = await res.json();
+      
+      if (data.modules) {
+        const newItems = data.modules.map((m: any) => ({
+          title: m.title,
+          score: 100,
+          date: formData.dateIssued,
+          hours: 6.0,
+          note: ""
+        }));
+        
+        // Also add core safety items
+        if (slug !== "safety-management") {
+          const genRes = await fetch(`${getApiBase()}/api/course-content/courses/safety-management/modules`);
+          const genData = await genRes.json();
+          if (genData.modules) {
+            newItems.push(...genData.modules.map((m: any) => ({
+              title: m.title,
+              score: 100,
+              date: formData.dateIssued,
+              hours: 6.0,
+              note: ""
+            })));
+          }
+        }
+
+        setFormData(prev => ({ ...prev, transcript: newItems }));
+        toast.success("Curriculum modules imported to transcript");
+      }
+    } catch (e) {
+      toast.error("Failed to import curriculum");
+    }
   };
 
   const handlePrint = () => {
@@ -312,6 +370,129 @@ export default function AdminCertificate() {
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                 />
               </div>
+
+              {/* Transcript Management Section */}
+              <div className="space-y-4 border rounded-lg p-4 bg-gray-50/50">
+                <div className="flex items-center justify-between">
+                   <h3 className="font-bold text-gray-900">Academic Transcript</h3>
+                   <Button type="button" variant="outline" size="sm" onClick={handleImportCurriculum}>
+                     Import from Modules
+                   </Button>
+                </div>
+
+                <div className="grid grid-cols-3 gap-4">
+                  <div className="space-y-1">
+                    <Label className="text-xs">Total Hours</Label>
+                    <Input 
+                      type="number"
+                      value={formData.totalHours} 
+                      onChange={e => setFormData({...formData, totalHours: Number(e.target.value)})} 
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">Average Score (%)</Label>
+                    <Input 
+                      type="number"
+                      value={formData.averageScore} 
+                      onChange={e => setFormData({...formData, averageScore: Number(e.target.value)})} 
+                    />
+                  </div>
+                  <div className="space-y-1">
+                    <Label className="text-xs">GPA</Label>
+                    <Input 
+                      value={formData.gpa} 
+                      onChange={e => setFormData({...formData, gpa: e.target.value})} 
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label className="text-xs">Course Details (for scanner to see)</Label>
+                  <div className="space-y-2 max-h-[300px] overflow-y-auto pr-2">
+                    {formData.transcript.map((item, idx) => (
+                      <div key={idx} className="grid grid-cols-12 gap-2 items-center bg-white p-2 rounded border group relative">
+                        <div className="col-span-4">
+                          <Input 
+                            placeholder="Course Title" 
+                            className="text-xs h-8" 
+                            value={item.title}
+                            onChange={(e) => {
+                              const newT = [...formData.transcript];
+                              newT[idx].title = e.target.value;
+                              setFormData({...formData, transcript: newT});
+                            }}
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Input 
+                            type="number" 
+                            placeholder="Score" 
+                            className="text-xs h-8" 
+                            value={item.score}
+                            onChange={(e) => {
+                              const newT = [...formData.transcript];
+                              newT[idx].score = Number(e.target.value);
+                              setFormData({...formData, transcript: newT});
+                            }}
+                          />
+                        </div>
+                        <div className="col-span-3">
+                          <Input 
+                            type="date" 
+                            className="text-xs h-8" 
+                            value={item.date}
+                            onChange={(e) => {
+                              const newT = [...formData.transcript];
+                              newT[idx].date = e.target.value;
+                              setFormData({...formData, transcript: newT});
+                            }}
+                          />
+                        </div>
+                        <div className="col-span-2">
+                          <Input 
+                            type="number" 
+                            placeholder="Hrs" 
+                            className="text-xs h-8" 
+                            value={item.hours}
+                            onChange={(e) => {
+                              const newT = [...formData.transcript];
+                              newT[idx].hours = Number(e.target.value);
+                              setFormData({...formData, transcript: newT});
+                            }}
+                          />
+                        </div>
+                        <div className="col-span-1">
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-red-500"
+                            onClick={() => {
+                              const newT = formData.transcript.filter((_, i) => i !== idx);
+                              setFormData({...formData, transcript: newT});
+                            }}
+                          >
+                            <Trash2 className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <Button 
+                    type="button" 
+                    variant="ghost" 
+                    size="sm" 
+                    className="w-full border-dashed border-2 h-9 text-gray-500 hover:text-primary hover:border-primary"
+                    onClick={() => setFormData({
+                      ...formData, 
+                      transcript: [...formData.transcript, { title: "", score: 100, date: formData.dateIssued, hours: 6.0 }]
+                    })}
+                  >
+                    <Plus className="h-4 w-4 mr-2" /> Add Course to Transcript
+                  </Button>
+                </div>
+              </div>
+
 <div className="flex gap-2">
                 <Button type="submit" className="flex-1" disabled={createMutation.isPending || updateMutation.isPending}>
                   {(createMutation.isPending || updateMutation.isPending) ? (
@@ -389,6 +570,10 @@ export default function AdminCertificate() {
                                 dateIssued: format(new Date(cert.dateIssued), "yyyy-MM-dd"),
                                 duration: cert.duration,
                                 email: cert.email,
+                                totalHours: cert.totalHours || 120,
+                                averageScore: cert.averageScore || 90,
+                                gpa: cert.gpa || "3.60",
+                                transcript: cert.transcript || [],
                               });
                               window.scrollTo({ top: 0, behavior: "smooth" });
                             }}

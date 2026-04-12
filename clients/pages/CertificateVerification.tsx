@@ -1,10 +1,12 @@
 import React from "react";
 import { useParams, Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
+import { format } from "date-fns";
 import { getApiBase } from "@/lib/apiBase";
 import { Certificate } from "@/components/Certificate";
 import { Loader2, ShieldCheck, AlertCircle, Home, Download, Printer } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Label } from "@/components/ui/label";
 
 export default function CertificateVerification() {
   const { id } = useParams();
@@ -141,65 +143,110 @@ export default function CertificateVerification() {
         
         <div className="responsive-cert-spacer w-full h-1" />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 w-full max-w-4xl">
-          <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm transition-all hover:shadow-md">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 border-b pb-2">Verification Registry</h2>
-            <div className="space-y-4">
-               <div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Student Name</p>
-                  <p className="text-lg font-black text-[#004d40] leading-tight">{cert.learnerName}</p>
-               </div>
-               <div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Certificate ID</p>
-                  <div className="bg-gray-50 p-2.5 rounded-lg border border-gray-200">
-                    <code className="text-[#004d40] font-black font-mono text-sm break-all">
-                      {cert.certificateId}
-                    </code>
-                  </div>
-               </div>
-               <div>
-                  <p className="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-1">Status</p>
-                  <div className="inline-flex items-center gap-2 px-3 py-1 bg-green-50 text-green-700 rounded-full text-sm font-black border border-green-100">
-                     <ShieldCheck className="h-4 w-4" /> Validated Original
-                  </div>
-               </div>
+        <div className="w-full max-w-5xl bg-white shadow-2xl rounded-sm border border-gray-200 p-8 sm:p-12 mb-12">
+          {/* Transcript Header */}
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-2 border-gray-100 pb-8 mb-8 gap-6">
+            <div className="flex items-center gap-4">
+              <div className="w-16 h-16 bg-[#004d40] rounded-full flex items-center justify-center text-white font-black text-2xl">KS</div>
+              <div>
+                <h2 className="text-3xl font-black text-[#004d40] tracking-tighter uppercase leading-none">KSOSHTC</h2>
+                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Occupational Safety & Health Training</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Official Student Transcript</h1>
             </div>
           </div>
 
-          <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm transition-all hover:shadow-md h-fit">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 uppercase border-b pb-2 tracking-tight">Certified Content</h2>
-            <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
-               {modulesLoading ? (
-                 <div className="flex items-center gap-2 text-gray-400 py-4">
-                   <Loader2 className="h-4 w-4 animate-spin" />
-                   <span className="text-sm">Fetching syllabus...</span>
-                 </div>
-               ) : curriculumData?.curriculum?.length > 0 ? (
-                 curriculumData.curriculum.map((mod: any, i: number) => (
-                   <div key={i} className="space-y-2">
-                     <h3 className="text-sm font-black text-[#004d40] uppercase tracking-wider flex items-center gap-2">
-                       <div className="h-1.5 w-1.5 bg-[#004d40] rounded-full"></div>
-                       {mod.moduleTitle}
-                     </h3>
-                     <div className="pl-4 space-y-1.5">
-                       {mod.lessons.map((lesson: string, j: number) => (
-                         <div key={j} className="flex items-start gap-2 text-gray-600 text-xs">
-                           <span className="text-[#004d40] mt-0.5">•</span>
-                           <span className="leading-tight font-medium text-justify">{lesson}</span>
-                         </div>
-                       ))}
-                     </div>
-                   </div>
-                 ))
-               ) : (
-                 <p className="text-sm text-gray-500 italic">Curriculum details not available.</p>
-               )}
+          {/* Student Info */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+            <div className="space-y-4">
+              <div>
+                <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Student Name</Label>
+                <div className="text-xl font-black text-[#004d40] uppercase">{cert.learnerName}</div>
+              </div>
+              <p className="text-sm text-gray-600 leading-relaxed font-medium">
+                {cert.learnerName} has successfully completed the required professional development certificate programs and courses listed below. These accomplishments demonstrate continued academic excellence and a commitment to occupational safety and health.
+              </p>
             </div>
-            
-            <div className="mt-8 pt-4 border-t border-gray-100 flex items-center justify-between">
-              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Program Duration</div>
-              <div className="text-sm font-black text-[#004d40]">3 MONTHS (120 HOURS)</div>
+            <div className="border-l border-gray-100 pl-8 space-y-4">
+              <div className="flex justify-between items-center border-b border-gray-50 pb-2">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Student Number</span>
+                <span className="font-mono font-bold text-gray-900">{cert.certificateId}</span>
+              </div>
+              <div className="flex justify-between items-center border-b border-gray-50 pb-2">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Enrollment Date</span>
+                <span className="font-bold text-gray-900">{format(new Date(cert.createdAt || cert.dateIssued), "MM/dd/yyyy")}</span>
+              </div>
             </div>
+          </div>
+
+          {/* Main Programs Table */}
+          <div className="mb-12">
+            <h3 className="text-sm font-black text-gray-900 uppercase border-b border-gray-900 pb-1 mb-4">Professional Certificate Program</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b">
+                    <th className="py-2 px-4">Program Title</th>
+                    <th className="py-2 px-4 text-center">Hours</th>
+                    <th className="py-2 px-4 text-center">Score</th>
+                    <th className="py-2 px-4 text-center">GPA</th>
+                    <th className="py-2 px-4 text-right">Issue Date</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  <tr className="border-b font-bold text-gray-800">
+                    <td className="py-3 px-4">{cert.courses}</td>
+                    <td className="py-3 px-4 text-center">{cert.totalHours || "120"}</td>
+                    <td className="py-3 px-4 text-center">{cert.averageScore || "90"}</td>
+                    <td className="py-3 px-4 text-center">{cert.gpa || "3.60"}</td>
+                    <td className="py-3 px-4 text-right">{format(new Date(cert.dateIssued), "MM/dd/yyyy")}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Individual Courses Table */}
+          <div>
+            <h3 className="text-sm font-black text-gray-900 uppercase border-b border-gray-900 pb-1 mb-4">Course Details</h3>
+            <div className="overflow-x-auto">
+              <table className="w-full text-left">
+                <thead>
+                  <tr className="bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b">
+                    <th className="py-2 px-4">Course Title</th>
+                    <th className="py-2 px-4 text-center">Score</th>
+                    <th className="py-2 px-4 text-center">Issue Date</th>
+                    <th className="py-2 px-4 text-center">Hours</th>
+                    <th className="py-2 px-4 text-right">Note</th>
+                  </tr>
+                </thead>
+                <tbody className="text-sm">
+                  {cert.transcript && cert.transcript.length > 0 ? (
+                    cert.transcript.map((item: any, idx: number) => (
+                      <tr key={idx} className={`border-b ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
+                        <td className="py-2.5 px-4 font-bold text-gray-700">{item.title}</td>
+                        <td className="py-2.5 px-4 text-center font-bold text-gray-900">{item.score}</td>
+                        <td className="py-2.5 px-4 text-center text-gray-500 font-medium">
+                          {format(new Date(item.date || cert.dateIssued), "MM/dd/yyyy")}
+                        </td>
+                        <td className="py-2.5 px-4 text-center font-bold text-gray-800">{item.hours}</td>
+                        <td className="py-2.5 px-4 text-right text-gray-400 text-[10px] uppercase font-bold italic">{item.note || ""}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5} className="py-8 text-center text-gray-400 italic">No detailed course breakdown available.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          
+          <div className="mt-16 text-center border-t border-gray-100 pt-8 opacity-30 grayscale hover:grayscale-0 transition-all cursor-default select-none">
+            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5em]">Kigali Safety OSH Training Center - Official Verification Document</p>
           </div>
         </div>
       </div>
