@@ -39,7 +39,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
       <div className="absolute inset-10 border-[3px] border-[#c4ac6a] pointer-events-none z-10"></div>
 
       {/* Main Content Flow */}
-      <div className="relative z-20 w-full h-full flex flex-col items-center pt-14 pb-16 px-24">
+      <div className="relative z-20 w-full h-full flex flex-col items-center pt-10 pb-12 px-24">
         
         {/* Header */}
         <div className="flex flex-col items-center mb-8">
@@ -53,7 +53,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
         </div>
 
         {/* Recipient */}
-        <div className="mb-8 text-center">
+        <div className="mb-5 text-center">
           <h2 className="text-[#1a1a1a] text-6xl font-serif italic font-bold tracking-tight">
              {data.title} {data.learnerName || "Telesphore Uwabera"}
           </h2>
@@ -70,7 +70,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
         </div>
 
         {/* ID Section */}
-        <div className="w-full max-w-3xl flex justify-center gap-14 border-t border-b border-[#c4ac6a]/50 py-3 mb-12">
+        <div className="w-full max-w-3xl flex justify-center gap-14 border-t border-b border-[#c4ac6a]/50 py-3 mb-6">
           <p className="text-sm font-bold"><span className="text-[#004d40] uppercase mr-2 opacity-60">Duration:</span> {data.duration}</p>
           <div className="w-px h-full bg-[#c4ac6a]"></div>
           <p className="text-sm font-bold"><span className="text-[#004d40] uppercase mr-2 opacity-60">Certificate ID:</span> {data.certificateId}</p>
@@ -84,7 +84,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
              <div className="relative h-16 w-full flex items-end mb-2">
                <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-3 mr-4 shrink-0">Signature:</span>
                <div className="w-56 flex items-end">
-                 <img src="/certificate/signature.webp" alt="Signature" className="h-20 w-auto object-contain mix-blend-multiply" />
+                 <img src="/certificate/signature.webp" alt="Signature" className="h-20 w-auto object-contain" />
                </div>
              </div>
              <div className="pt-2 pl-[65px]">
