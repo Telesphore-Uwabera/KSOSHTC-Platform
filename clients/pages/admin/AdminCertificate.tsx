@@ -142,6 +142,51 @@ export default function AdminCertificate() {
     setCurrentId(null);
   };
 
+  const updateTranscriptItem = (idx: number, field: string, value: any) => {
+    const newT = [...formData.transcript];
+    if (newT.length === 0 || !newT[idx]) return;
+    
+    newT[idx][field] = value;
+    
+    let totalHrs = 0;
+    let totalScorePoints = 0;
+    let totalGradePoints = 0;
+    
+    newT.forEach((item: any) => {
+      const h = Number(item.hours) || 0;
+      const sSrc = item.score;
+      
+      if (sSrc !== "" && sSrc !== null && sSrc !== undefined) {
+        const s = Number(sSrc);
+        totalHrs += h;
+        totalScorePoints += (s * h);
+
+        // Direct proportional GPA (100% = 4.0, 95% = 3.8...)
+        let gp = (s / 100) * 4.0;
+        totalGradePoints += (gp * h);
+      }
+    });
+
+    let newAvg = formData.averageScore;
+    let newGpa = formData.gpa;
+    let newTotalHrs = formData.totalHours;
+
+    if (totalHrs > 0) {
+       newTotalHrs = totalHrs;
+       newAvg = Math.round(totalScorePoints / totalHrs);
+       newGpa = (totalGradePoints / totalHrs).toFixed(2);
+    }
+
+    setFormData(prev => ({
+      ...prev,
+      transcript: newT,
+      totalHours: newTotalHrs,
+      averageScore: newAvg,
+      gpa: newGpa
+    }));
+  };
+
+
   const handleImportCurriculum = async () => {
     if (!formData.courses) {
       toast.error("Please select a course first");
@@ -391,7 +436,8 @@ export default function AdminCertificate() {
                     <Input 
                       type="number"
                       value={formData.totalHours} 
-                      onChange={e => setFormData({...formData, totalHours: Number(e.target.value)})} 
+                      className="bg-gray-100 font-bold"
+                      readOnly
                     />
                   </div>
                   <div className="space-y-1">
@@ -399,14 +445,16 @@ export default function AdminCertificate() {
                     <Input 
                       type="number"
                       value={formData.averageScore} 
-                      onChange={e => setFormData({...formData, averageScore: Number(e.target.value)})} 
+                      className="bg-gray-100 font-bold"
+                      readOnly
                     />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-xs">GPA</Label>
                     <Input 
                       value={formData.gpa} 
-                      onChange={e => setFormData({...formData, gpa: e.target.value})} 
+                      className="bg-gray-100 font-bold"
+                      readOnly
                     />
                   </div>
                 </div>
@@ -422,11 +470,7 @@ export default function AdminCertificate() {
                             className="text-xs h-8" 
 
                             value={item.title}
-                            onChange={(e) => {
-                              const newT = [...formData.transcript];
-                              newT[idx].title = e.target.value;
-                              setFormData({...formData, transcript: newT});
-                            }}
+                            onChange={(e) => updateTranscriptItem(idx, "title", e.target.value)}
                           />
                         </div>
                         <div className="md:col-span-2">
@@ -435,11 +479,7 @@ export default function AdminCertificate() {
                             placeholder="Score (%)" 
                             className="text-xs h-8" 
                             value={item.score}
-                            onChange={(e) => {
-                              const newT = [...formData.transcript];
-                              newT[idx].score = Number(e.target.value);
-                              setFormData({...formData, transcript: newT});
-                            }}
+                            onChange={(e) => updateTranscriptItem(idx, "score", e.target.value)}
                           />
                         </div>
                         <div className="md:col-span-3">
@@ -447,11 +487,7 @@ export default function AdminCertificate() {
                             type="date" 
                             className="text-xs h-8" 
                             value={item.date}
-                            onChange={(e) => {
-                              const newT = [...formData.transcript];
-                              newT[idx].date = e.target.value;
-                              setFormData({...formData, transcript: newT});
-                            }}
+                            onChange={(e) => updateTranscriptItem(idx, "date", e.target.value)}
                           />
                         </div>
                         <div className="md:col-span-2">
@@ -460,11 +496,7 @@ export default function AdminCertificate() {
                             placeholder="Hrs" 
                             className="text-xs h-8" 
                             value={item.hours}
-                            onChange={(e) => {
-                              const newT = [...formData.transcript];
-                              newT[idx].hours = Number(e.target.value);
-                              setFormData({...formData, transcript: newT});
-                            }}
+                            onChange={(e) => updateTranscriptItem(idx, "hours", e.target.value)}
                           />
                         </div>
                         <div className="md:col-span-1 flex justify-end">
@@ -476,6 +508,8 @@ export default function AdminCertificate() {
                             onClick={() => {
                               const newT = formData.transcript.filter((_, i) => i !== idx);
                               setFormData({...formData, transcript: newT});
+                              // Quick calculation reset when a row is removed
+                              setTimeout(() => { updateTranscriptItem(0, "hours", newT[0]?.hours || 0); }, 50);
                             }}
                           >
                             <Trash2 className="h-4 w-4" />
