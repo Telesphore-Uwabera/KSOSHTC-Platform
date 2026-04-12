@@ -1,5 +1,5 @@
 import React from "react";
-import { QRCodeSVG } from "qrcode.react";
+import { QRCodeCanvas } from "qrcode.react";
 import { Mail, Globe, Shield } from "lucide-react";
 
 interface CertificateProps {
@@ -14,7 +14,7 @@ interface CertificateProps {
 }
 
 export const Certificate: React.FC<CertificateProps> = ({ data }) => {
-  const verificationUrl = `${window.location.origin}/verify-certificate/${data.certificateId}`;
+  const verificationUrl = `https://www.kigalisafetytraining.com/verify-certificate/${data.certificateId}`;
 
   return (
     <div 
@@ -76,33 +76,33 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
           <p className="text-sm font-bold"><span className="text-[#004d40] uppercase mr-2 opacity-60">Certificate ID:</span> {data.certificateId}</p>
         </div>
 
-        {/* Signatures & QR Area - Perfectly Aligned Row */}
-        <div className="w-full mt-auto grid grid-cols-[1.3fr_1fr_1.3fr] items-center">
+        {/* Signatures & QR Area - Flex Layout for better PDF rendering */}
+        <div className="w-full mt-auto flex justify-between items-center">
           
           {/* Left: Signature */}
-          <div className="flex flex-col items-start h-full justify-center">
+          <div className="flex flex-col items-start h-full justify-center w-[35%]">
              <div className="relative h-16 w-full flex items-end mb-2">
-               <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1.5 mr-4">Signature:</span>
-               <div className="relative">
+               <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1.5 mr-4 shrink-0">Signature:</span>
+               <div className="relative w-56">
                  <span className="font-['Dancing_Script',_cursive] text-5xl text-[#1e272e] select-none italic absolute bottom-1 left-0 whitespace-nowrap">Emmanuel</span>
-                 <div className="w-56 border-b-2 border-[#1e272e] mt-1.5"></div>
+                 <div className="w-full border-b-2 border-[#1e272e] mt-1.5"></div>
                </div>
              </div>
-             <div className="pt-2">
+             <div className="pt-2 pl-[65px]">
                <p className="font-black text-[#004d40] text-sm uppercase leading-tight tracking-wide">Emmanuel NIYOBUHUNGIRO</p>
                <p className="text-[#444] text-[9px] font-black uppercase tracking-widest mt-0.5">HSE Director</p>
              </div>
           </div>
 
           {/* Center: Stamp */}
-          <div className="flex justify-center items-center h-full">
-             <div className="z-20 pointer-events-none shrink-0 w-48 h-48 sm:w-52 sm:h-52 rounded-full overflow-hidden flex items-center justify-center">
-                <img src="/certificate/stamp_transparent.webp" alt="Stamp" className="w-full h-full object-contain aspect-square mix-blend-multiply" style={{ transform: 'rotate(-4deg)' }} />
+          <div className="flex justify-center items-center h-full w-[30%]">
+             <div className="z-20 pointer-events-none shrink-0 w-48 h-48 sm:w-52 sm:h-52 flex items-center justify-center">
+                <img src="/certificate/stamp_transparent.webp" alt="Stamp" className="w-full h-full object-contain aspect-square mix-blend-multiply" style={{ transform: 'rotate(-4deg)', borderRadius: '50%' }} />
              </div>
           </div>
 
           {/* Right: QR & Date */}
-          <div className="flex flex-col items-end justify-center h-full">
+          <div className="flex flex-col items-end justify-center h-full w-[35%]">
              <div className="flex items-center gap-4 mb-3">
                 <div className="text-right">
                    <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest italic leading-none mb-1">Verify Authenticity</p>
@@ -111,8 +111,8 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
                      <span className="whitespace-nowrap">{data.dateIssued ? new Date(data.dateIssued).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "April 10, 2026"}</span>
                    </p>
                 </div>
-                <div className="bg-white p-1.5 border-[1px] border-[#c4ac6a] shadow-sm">
-                   <QRCodeSVG value={verificationUrl} size={65} level="H" />
+                <div className="bg-white p-1.5 border-[1px] border-[#c4ac6a] shadow-sm flex items-center justify-center">
+                   <QRCodeCanvas value={verificationUrl} size={65} level="H" />
                 </div>
              </div>
           </div>
