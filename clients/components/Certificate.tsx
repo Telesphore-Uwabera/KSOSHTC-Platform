@@ -83,8 +83,8 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
           <div className="flex flex-col items-start h-full justify-center w-[35%]">
              <div className="relative h-16 w-full flex items-end mb-2">
                <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-3 mr-4 shrink-0">Signature:</span>
-               <div className="w-56">
-                 <span className="font-['Dancing_Script',_cursive] text-5xl text-[#1e272e] select-none italic whitespace-nowrap">Emmanuel</span>
+               <div className="w-56 flex items-end">
+                 <img src="/certificate/signature.webp" alt="Signature" className="h-20 w-auto object-contain mix-blend-multiply" />
                </div>
              </div>
              <div className="pt-2 pl-[65px]">
