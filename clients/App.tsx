@@ -102,7 +102,8 @@ function ScrollToTop() {
         return () => clearTimeout(t);
       }
     }
-    smoothScrollTo(0);
+    // Instant scroll to top on page change prevents "blank page" feel
+    window.scrollTo(0, 0);
   }, [pathname, hash]);
   return null;
 }

@@ -101,8 +101,6 @@ export function ScrollRevealObserver() {
   }, []);
 
   useEffect(() => {
-    const timeouts: ReturnType<typeof setTimeout>[] = [];
-
     const run = () => {
       observerRef.current?.disconnect();
       observerRef.current = null;
@@ -114,11 +112,16 @@ export function ScrollRevealObserver() {
     };
 
     run();
-    requestAnimationFrame(run);
+    
+    const timeouts: ReturnType<typeof setTimeout>[] = [];
     timeouts.push(setTimeout(run, 100));
-    timeouts.push(setTimeout(run, 400));
-    timeouts.push(setTimeout(run, 900));
-    timeouts.push(setTimeout(run, 1500));
+    timeouts.push(setTimeout(run, 800));
+
+    // MutationObserver to catch lazy-loaded components as they mount
+    const mutObserver = new MutationObserver(() => {
+      run();
+    });
+    mutObserver.observe(document.body, { childList: true, subtree: true });
 
     const onResize = () => run();
     const onLoad = () => run();
@@ -130,6 +133,7 @@ export function ScrollRevealObserver() {
       timeouts.forEach((id) => clearTimeout(id));
       window.removeEventListener("resize", onResize);
       window.removeEventListener("load", onLoad);
+      mutObserver.disconnect();
       observerRef.current?.disconnect();
       observerRef.current = null;
       connectorObserverRef.current?.disconnect();
