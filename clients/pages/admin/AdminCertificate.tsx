@@ -21,6 +21,8 @@ export default function AdminCertificate() {
     learnerName: "",
     courses: "",
     dateIssued: format(new Date(), "yyyy-MM-dd"),
+    startDate: format(new Date(), "yyyy-MM-dd"),
+    completionDate: format(new Date(), "yyyy-MM-dd"),
     duration: "3 months",
     email: "",
     totalHours: 120,
@@ -33,6 +35,31 @@ export default function AdminCertificate() {
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState<string | null>(null);
   const queryClient = useQueryClient();
+  
+  useEffect(() => {
+    if (formData.startDate && formData.completionDate) {
+      try {
+        const start = new Date(formData.startDate);
+        const end = new Date(formData.completionDate);
+        const diffTime = Math.abs(end.getTime() - start.getTime());
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        
+        let dur = "";
+        if (diffDays >= 30) {
+          const months = Math.round(diffDays / 30);
+          dur = `${months} month${months > 1 ? 's' : ''}`;
+        } else {
+          dur = `${diffDays} day${diffDays > 1 ? 's' : ''}`;
+        }
+        
+        if (dur !== formData.duration) {
+          setFormData(prev => ({ ...prev, duration: dur }));
+        }
+      } catch (e) {
+        // ignore invalid dates
+      }
+    }
+  }, [formData.startDate, formData.completionDate]);
 
   const { data: certificates, isLoading } = useQuery({
     queryKey: ["certificates"],
@@ -133,6 +160,8 @@ export default function AdminCertificate() {
       learnerName: "",
       courses: "",
       dateIssued: format(new Date(), "yyyy-MM-dd"),
+      startDate: format(new Date(), "yyyy-MM-dd"),
+      completionDate: format(new Date(), "yyyy-MM-dd"),
       duration: "3 months",
       email: "",
       totalHours: 120,
@@ -424,12 +453,35 @@ export default function AdminCertificate() {
                 <Label htmlFor="email">Student Email</Label>
                 <Input 
                   id="email" 
-                  type="email"
+                  type="email" 
                   placeholder="student@example.com"
                   required
                   value={formData.email}
                   onChange={(e) => setFormData({...formData, email: e.target.value})}
                 />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2">
+                <div className="space-y-2">
+                  <Label htmlFor="startDate">Program Start Date</Label>
+                  <Input 
+                    id="startDate" 
+                    type="date"
+                    required
+                    value={formData.startDate}
+                    onChange={(e) => setFormData({...formData, startDate: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="completionDate">Program Completion Date</Label>
+                  <Input 
+                    id="completionDate" 
+                    type="date"
+                    required
+                    value={formData.completionDate}
+                    onChange={(e) => setFormData({...formData, completionDate: e.target.value})}
+                  />
+                </div>
               </div>
 
               <div className="space-y-4 border rounded-lg p-4 bg-gray-50/50">
@@ -619,6 +671,8 @@ export default function AdminCertificate() {
                                   learnerName: cert.learnerName,
                                   courses: cert.courses,
                                   dateIssued: format(new Date(cert.dateIssued), "yyyy-MM-dd"),
+                                  startDate: cert.startDate ? format(new Date(cert.startDate), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
+                                  completionDate: cert.completionDate ? format(new Date(cert.completionDate), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
                                   duration: cert.duration,
                                   email: cert.email,
                                   totalHours: cert.totalHours || 120,

@@ -214,6 +214,18 @@ export default function CertificateVerification() {
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Enrollment Date</span>
                 <span className="font-bold text-gray-900">{format(new Date(cert.createdAt || cert.dateIssued), "MM/dd/yyyy")}</span>
               </div>
+              {cert.startDate && (
+                <div className="flex justify-between items-center border-b border-gray-50 pb-2">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Program Start</span>
+                  <span className="font-bold text-gray-900">{format(new Date(cert.startDate), "MM/dd/yyyy")}</span>
+                </div>
+              )}
+              {cert.completionDate && (
+                <div className="flex justify-between items-center border-b border-gray-50 pb-2">
+                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Program Completion</span>
+                  <span className="font-bold text-gray-900">{format(new Date(cert.completionDate), "MM/dd/yyyy")}</span>
+                </div>
+              )}
             </div>
           </div>
 

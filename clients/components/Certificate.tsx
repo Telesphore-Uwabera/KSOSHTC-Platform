@@ -8,6 +8,8 @@ interface CertificateProps {
     learnerName: string;
     courses: string;
     dateIssued: string;
+    startDate?: string;
+    completionDate?: string;
     duration: string;
     certificateId: string;
   };
@@ -62,7 +64,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
         {/* Success Statement */}
         <div className="text-center max-w-4xl mb-4">
           <p className="text-gray-700 text-lg leading-relaxed font-medium mb-4">
-            has successfully completed Occupational Safety and Health (OSH) training and has been assessed and found competent in accordance with the applicable OSH standards for:
+            has successfully completed Occupational Safety and Health (OSH) training within a period of <span className="font-black text-[#004d40]">{data.duration}</span> and has been assessed and found competent in accordance with the applicable OSH standards for:
           </p>
           <h3 className="text-[#004d40] text-4xl font-black uppercase tracking-widest">
             {data.courses || "CONSTRUCTION WORKPLACES"}
@@ -95,7 +97,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
           {/* Center: Stamp */}
           <div className="flex justify-center items-center h-full w-[30%]">
              <div className="z-20 pointer-events-none shrink-0 flex items-center justify-center">
-                <img src="/certificate/stamp_transparent.webp" alt="Stamp" style={{ width: '170px', height: '170px', objectFit: 'contain' }} />
+                <img src="/certificate/stamp_transparent.webp" alt="Stamp" style={{ width: '180px', height: 'auto', display: 'block' }} />
              </div>
           </div>
 

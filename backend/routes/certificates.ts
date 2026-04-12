@@ -21,6 +21,8 @@ export interface Certificate {
   certificateId: string;
   email: string;
   createdAt: string;
+  startDate?: string;
+  completionDate?: string;
   // Transcript Extensions
   totalHours?: number;
   averageScore?: number;
@@ -54,7 +56,7 @@ async function getNextCertificateId(year: number): Promise<string> {
 
 export async function createCertificate(req: Request, res: Response): Promise<void> {
   try {
-    const { title, learnerName, courses, dateIssued, duration, email, totalHours, averageScore, gpa, transcript } = req.body;
+    const { title, learnerName, courses, dateIssued, duration, email, totalHours, averageScore, gpa, transcript, startDate, completionDate } = req.body;
     
     if (!learnerName || !courses || !dateIssued) {
       res.status(400).json({ error: "Missing required fields" });
@@ -79,6 +81,8 @@ export async function createCertificate(req: Request, res: Response): Promise<vo
       averageScore,
       gpa,
       transcript,
+      startDate,
+      completionDate,
     };
 
     await col.insertOne(newCertificate as any);
