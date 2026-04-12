@@ -156,6 +156,16 @@ Routes: `/admin`, `/admin/courses`, `/admin/course-content`, `/admin/learners`, 
 
 ---
 
+## Certificates & Verification
+
+A robust module for Official Certificates and Transcripts is available for administrators and end-users.
+
+- **Dynamic Calculations**: The transcript engine mathematically tracks individual course scores (`Score (%)`) and credit hours. It instantly computes the true proportional **GPA (out of 4.0)** and **Program Score** based on active tabular row data, rather than relying on out-of-sync static database properties.
+- **High-Fidelity PDF Direct Export**: Powered by `html2canvas` and `jsPDF`, the platform completely bypasses browser "Print" dialogs. Clicking "Download" generates a pixel-perfect, fixed-dimension (A4 Landscape) PDF inside the browser. Advanced mechanisms explicitly preserve circular component masks and force Canvas-based `QR Code` structures to gracefully dodge mobile browser rendering bugs.
+- **Verification Portal**: Embedded QR Codes securely link employers directly to an isolated verification portal `/verify-certificate/:certificateId` which instantly validates the official student documentation.
+
+---
+
 ## Deployment
 
 ### Backend (Render)
