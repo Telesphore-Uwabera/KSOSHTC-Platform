@@ -1,5 +1,5 @@
 import React from "react";
-import { QRCodeCanvas } from "qrcode.react";
+import { QRCodeSVG } from "qrcode.react";
 import { Mail, Globe, Shield } from "lucide-react";
 
 interface CertificateProps {
@@ -82,10 +82,9 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
           {/* Left: Signature */}
           <div className="flex flex-col items-start h-full justify-center w-[35%]">
              <div className="relative h-16 w-full flex items-end mb-2">
-               <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-1.5 mr-4 shrink-0">Signature:</span>
-               <div className="relative w-56">
-                 <span className="font-['Dancing_Script',_cursive] text-5xl text-[#1e272e] select-none italic absolute bottom-1 left-0 whitespace-nowrap">Emmanuel</span>
-                 <div className="w-full border-b-2 border-[#1e272e] mt-1.5"></div>
+               <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-3 mr-4 shrink-0">Signature:</span>
+               <div className="w-56">
+                 <span className="font-['Dancing_Script',_cursive] text-5xl text-[#1e272e] select-none italic whitespace-nowrap">Emmanuel</span>
                </div>
              </div>
              <div className="pt-2 pl-[65px]">
@@ -96,8 +95,8 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
 
           {/* Center: Stamp */}
           <div className="flex justify-center items-center h-full w-[30%]">
-             <div className="z-20 pointer-events-none shrink-0 w-48 h-48 sm:w-52 sm:h-52 flex items-center justify-center">
-                <img src="/certificate/stamp_transparent.webp" alt="Stamp" className="w-full h-full object-contain aspect-square mix-blend-multiply" style={{ transform: 'rotate(-4deg)', borderRadius: '50%' }} />
+             <div className="z-20 pointer-events-none shrink-0 flex items-center justify-center">
+                <img src="/certificate/stamp_transparent.webp" alt="Stamp" style={{ width: '200px', height: '200px', objectFit: 'contain', transform: 'rotate(-4deg)', borderRadius: '50%', mixBlendMode: 'multiply' }} />
              </div>
           </div>
 
@@ -112,7 +111,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
                    </p>
                 </div>
                 <div className="bg-white p-1.5 border-[1px] border-[#c4ac6a] shadow-sm flex items-center justify-center">
-                   <QRCodeCanvas value={verificationUrl} size={65} level="H" />
+                   <QRCodeSVG value={verificationUrl} size={65} level="H" />
                 </div>
              </div>
           </div>
