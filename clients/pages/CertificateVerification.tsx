@@ -145,16 +145,14 @@ export default function CertificateVerification() {
 
         <div className="w-full max-w-5xl bg-white shadow-2xl rounded-sm border border-gray-200 p-8 sm:p-12 mb-12">
           {/* Transcript Header */}
-          <div className="flex flex-col md:flex-row justify-between items-start md:items-center border-b-2 border-gray-100 pb-8 mb-8 gap-6">
-            <div className="flex items-center gap-4">
-              <img src="/logo.webp" alt="KSOSHTC Logo" className="h-16 w-auto object-contain" />
-              <div>
-                <h2 className="text-3xl font-black text-[#004d40] tracking-tighter uppercase leading-none">KSOSHTC</h2>
-                <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.2em] mt-1">Occupational Safety & Health Training</p>
-              </div>
+          <div className="flex flex-col items-center justify-center text-center border-b-2 border-gray-100 pb-8 mb-8 gap-3">
+            <img src="/logo.webp" alt="KSOSHTC Logo" className="h-20 sm:h-24 w-auto object-contain mx-auto" />
+            <div>
+              <h2 className="text-3xl sm:text-4xl font-black text-[#004d40] tracking-tighter uppercase leading-none">KSOSHTC</h2>
+              <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mt-2">Occupational Safety & Health Training</p>
             </div>
-            <div className="text-right">
-              <h1 className="text-2xl font-black text-gray-900 uppercase tracking-tight">Official Student Transcript</h1>
+            <div className="mt-4 border-t border-gray-100 pt-4 w-full max-w-md mx-auto">
+              <h1 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tight">Official Student Transcript</h1>
             </div>
           </div>
 
@@ -184,8 +182,8 @@ export default function CertificateVerification() {
           {/* Main Programs Table */}
           <div className="mb-12">
             <h3 className="text-sm font-black text-gray-900 uppercase border-b border-gray-900 pb-1 mb-4">Professional Certificate Program</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
+            <div className="overflow-x-auto pb-4">
+              <table className="w-full text-left whitespace-nowrap min-w-max">
                 <thead>
                   <tr className="bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b">
                     <th className="py-2 px-4">Program Title</th>
@@ -211,15 +209,14 @@ export default function CertificateVerification() {
           {/* Individual Courses Table */}
           <div>
             <h3 className="text-sm font-black text-gray-900 uppercase border-b border-gray-900 pb-1 mb-4">Course Details</h3>
-            <div className="overflow-x-auto">
-              <table className="w-full text-left">
+            <div className="overflow-x-auto pb-4">
+              <table className="w-full text-left whitespace-nowrap min-w-max">
                 <thead>
                   <tr className="bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b">
                     <th className="py-2 px-4">Course Title</th>
                     <th className="py-2 px-4 text-center">Score</th>
                     <th className="py-2 px-4 text-center">Issue Date</th>
                     <th className="py-2 px-4 text-center">Hours</th>
-                    <th className="py-2 px-4 text-right">Note</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
@@ -232,12 +229,11 @@ export default function CertificateVerification() {
                           {format(new Date(item.date || cert.dateIssued), "MM/dd/yyyy")}
                         </td>
                         <td className="py-2.5 px-4 text-center font-bold text-gray-800">{item.hours}</td>
-                        <td className="py-2.5 px-4 text-right text-gray-400 text-[10px] uppercase font-bold italic">{item.note || ""}</td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-gray-400 italic">No detailed course breakdown available.</td>
+                      <td colSpan={4} className="py-8 text-center text-gray-400 italic">No detailed course breakdown available.</td>
                     </tr>
                   )}
                 </tbody>
