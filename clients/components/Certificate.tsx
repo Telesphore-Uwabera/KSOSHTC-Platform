@@ -54,9 +54,8 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
           </p>
         </div>
 
-        {/* Recipient */}
-        <div className="mb-5 text-center w-full">
-          <h2 className="text-[#1a1a1a] text-6xl font-serif italic font-bold tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
+        <div className="mb-5 text-center w-full px-4">
+          <h2 className="text-[#1a1a1a] text-5xl font-serif italic font-bold tracking-tight leading-tight">
              {data.title} {data.learnerName || "Telesphore Uwabera"}
           </h2>
         </div>
