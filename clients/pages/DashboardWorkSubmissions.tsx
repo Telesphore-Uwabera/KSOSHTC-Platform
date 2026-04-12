@@ -48,13 +48,13 @@ export default function DashboardWorkSubmissions() {
 
   const { data: submissions = [], isLoading: listLoading } = useQuery({
     queryKey: ["assignment-submissions", user?.id],
-    queryFn: () => fetchMySubmissions(user!.id),
+    queryFn: () => fetchMySubmissions(user?.id || ""),
     enabled: !!user?.id && canAccess,
   });
 
   const { data: handouts = [], isLoading: handoutsLoading } = useQuery({
     queryKey: ["admin-distributed-assignments", "learner", user?.id],
-    queryFn: () => fetchLearnerHandouts(user!.id),
+    queryFn: () => fetchLearnerHandouts(user?.id || ""),
     enabled: !!user?.id && canAccess,
   });
 

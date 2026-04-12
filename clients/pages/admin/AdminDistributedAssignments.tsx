@@ -227,7 +227,7 @@ export default function AdminDistributedAssignments() {
                   <p className="font-semibold text-gray-900">{a.title}</p>
                   <p className="text-xs text-gray-500 mt-0.5">
                     {new Date(a.createdAt).toLocaleString()} ·{" "}
-                    {a.courseIds.map((id) => courseTitleById[id] ?? id).join(", ")}
+                    {a.courseIds?.map((id) => courseTitleById[id] ?? id).join(", ")}
                   </p>
                 </div>
                 <a

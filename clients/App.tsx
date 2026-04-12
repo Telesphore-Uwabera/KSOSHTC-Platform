@@ -57,8 +57,13 @@ const NotFound = lazy(() => import("./pages/NotFound"));
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
-      staleTime: 2 * 60 * 1000, // 2 min: show cached data instantly when revisiting a page
+      staleTime: 2 * 60 * 1000, 
       refetchOnWindowFocus: false,
+      retry: (failureCount, error: any) => {
+        // Automatically retry on network failures, but stop on auth failures
+        if (error?.status === 401 || error?.status === 403) return false;
+        return failureCount < 2;
+      }
     },
   },
 });
@@ -128,15 +133,31 @@ function PrefetchKeyData() {
 
 function RouteLoader() {
   const location = useLocation();
-  const [showBar, setShowBar] = useState(false);
+  const [isChanging, setIsChanging] = useState(false);
 
   useEffect(() => {
-    setShowBar(true);
-    const t = setTimeout(() => setShowBar(false), 450);
-    return () => clearTimeout(t);
+    // Global recovery for ChunkLoadError (common when deploying new versions while user has app open)
+    const handleError = (e: ErrorEvent | PromiseRejectionEvent) => {
+      const message = "message" in e ? e.message : (e as any).reason?.toString() || "";
+      if (message.includes("Loading chunk") || message.includes("chunk load") || message.includes("Failed to fetch dynamically imported module")) {
+        console.warn("Chunk load failure detected. Forcing reload to recover latest assets...");
+        window.location.reload();
+      }
+    };
+
+    window.addEventListener("error", handleError);
+    window.addEventListener("unhandledrejection", handleError);
+
+    setIsChanging(true);
+    const t = setTimeout(() => setIsChanging(false), 300);
+    return () => {
+      window.removeEventListener("error", handleError);
+      window.removeEventListener("unhandledrejection", handleError);
+      clearTimeout(t);
+    };
   }, [location.pathname]);
 
-  return showBar ? <LoadingBar /> : null;
+  return isChanging ? <LoadingBar /> : null;
 }
 
 const App = () => {

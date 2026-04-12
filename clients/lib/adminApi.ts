@@ -67,27 +67,36 @@ export function withAdminAuth(init?: RequestInit): RequestInit {
   return { ...init, headers };
 }
 
-export function adminFetch(input: string | Request, init?: RequestInit): Promise<Response> {
-  return fetch(input, withAdminAuth(init)).then((res) => {
-    if (res.status !== 401 || typeof window === "undefined") return res;
+export async function adminFetch(input: string | Request, init?: RequestInit): Promise<Response> {
+  const res = await fetch(input, withAdminAuth(init));
+  
+  if (res.status === 401 && typeof window !== "undefined") {
     const path = window.location.pathname;
-    if (!path.startsWith("/admin") || path.startsWith("/admin/login")) return res;
-    res
-      .clone()
-      .json()
-      .then((data: { error?: string }) => {
+    // Only intercept if we are deep in the admin panel
+    if (path.startsWith("/admin") && !path.startsWith("/admin/login")) {
+      try {
+        const data = await res.clone().json();
         const msg = (data?.error ?? "").toLowerCase();
-        if (msg.includes("admin session")) {
+        
+        if (msg.includes("admin session") || msg.includes("unauthorized") || msg.includes("token")) {
           setAdminSessionToken(null);
           try {
             sessionStorage.setItem(POLICY_KEY, "yes");
-          } catch {
-            /* ignore */
-          }
+          } catch { /* ignore */ }
+          
+          console.warn("Admin session expired. Redirecting...");
           window.location.replace("/admin/login?reason=session");
+          
+          // Return a dummy promise that never resolves/rejects to prevent the caller from continuing
+          return new Promise(() => {});
         }
-      })
-      .catch(() => {});
-    return res;
-  });
+      } catch (e) {
+        // Fallback for non-JSON 401s
+        window.location.replace("/admin/login?reason=session");
+        return new Promise(() => {});
+      }
+    }
+  }
+  
+  return res;
 }

@@ -202,7 +202,7 @@ export default function AdminLearners() {
     setFormError("");
   }
 
-  const courseTitleById = Object.fromEntries(courses.map((c) => [c.id, c.title]));
+  const courseTitleById = Object.fromEntries((courses || []).map((c) => [c.id, c.title]));
 
   const users = data?.users ?? [];
   const enrollmentsByUserId = data?.enrollmentsByUserId ?? {};
@@ -331,7 +331,7 @@ export default function AdminLearners() {
                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Enrollments</p>
                             <div className="mb-3 flex flex-wrap items-center gap-2">
                               {(() => {
-                                const enrolled = new Set(enrollments.map((en) => en.courseId));
+                                const enrolled = new Set((enrollments || []).map((en) => en.courseId));
                                 const available = courses.filter((c) => !enrolled.has(c.id));
                                 if (available.length === 0) {
                                   return (

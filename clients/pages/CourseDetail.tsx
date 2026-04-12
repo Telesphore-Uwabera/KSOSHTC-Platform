@@ -459,7 +459,7 @@ export default function CourseDetail() {
 
   const { data: myEnrollments = [] } = useQuery({
     queryKey: ["enrollments", user?.id],
-    queryFn: () => fetchUserEnrollments(user!.id),
+    queryFn: () => fetchUserEnrollments(user?.id || ""),
     enabled: !!user?.id && canAccess,
   });
 
@@ -475,7 +475,7 @@ export default function CourseDetail() {
 
   const { data: progress, refetch: refetchProgress } = useQuery({
     queryKey: ["progress", user?.id, courseId],
-    queryFn: () => fetchProgress(user!.id, courseId!),
+    queryFn: () => fetchProgress(user?.id || "", courseId!),
     enabled: !!user?.id && !!courseId && canAccess && !!displayCourse,
   });
 
@@ -502,10 +502,10 @@ export default function CourseDetail() {
   });
 
   const enrollMutation = useMutation({
-    mutationFn: () => ensureEnrolled(user!.id, courseId!),
+    mutationFn: () => ensureEnrolled(user?.id || "", courseId!),
   });
   const markCompleteMutation = useMutation({
-    mutationFn: (lessonId: string) => markLessonComplete(user!.id, courseId!, lessonId),
+    mutationFn: (lessonId: string) => markLessonComplete(user?.id || "", courseId!, lessonId),
     onSuccess: () => refetchProgress(),
   });
 

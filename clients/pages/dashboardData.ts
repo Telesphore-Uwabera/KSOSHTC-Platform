@@ -76,20 +76,17 @@ export function useDashboardData() {
   });
 
   const { data: allProgress = [] } = useQuery({
-    queryKey: ["progress", user?.id],
-    queryFn: () => fetchAllProgress(user!.id),
+    queryFn: () => fetchAllProgress(user?.id || ""),
     enabled: !!user?.id && canAccess,
   });
 
   const { data: allSubmissions = [] } = useQuery({
-    queryKey: ["submissions", user?.id],
-    queryFn: () => fetchUserSubmissions(user!.id),
+    queryFn: () => fetchUserSubmissions(user?.id || ""),
     enabled: !!user?.id && canAccess,
   });
 
   const { data: enrollments = [] } = useQuery({
-    queryKey: ["enrollments", user?.id],
-    queryFn: () => fetchUserEnrollments(user!.id),
+    queryFn: () => fetchUserEnrollments(user?.id || ""),
     enabled: !!user?.id && canAccess,
   });
 

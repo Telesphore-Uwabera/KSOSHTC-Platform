@@ -11,7 +11,7 @@ export default function DashboardHandouts() {
 
   const { data: handouts = [], isLoading: handoutsLoading } = useQuery({
     queryKey: ["admin-distributed-assignments", "learner", user?.id],
-    queryFn: () => fetchLearnerHandouts(user!.id),
+    queryFn: () => fetchLearnerHandouts(user?.id || ""),
     enabled: !!user?.id && canAccess,
   });
 
