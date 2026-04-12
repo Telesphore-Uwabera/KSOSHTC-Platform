@@ -453,7 +453,7 @@ export default function CourseDetail() {
 
   const { data: course, isLoading: courseLoading } = useQuery({
     queryKey: ["course-content", "course", courseId],
-    queryFn: () => fetchCourse(courseId!),
+    queryFn: () => fetchCourse(courseId || ""),
     enabled: !!courseId,
   });
 
@@ -467,7 +467,7 @@ export default function CourseDetail() {
 
   const { data: modules = [], isLoading: modulesLoading } = useQuery({
     queryKey: ["course-content", "modules", courseId],
-    queryFn: () => fetchModules(courseId!),
+    queryFn: () => fetchModules(courseId || ""),
     enabled: !!courseId && !!displayCourse,
   });
 
@@ -475,14 +475,14 @@ export default function CourseDetail() {
 
   const { data: progress, refetch: refetchProgress } = useQuery({
     queryKey: ["progress", user?.id, courseId],
-    queryFn: () => fetchProgress(user?.id || "", courseId!),
+    queryFn: () => fetchProgress(user?.id || "", courseId || ""),
     enabled: !!user?.id && !!courseId && canAccess && !!displayCourse,
   });
 
   const section99Module = modules.find((m) => m.title.includes("Section 99"));
   const { data: section99Items = [] } = useQuery({
     queryKey: ["course-content", "items", courseId, section99Module?.id],
-    queryFn: () => fetchModuleItems(courseId!, section99Module!.id),
+    queryFn: () => fetchModuleItems(courseId || "", section99Module?.id || ""),
     enabled: !!courseId && !!section99Module?.id,
   });
   const completedLessons = new Set(progress?.completedLessonIds ?? []);
@@ -497,15 +497,15 @@ export default function CourseDetail() {
 
   const { data: legacyQuiz } = useQuery({
     queryKey: ["quiz", courseId],
-    queryFn: () => fetchLegacyQuiz(courseId!),
+    queryFn: () => fetchLegacyQuiz(courseId || ""),
     enabled: !!courseId && canAccess,
   });
 
   const enrollMutation = useMutation({
-    mutationFn: () => ensureEnrolled(user?.id || "", courseId!),
+    mutationFn: () => ensureEnrolled(user?.id || "", courseId || ""),
   });
   const markCompleteMutation = useMutation({
-    mutationFn: (lessonId: string) => markLessonComplete(user?.id || "", courseId!, lessonId),
+    mutationFn: (lessonId: string) => markLessonComplete(user?.id || "", courseId || "", lessonId),
     onSuccess: () => refetchProgress(),
   });
 
@@ -788,7 +788,7 @@ export default function CourseDetail() {
                               <SingleLessonCard
                                 key={`lesson-${lesson.id}`}
                                 number={cardNumber}
-                                courseId={courseId!}
+                                courseId={courseId || ""}
                                 moduleId={mod.id}
                                 lesson={lesson}
                                 unlocked={isLessonUnlockedInSection99(itemIndex)}
@@ -802,7 +802,7 @@ export default function CourseDetail() {
                               <AssessmentCard
                                 key={`assessment-${item.data.id}`}
                                 number={cardNumber}
-                                courseId={courseId!}
+                                courseId={courseId || ""}
                                 moduleId={mod.id}
                                 assessment={item.data}
                                 passed={completedAssessments.has(item.data.id)}
@@ -816,10 +816,10 @@ export default function CourseDetail() {
                           <ModuleBlock
                             key={mod.id}
                             number={cardNumber}
-                            courseId={courseId!}
+                            courseId={courseId || ""}
                             module={mod}
                             progress={progress ?? null}
-                            userId={user!.id}
+                            userId={user?.id || ""}
                             onProgressUpdate={() => refetchProgress()}
                             onViewPdf={openPdfViewer}
                           />
