@@ -280,9 +280,9 @@ export default function AdminCertificate() {
         </Button>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <div className="flex flex-col gap-8">
         {/* Creation Form */}
-        <Card className="lg:col-span-1 border-primary/20 bg-primary/5">
+        <Card className="border-primary/20 bg-primary/5">
           <CardHeader>
             <CardTitle>Generate Certificate</CardTitle>
             <CardDescription>Fill in the learner details below.</CardDescription>
@@ -520,7 +520,7 @@ export default function AdminCertificate() {
         </Card>
 
         {/* List of Certificates */}
-        <Card className="lg:col-span-2">
+        <Card>
           <CardHeader>
             <CardTitle className="flex items-center">
               <History className="mr-2 h-5 w-5" /> Issued Certificates
