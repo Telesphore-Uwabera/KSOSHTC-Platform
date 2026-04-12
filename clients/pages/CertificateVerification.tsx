@@ -99,6 +99,35 @@ export default function CertificateVerification() {
     );
   }
 
+  // Dynamically enforce that Program Score strictly refers to actual course details scores
+  let displayHours = Number(cert.totalHours) || 120;
+  let displayScore = Number(cert.averageScore) || 90;
+  let displayGpa = cert.gpa || "3.60";
+
+  if (cert.transcript && cert.transcript.length > 0) {
+    let tHrs = 0;
+    let tScorePoints = 0;
+    let tGpaPoints = 0;
+
+    cert.transcript.forEach((item: any) => {
+      const h = Number(item.hours) || 0;
+      const sSrc = item.score;
+      if (sSrc !== "" && sSrc !== null && sSrc !== undefined) {
+        const s = Number(sSrc);
+        tHrs += h;
+        tScorePoints += (s * h);
+        let gp = (s / 100) * 4.0;
+        tGpaPoints += (gp * h);
+      }
+    });
+
+    if (tHrs > 0) {
+      displayHours = tHrs;
+      displayScore = Math.round(tScorePoints / tHrs);
+      displayGpa = (tGpaPoints / tHrs).toFixed(2);
+    }
+  }
+
   return (
     <div className="min-h-screen bg-[#f3f4f6] pb-20 overflow-x-hidden">
       <div className="bg-[#004d40] text-white py-12 px-4 shadow-lg mb-12">
@@ -196,9 +225,9 @@ export default function CertificateVerification() {
                 <tbody className="text-sm">
                   <tr className="border-b font-bold text-gray-800">
                     <td className="py-3 px-4">{cert.courses}</td>
-                    <td className="py-3 px-4 text-center">{cert.totalHours || "120"}</td>
-                    <td className="py-3 px-4 text-center">{cert.averageScore || "90"}</td>
-                    <td className="py-3 px-4 text-center">{cert.gpa || "3.60"}</td>
+                    <td className="py-3 px-4 text-center">{displayHours}</td>
+                    <td className="py-3 px-4 text-center">{displayScore}</td>
+                    <td className="py-3 px-4 text-center">{displayGpa}</td>
                     <td className="py-3 px-4 text-right">{format(new Date(cert.dateIssued), "MM/dd/yyyy")}</td>
                   </tr>
                 </tbody>
