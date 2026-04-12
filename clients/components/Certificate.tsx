@@ -81,10 +81,9 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
           
           {/* Left: Signature */}
           <div className="flex flex-col items-start h-full justify-center w-[35%]">
-             <div className="relative h-16 w-full flex items-end mb-2">
-               <span className="text-gray-400 text-[10px] font-bold uppercase tracking-widest mb-3 mr-4 shrink-0">Signature:</span>
+             <div className="relative h-[85px] w-full flex items-end mb-2 pl-[65px]">
                <div className="w-56 flex items-end">
-                 <img src="/certificate/signature.webp" alt="Signature" className="h-20 w-auto object-contain" />
+                 <img src="/certificate/signature.webp" alt="Signature" className="h-full w-auto object-contain" />
                </div>
              </div>
              <div className="pt-2 pl-[65px]">
@@ -96,7 +95,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
           {/* Center: Stamp */}
           <div className="flex justify-center items-center h-full w-[30%]">
              <div className="z-20 pointer-events-none shrink-0 flex items-center justify-center">
-                <img src="/certificate/stamp_transparent.webp" alt="Stamp" style={{ width: '200px', height: '200px', objectFit: 'contain', transform: 'rotate(-4deg)', borderRadius: '50%', mixBlendMode: 'multiply' }} />
+                <img src="/certificate/stamp_transparent.webp" alt="Stamp" style={{ width: '170px', height: '170px', objectFit: 'contain' }} />
              </div>
           </div>
 
