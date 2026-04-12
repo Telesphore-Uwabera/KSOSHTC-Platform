@@ -44,7 +44,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
         {/* Header */}
         <div className="flex flex-col items-center mb-8">
           <img src="/logo_transparent.webp" alt="KSOHTC" className="h-20 w-auto mb-4" />
-          <h1 className="text-[#004d40] text-4xl font-black tracking-[0.15em] uppercase border-b-2 border-[#004d40] pb-2 mb-2 whitespace-nowrap">
+          <h1 className="text-[#004d40] text-4xl font-black tracking-[0.15em] uppercase mb-2 whitespace-nowrap">
             Certificate of Competence
           </h1>
           <p className="text-gray-500 text-[10px] font-bold tracking-[0.4em] uppercase">
@@ -95,9 +95,9 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
           </div>
 
           {/* Center: Stamp */}
-          <div className="flex justify-center items-center">
-             <div className="opacity-100 pointer-events-none drop-shadow-xl z-20">
-                <img src="/certificate/stamp_transparent.webp" alt="Stamp" className="w-52 h-52 object-contain rotate-[-4deg]" />
+          <div className="flex justify-center items-center h-full">
+             <div className="z-20 pointer-events-none shrink-0 w-48 h-48 sm:w-52 sm:h-52 rounded-full overflow-hidden flex items-center justify-center">
+                <img src="/certificate/stamp_transparent.webp" alt="Stamp" className="w-full h-full object-contain aspect-square mix-blend-multiply" style={{ transform: 'rotate(-4deg)' }} />
              </div>
           </div>
 
