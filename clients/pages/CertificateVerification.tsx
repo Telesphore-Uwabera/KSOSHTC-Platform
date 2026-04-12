@@ -19,6 +19,16 @@ export default function CertificateVerification() {
     enabled: !!id,
   });
 
+  const { data: curriculumData, isLoading: modulesLoading } = useQuery({
+    queryKey: ["curriculum", id],
+    queryFn: async () => {
+      const res = await fetch(`${getApiBase()}/api/certificates/${id}/curriculum`);
+      if (!res.ok) throw new Error("Failed to load curriculum");
+      return res.json();
+    },
+    enabled: !!cert,
+  });
+
   const handleDownload = () => {
     const printContent = document.getElementById("certificate-print-area");
     if (!printContent) return;
@@ -156,39 +166,39 @@ export default function CertificateVerification() {
             </div>
           </div>
 
-          <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm transition-all hover:shadow-md">
-            <h2 className="text-xl font-bold text-gray-800 mb-4 uppercase border-b pb-2 tracking-tight">Studied Curriculum</h2>
-            <div className="space-y-3">
-               {(cert.courses?.toLowerCase().includes('mining') ? [
-                 'Safety in Surface Mining',
-                 'Underground Mining Hazards',
-                 'Heavy Machinery Safety',
-                 'Emergency Response in Mines',
-                 'General Safety & Environment'
-               ] : cert.courses?.toLowerCase().includes('construction') ? [
-                 'Working at Heights',
-                 'Electrical Safety',
-                 'Excavation & Trenching',
-                 'Construction PPE & Hazards',
-                 'General Safety & Environment'
-               ] : cert.courses?.toLowerCase().includes('industrial') ? [
-                 'Machine Guarding',
-                 'Chemical Safety (HAZMAT)',
-                 'Fire Prevention',
-                 'Factory OSH Standards',
-                 'General Safety & Environment'
-               ] : [
-                 'Introduction to Workplace OSH',
-                 'Hazard Identification',
-                 'Fire Safety & Prevention',
-                 'Personal Protective Equipment',
-                 'General Safety & Environment'
-               ]).map((topic, i) => (
-                 <div key={i} className="flex items-center gap-3 text-gray-700 font-bold text-sm">
-                   <div className="h-2 w-2 bg-[#004d40] rounded-full shrink-0"></div>
-                   <span className="leading-tight">{topic}</span>
+          <div className="bg-white p-6 sm:p-8 rounded-2xl border border-gray-200 shadow-sm transition-all hover:shadow-md h-fit">
+            <h2 className="text-xl font-bold text-gray-800 mb-4 uppercase border-b pb-2 tracking-tight">Certified Content</h2>
+            <div className="space-y-6 max-h-[500px] overflow-y-auto pr-2 custom-scrollbar">
+               {modulesLoading ? (
+                 <div className="flex items-center gap-2 text-gray-400 py-4">
+                   <Loader2 className="h-4 w-4 animate-spin" />
+                   <span className="text-sm">Fetching syllabus...</span>
                  </div>
-               ))}
+               ) : curriculumData?.curriculum?.length > 0 ? (
+                 curriculumData.curriculum.map((mod: any, i: number) => (
+                   <div key={i} className="space-y-2">
+                     <h3 className="text-sm font-black text-[#004d40] uppercase tracking-wider flex items-center gap-2">
+                       <div className="h-1.5 w-1.5 bg-[#004d40] rounded-full"></div>
+                       {mod.moduleTitle}
+                     </h3>
+                     <div className="pl-4 space-y-1.5">
+                       {mod.lessons.map((lesson: string, j: number) => (
+                         <div key={j} className="flex items-start gap-2 text-gray-600 text-xs">
+                           <span className="text-[#004d40] mt-0.5">•</span>
+                           <span className="leading-tight font-medium text-justify">{lesson}</span>
+                         </div>
+                       ))}
+                     </div>
+                   </div>
+                 ))
+               ) : (
+                 <p className="text-sm text-gray-500 italic">Curriculum details not available.</p>
+               )}
+            </div>
+            
+            <div className="mt-8 pt-4 border-t border-gray-100 flex items-center justify-between">
+              <div className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Program Duration</div>
+              <div className="text-sm font-black text-[#004d40]">3 MONTHS (120 HOURS)</div>
             </div>
           </div>
         </div>
