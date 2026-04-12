@@ -259,7 +259,11 @@ export default function AdminCertificate() {
         scale: 2, 
         useCORS: true,
         logging: false,
-        backgroundColor: '#e9e4d1'
+        backgroundColor: '#e9e4d1',
+        windowWidth: 1122,
+        windowHeight: 793,
+        width: 1122,
+        height: 793
       });
 
       if (printContent.parentElement && oldTransform) {
