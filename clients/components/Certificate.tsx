@@ -80,8 +80,19 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
         {/* Signatures & QR Area - Flex Layout for better PDF rendering */}
         <div className="w-full mt-auto flex justify-between items-center">
           
-          {/* Left: Signature */}
-          <div className="flex flex-col items-start h-full justify-center w-[35%]">
+          {/* Left: Signature with Digital Overlay */}
+          <div className="flex flex-col items-start h-full justify-center w-[35%] relative">
+             {/* Dynamic Digital Watermark */}
+             <div className="absolute top-[30px] left-[45px] z-[25] pointer-events-none opacity-40 transform -rotate-12 border-2 border-primary/50 text-primary px-3 py-1 rounded font-bold overflow-hidden select-none whitespace-nowrap">
+                <p className="text-[10px] leading-tight text-center tracking-widest uppercase">Verified System Signature</p>
+                <div className="flex items-center justify-between gap-2 mt-0.5">
+                   <div className="h-[1px] bg-primary/30 flex-1"></div>
+                   <p className="text-[8px] font-mono leading-none">{data.certificateId}</p>
+                   <div className="h-[1px] bg-primary/30 flex-1"></div>
+                </div>
+                <p className="text-[6px] text-center uppercase tracking-tighter mt-0.5">Authenticated by Kigali Safety OSH Training Center</p>
+             </div>
+
              <div className="relative h-[85px] w-full flex items-end mb-2 pl-[65px]">
                <div className="w-56 flex items-end">
                  <img src="/certificate/signature.webp" alt="Signature" className="h-full w-auto object-contain" />
@@ -93,10 +104,14 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
              </div>
           </div>
 
-          {/* Center: Stamp */}
-          <div className="flex justify-center items-center h-full w-[30%]">
-             <div className="z-20 pointer-events-none shrink-0 flex items-center justify-center">
+          {/* Center: Stamp with Digital Verification Title */}
+          <div className="flex flex-col items-center justify-center h-full w-[30%]">
+             <div className="z-20 pointer-events-none shrink-0 flex items-center justify-center relative">
                 <img src="/certificate/stamp.webp" alt="Stamp" style={{ width: '180px', height: 'auto', display: 'block' }} />
+                {/* Micro-Digital Verification Text above stamp */}
+                <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#004d40] text-white px-3 py-0.5 rounded-full text-[8px] font-bold tracking-widest uppercase shadow-md animate-pulse">
+                   Digitally Authenticated
+                </div>
              </div>
           </div>
 
