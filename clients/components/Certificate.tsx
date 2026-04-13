@@ -107,30 +107,28 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
           </div>
 
           <div className="flex flex-col items-center justify-center h-full w-[30%]">
-             <div className="z-20 pointer-events-none shrink-0 flex items-center justify-center relative">
+             <div className="z-20 pointer-events-none shrink-0 flex items-center justify-center relative bg-transparent" style={{ width: '180px', height: '180px' }}>
                 <img 
                    src="/certificate/stamp.webp" 
                    alt="Stamp" 
-                   width="180"
-                   height="180"
-                   className="object-contain"
-                   style={{ width: '180px', height: '180px', display: 'block' }} 
+                   className="w-full h-full object-contain"
+                   style={{ width: '180px', height: '180px', aspectRatio: '1/1' }} 
                 />
              </div>
           </div>
 
-          {/* Right: QR & Date */}
+          {/* Right: QR & Date - Vertical Layout */}
           <div className="flex flex-col items-end justify-center h-full w-[35%]">
-             <div className="flex items-center gap-4 mb-3">
-                <div className="text-right">
-                   <p className="text-[9px] text-gray-400 font-bold uppercase tracking-widest italic leading-none mb-1">Verify Authenticity</p>
-                   <p className="text-gray-800 font-bold text-xs">
-                     <span className="text-gray-400 uppercase mr-1 text-[9px] tracking-widest">Date:</span> 
-                     <span className="whitespace-nowrap">{data.dateIssued ? new Date(data.dateIssued).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "April 10, 2026"}</span>
-                   </p>
-                </div>
+             <div className="flex flex-col items-center gap-2 mb-3">
                 <div className="bg-white p-1.5 border-[1px] border-[#c4ac6a] shadow-sm flex items-center justify-center">
                    <QRCodeSVG value={verificationUrl} size={65} level="H" />
+                </div>
+                <div className="text-center">
+                   <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest italic leading-none mb-1">Verify Authenticity</p>
+                   <p className="text-gray-800 font-bold text-[10px]">
+                     <span className="text-gray-400 uppercase mr-1 text-[8px] tracking-widest">Date:</span> 
+                     <span className="whitespace-nowrap">{data.dateIssued ? new Date(data.dateIssued).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "April 10, 2026"}</span>
+                   </p>
                 </div>
              </div>
           </div>
