@@ -137,7 +137,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
                    <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest italic leading-none mb-1">Verify Authenticity</p>
                    <p className="text-gray-800 font-bold text-[10px]">
                      <span className="text-gray-400 uppercase mr-1 text-[8px] tracking-widest">Date:</span> 
-                     <span className="whitespace-nowrap">{data.dateIssued ? new Date(data.dateIssued).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "April 10, 2026"}</span>
+                     <span className="whitespace-nowrap">{data.dateIssued ? new Date(data.dateIssued).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : \"April 10, 2026\"}</span>
                    </p>
                 </div>
              </div>
@@ -146,33 +146,31 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
       </div>
 
        {/* Footer Bar - Perfectly Distributed Row */}
-       <div className="absolute bottom-0 left-0 right-0 h-10 bg-[#004d40] flex items-center justify-between px-24 z-30">
+       <div className=\"absolute bottom-0 left-0 right-0 h-10 bg-[#004d40] flex items-center justify-between px-24 z-30\">
          
          {/* Left: Email */}
-         <div className="flex flex-row items-center gap-2 w-1/3">
-            <Mail className="h-3.5 w-3.5 text-white/90 shrink-0" />
-            <p className="text-white text-[10px] font-bold tracking-widest leading-none">ksoshtc@gmail.com</p>
+         <div className=\"flex flex-row items-center gap-2 w-1/3\">
+            <Mail className=\"h-3.5 w-3.5 text-white/90 shrink-0\" />
+            <p className=\"text-white text-[10px] font-bold tracking-widest leading-none\">ksoshtc@gmail.com</p>
          </div>
  
          {/* Center: Website */}
-         <div className="flex flex-row items-center justify-center gap-2 w-1/3">
-            <Globe className="h-3.5 w-3.5 text-white/90 shrink-0" />
-            <p className="text-white text-[10px] font-bold tracking-widest leading-none uppercase">www.kigalisafetytraining.com</p>
+         <div className=\"flex flex-row items-center justify-center gap-2 w-1/3\">
+            <Globe className=\"h-3.5 w-3.5 text-white/90 shrink-0\" />
+            <p className=\"text-white text-[10px] font-bold tracking-widest leading-none uppercase\">www.kigalisafetytraining.com</p>
          </div>
  
          {/* Right: Slogan */}
-         <div className="flex flex-row items-center justify-end gap-2 w-1/3 text-right whitespace-nowrap">
-            <Shield className="h-3.5 w-3.5 text-white/90 shrink-0" />
-            <p className="text-white text-[10px] italic font-bold tracking-widest uppercase leading-none">Safety today, prosperity tomorrow.</p>
+         <div className=\"flex flex-row items-center justify-end gap-2 w-1/3 text-right whitespace-nowrap\">
+            <Shield className=\"h-3.5 w-3.5 text-white/90 shrink-0\" />
+            <p className=\"text-white text-[10px] italic font-bold tracking-widest uppercase leading-none\">Safety today, prosperity tomorrow.</p>
          </div>
        </div>
 
-      </div>
-
       {/* Wave Decoration Bottom */}
-      <div className="absolute bottom-0 right-0 w-[500px] h-[120px] z-10 pointer-events-none opacity-30">
-        <svg viewBox="0 0 600 150" className="w-full h-full">
-           <path d="M0,150 Q150,0 300,150 T600,150 L600,150 L0,150 Z" fill="#c4ac6a" />
+      <div className=\"absolute bottom-0 right-0 w-[500px] h-[120px] z-10 pointer-events-none opacity-30\">
+        <svg viewBox=\"0 0 600 150\" className=\"w-full h-full\">
+           <path d=\"M0,150 Q150,0 300,150 T600,150 L600,150 L0,150 Z\" fill=\"#c4ac6a\" />
         </svg>
       </div>
     </div>
