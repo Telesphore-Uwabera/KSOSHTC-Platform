@@ -93,18 +93,18 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
                 <p className="text-[6px] text-center uppercase tracking-tighter mt-0.5">Authenticated by Kigali Safety OSH Training Center</p>
              </div>
 
-             {/* Signature Scribble Section */}
-             <div className="pl-[65px] flex flex-col items-start translate-y-4">
-               <div className="h-[65px] w-56 flex items-end justify-center mb-1">
-                 <p className="text-[#004d40] text-[80px] font-normal leading-none opacity-90" style={{ fontFamily: '"Mrs Saint Delafield", cursive', transform: 'rotate(-8deg) scaleX(1.1)' }}>
+             {/* Signature Scribble Section - Fixed positioning to avoid PDF collision */}
+             <div className="pl-[65px] relative h-[140px] w-full flex flex-col justify-end">
+               <div className="absolute top-0 left-[65px] w-56 h-[70px] flex items-center justify-center">
+                 <p className="text-[#004d40] text-[75px] font-normal leading-none opacity-90" style={{ fontFamily: '"Mrs Saint Delafield", cursive', transform: 'rotate(-8deg) scaleX(1.1)' }}>
                    E. N.
                  </p>
                </div>
                <div className="w-56 h-[1px] bg-gray-400 mb-2 opacity-50"></div>
                <div className="flex flex-col items-start">
-                 <p className="font-bold text-[#004d40] text-[10px] uppercase leading-tight tracking-wide">Emmanuel NIYOBUHUNGIRO</p>
-                 <p className="text-[#444] text-[8px] font-bold uppercase tracking-widest mt-0.5">Director, Instructor</p>
-                 <p className="text-[#444] text-[8px] font-medium uppercase tracking-widest leading-tight">Kigali Safety OSH Training Center</p>
+                 <p className="font-bold text-[#004d40] text-[10px] uppercase leading-none tracking-wide mb-1">Emmanuel NIYOBUHUNGIRO</p>
+                 <p className="text-[#444] text-[8px] font-bold uppercase tracking-widest leading-none mb-1">Director, Instructor</p>
+                 <p className="text-[#444] text-[8px] font-medium uppercase tracking-widest leading-none">Kigali Safety OSH Training Center</p>
                </div>
              </div>
           </div>
