@@ -143,26 +143,27 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
         </div>
       </div>
 
-      {/* Footer Bar - Perfectly Distributed Row */}
-      <div className="absolute bottom-0 left-0 right-0 h-10 bg-[#004d40] flex items-center justify-between px-24 z-30">
-        
-        {/* Left: Email */}
-        <div className="flex items-center gap-2 w-1/3">
-           <Mail className="h-3 w-3 text-white/80" />
-           <p className="text-white text-[10px] font-bold tracking-widest">ksoshtc@gmail.com</p>
-        </div>
-
-        {/* Center: Website */}
-        <div className="flex items-center justify-center gap-2 w-1/3">
-           <Globe className="h-3 w-3 text-white/80" />
-           <p className="text-white text-[10px] font-bold tracking-widest">www.kigalisafetytraining.com</p>
-        </div>
-
-        {/* Right: Slogan */}
-        <div className="flex items-center justify-end gap-2 text-right whitespace-nowrap">
-           <Shield className="h-3 w-3 text-white/80 shrink-0" />
-           <p className="text-white text-[10px] italic font-bold tracking-widest uppercase whitespace-nowrap">Safety today, prosperity tomorrow.</p>
-        </div>
+       {/* Footer Bar - Perfectly Distributed Row */}
+       <div className="absolute bottom-0 left-0 right-0 h-10 bg-[#004d40] flex items-center justify-between px-24 z-30">
+         
+         {/* Left: Email */}
+         <div className="flex flex-row items-center gap-2 w-1/3">
+            <Mail className="h-3.5 w-3.5 text-white/90 shrink-0" />
+            <p className="text-white text-[10px] font-bold tracking-widest leading-none">ksoshtc@gmail.com</p>
+         </div>
+ 
+         {/* Center: Website */}
+         <div className="flex flex-row items-center justify-center gap-2 w-1/3">
+            <Globe className="h-3.5 w-3.5 text-white/90 shrink-0" />
+            <p className="text-white text-[10px] font-bold tracking-widest leading-none uppercase">www.kigalisafetytraining.com</p>
+         </div>
+ 
+         {/* Right: Slogan */}
+         <div className="flex flex-row items-center justify-end gap-2 w-1/3 text-right whitespace-nowrap">
+            <Shield className="h-3.5 w-3.5 text-white/90 shrink-0" />
+            <p className="text-white text-[10px] italic font-bold tracking-widest uppercase leading-none">Safety today, prosperity tomorrow.</p>
+         </div>
+       </div>
 
       </div>
 
