@@ -95,8 +95,8 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
 
              <div className="relative h-[85px] w-full flex items-end mb-2 pl-[65px]">
                <div className="w-56 flex items-end justify-center mb-1">
-                 <p className="text-[#004d40] text-4xl font-serif italic" style={{ fontFamily: '"Satisfy", cursive', transform: 'rotate(-2deg)' }}>
-                   Emmanuel Niyobuhungiro
+                 <p className="text-[#004d40] text-[80px] font-normal leading-none opacity-90" style={{ fontFamily: '"Mrs Saint Delafield", cursive', transform: 'rotate(-8deg) scaleX(1.1)' }}>
+                   E. N.
                  </p>
                </div>
              </div>
@@ -106,14 +106,16 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
              </div>
           </div>
 
-          {/* Center: Stamp with Digital Verification Title */}
           <div className="flex flex-col items-center justify-center h-full w-[30%]">
              <div className="z-20 pointer-events-none shrink-0 flex items-center justify-center relative">
-                <img src="/certificate/stamp.webp" alt="Stamp" style={{ width: '180px', height: 'auto', display: 'block' }} />
-                {/* Micro-Digital Verification Text above stamp */}
-                <div className="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap bg-[#004d40] text-white px-3 py-0.5 rounded-full text-[8px] font-bold tracking-widest uppercase shadow-md animate-pulse">
-                   Digitally Authenticated
-                </div>
+                <img 
+                   src="/certificate/stamp.webp" 
+                   alt="Stamp" 
+                   width="180"
+                   height="180"
+                   className="object-contain"
+                   style={{ width: '180px', height: '180px', display: 'block' }} 
+                />
              </div>
           </div>
 
