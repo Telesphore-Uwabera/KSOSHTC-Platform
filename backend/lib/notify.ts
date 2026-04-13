@@ -362,7 +362,7 @@ export async function notifyLearnerRegistrationReceived(data: { name: string; em
     "",
     "FEES",
     "• Registration fee: 10,000 FRW (required to access course materials).",
-    "• Tuition fee: 200,000 FRW (payable in instalments; contact us to arrange a payment plan).",
+    "• Tuition fee: 300,000 FRW (payable in instalments; contact us to arrange a payment plan).",
     "",
     "REGISTRATION FEE — PAYMENT (MOBILE MONEY)",
     "To unlock access to course materials, please pay the registration fee of 10,000 FRW via MoMo to:",
@@ -399,7 +399,7 @@ export async function notifyLearnerRegistrationReceived(data: { name: string; em
 <p style="margin:1.25em 0 0.35em;font-weight:bold;letter-spacing:0.03em;">FEES</p>
 <ul style="margin:0 0 1em;padding-left:1.25em;">
 <li><strong>Registration fee:</strong> 10,000 FRW (required to access course materials).</li>
-<li><strong>Tuition fee:</strong> 200,000 FRW (payable in instalments; contact us to arrange a payment plan).</li>
+<li><strong>Tuition fee:</strong> 300,000 FRW (payable in instalments; contact us to arrange a payment plan).</li>
 </ul>
 <p style="margin:1.25em 0 0.35em;font-weight:bold;letter-spacing:0.03em;">REGISTRATION FEE — PAYMENT (MOBILE MONEY)</p>
 <p style="margin:0 0 1em;">To unlock access to course materials, please pay the <strong>registration fee of 10,000 FRW</strong> via MoMo to:</p>
