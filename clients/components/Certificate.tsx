@@ -106,13 +106,19 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
              </div>
           </div>
 
-          <div className="flex flex-col items-center justify-center h-full w-[30%]">
-             <div className="z-20 pointer-events-none shrink-0 flex items-center justify-center relative bg-transparent" style={{ width: '180px', height: '180px' }}>
+          <div className="flex flex-col items-center justify-center w-[30%] min-h-[200px]">
+             <div className="z-20 pointer-events-none flex items-center justify-center" style={{ width: '180px', height: '180px' }}>
                 <img 
                    src="/certificate/stamp.webp" 
                    alt="Stamp" 
-                   className="w-full h-full object-contain"
-                   style={{ width: '180px', height: '180px', aspectRatio: '1/1' }} 
+                   className="w-[180px] h-[180px]"
+                   style={{ 
+                     width: '180px', 
+                     height: '180px', 
+                     maxWidth: '180px', 
+                     maxHeight: '180px',
+                     objectFit: 'contain'
+                   }} 
                 />
              </div>
           </div>
