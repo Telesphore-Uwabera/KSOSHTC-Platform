@@ -93,16 +93,17 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
                 <p className="text-[6px] text-center uppercase tracking-tighter mt-0.5">Authenticated by Kigali Safety OSH Training Center</p>
              </div>
 
-             <div className="relative h-[85px] w-full flex items-end mb-2 pl-[65px]">
-               <div className="w-56 flex items-end justify-center mb-1">
+             {/* Signature Scribble Section */}
+             <div className="pl-[65px] flex flex-col items-start">
+               <div className="h-[75px] w-56 flex items-end justify-center mb-6">
                  <p className="text-[#004d40] text-[80px] font-normal leading-none opacity-90" style={{ fontFamily: '"Mrs Saint Delafield", cursive', transform: 'rotate(-8deg) scaleX(1.1)' }}>
                    E. N.
                  </p>
                </div>
-             </div>
-             <div className="pt-2 pl-[65px]">
-               <p className="font-black text-[#004d40] text-sm uppercase leading-tight tracking-wide">Emmanuel NIYOBUHUNGIRO</p>
-               <p className="text-[#444] text-[9px] font-black uppercase tracking-widest mt-0.5">HSE Director</p>
+               <div className="pt-2">
+                 <p className="font-black text-[#004d40] text-sm uppercase leading-tight tracking-wide">Emmanuel NIYOBUHUNGIRO</p>
+                 <p className="text-[#444] text-[9px] font-black uppercase tracking-widest mt-0.5">HSE Director</p>
+               </div>
              </div>
           </div>
 
