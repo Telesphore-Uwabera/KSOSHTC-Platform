@@ -94,8 +94,10 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
              </div>
 
              <div className="relative h-[85px] w-full flex items-end mb-2 pl-[65px]">
-               <div className="w-56 flex items-end">
-                 <img src="/certificate/signature.webp" alt="Signature" className="h-full w-auto object-contain" />
+               <div className="w-56 flex items-end justify-center mb-1">
+                 <p className="text-[#004d40] text-4xl font-serif italic" style={{ fontFamily: '"Satisfy", cursive', transform: 'rotate(-2deg)' }}>
+                   Emmanuel Niyobuhungiro
+                 </p>
                </div>
              </div>
              <div className="pt-2 pl-[65px]">
