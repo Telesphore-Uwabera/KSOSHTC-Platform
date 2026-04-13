@@ -46,10 +46,10 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
         {/* Header */}
         <div className="flex flex-col items-center mb-8">
           <img src="/logo_transparent.webp" alt="KSOHTC" className="h-20 w-auto mb-4" />
-          <h1 className="text-[#004d40] text-4xl font-black tracking-[0.15em] uppercase mb-2 whitespace-nowrap">
+          <h1 className="text-[#004d40] text-4xl font-black tracking-[0.15em] uppercase mb-4 whitespace-nowrap">
             Certificate of Competence
           </h1>
-          <p className="text-gray-500 text-[10px] font-bold tracking-[0.4em] uppercase">
+          <p className="text-gray-500 text-[10px] font-bold tracking-[0.4em] uppercase mt-2">
             This is to certify that
           </p>
         </div>
