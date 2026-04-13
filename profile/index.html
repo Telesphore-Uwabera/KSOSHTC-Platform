@@ -1,0 +1,920 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Profile - KSOSHTC</title>
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;800;900&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        :root {
+            --primary: #1B5E3F;
+            --primary-light: #257e55;
+            --primary-dark: #12432d;
+            --accent: #FDB813;
+            --accent-light: #fcd872;
+            --bg-light: #FFFFFF;
+            --bg-soft: #F9FAFB;
+            --bg-card: #F3F4F6;
+            --text-dark: #111827;
+            --text-gray: #4B5563;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #E5E7EB; /* Darker backdrop for screen viewer */
+            color: var(--text-dark);
+            line-height: 1.6;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 2rem;
+            padding: 2rem 0;
+        }
+
+        h1, h2, h3, h4 {
+            font-family: 'Outfit', sans-serif;
+            color: var(--primary);
+        }
+
+        /* ---------------- A4 Page Definition ---------------- */
+        .page {
+            width: 210mm;
+            height: 297mm; /* strict height for exact PDF generation */
+            background: var(--bg-light);
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            page-break-after: always;
+            flex-shrink: 0;
+        }
+
+        .content-wrap {
+            padding: 30mm 20mm 20mm 20mm;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* ---------------- Header & Footer ---------------- */
+        .page-header {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 18mm;
+            background: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20mm;
+            z-index: 10;
+        }
+        
+        .page-header::after {
+            content: '';
+            position: absolute;
+            bottom: -5px; left: 0; right: 0;
+            height: 5px;
+            background: var(--accent);
+        }
+
+        .header-logo {
+            height: 12mm;
+            filter: brightness(0) invert(1);
+            object-fit: contain;
+        }
+        .header-logo-wrap {
+            height: 14mm;
+            display: flex;
+            align-items: center;
+        }
+
+        .header-title {
+            color: white;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            letter-spacing: 1px;
+        }
+
+        .page-footer {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            height: 15mm;
+            background: var(--bg-soft);
+            border-top: 1px solid #E5E7EB;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20mm;
+            font-size: 0.85rem;
+            font-weight: 500;
+            color: var(--text-gray);
+            z-index: 10;
+        }
+
+        /* ---------------- Utilities ---------------- */
+        .section-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            margin-bottom: 1.5rem;
+            margin-top: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .section-title::after {
+            content: '';
+            position: absolute;
+            bottom: 0; left: 0;
+            width: 80px;
+            height: 5px;
+            background: var(--accent);
+            border-radius: 2.5px;
+        }
+
+        .section-title i {
+            color: var(--accent);
+            background: var(--primary);
+            width: 50px; height: 50px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 12px;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .text-lead {
+            font-size: 1.15rem;
+            color: var(--text-gray);
+            margin-bottom: 2rem;
+            line-height: 1.8;
+            text-align: justify;
+        }
+
+        .flex-grow-spacer {
+            flex-grow: 1;
+        }
+
+        /* Dynamic Image Showcase sizes */
+        .img-showcase {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            margin-bottom: 2rem;
+            border: 4px solid white;
+        }
+        
+        .img-fill {
+            flex-grow: 1;
+            width: 100%;
+            height: 0;
+            min-height: 200px;
+            object-fit: cover;
+            border-radius: 16px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+            border: 4px solid white;
+            margin-bottom: 0;
+        }
+        
+        .img-logo {
+            object-fit: contain;
+            width: 100%;
+            height: 100%;
+        }
+
+        /* ---------------- Cover Page Specifics ---------------- */
+        .cover-page {
+            display: flex;
+            flex-direction: column;
+            padding: 0;
+        }
+
+        .cover-top {
+            height: 65%;
+            position: relative;
+            background-image: url('teaching.webp');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .cover-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(27,94,63,0.85) 0%, rgba(18,67,45,0.98) 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .cover-logo {
+            width: 240px;
+            height: 240px;
+            background: white;
+            border-radius: 50%;
+            padding: 25px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+            margin-bottom: 2.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 8px solid var(--accent);
+        }
+
+        .cover-h1 {
+            font-size: 4.5rem;
+            color: white;
+            font-weight: 900;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            margin-bottom: 0.5rem;
+        }
+
+        .cover-h2 {
+            font-size: 1.8rem;
+            color: var(--accent);
+            font-weight: 600;
+            max-width: 85%;
+        }
+
+        .cover-bottom {
+            height: 35%;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 0 3rem;
+            text-align: center;
+        }
+
+        .cover-bottom::before {
+            content: '';
+            position: absolute;
+            top: -50px; left: 0;
+            width: 100%; height: 100px;
+            background: white;
+            transform: skewY(-5deg);
+            z-index: 10;
+        }
+
+        .cover-motto {
+            font-size: 3.2rem;
+            font-weight: 900;
+            color: var(--primary);
+            z-index: 20;
+            line-height: 1.2;
+        }
+
+        .cover-motto span {
+            color: var(--accent);
+        }
+
+        .cover-sub {
+            font-size: 1.4rem;
+            color: var(--text-gray);
+            margin-top: 1rem;
+            font-weight: 500;
+            padding-top: 1rem;
+            border-top: 2px dashed rgba(27,94,63,0.2);
+            z-index: 20;
+        }
+
+        /* ---------------- Card Layouts ---------------- */
+        .card-grid-1 {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-grid-2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .card-grid-3 {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card-grid-4 {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        .card-grid-3 .card {
+            padding: 1rem;
+        }
+
+        .card-grid-4 .card {
+            padding: 0.8rem;
+        }
+
+        .card-grid-3 .card-icon-wrap {
+            width: 45px;
+            height: 45px;
+            font-size: 1.3rem;
+            margin-bottom: 0.6rem;
+        }
+
+        .card-grid-4 .card-icon-wrap {
+            width: 40px;
+            height: 40px;
+            font-size: 1.2rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .card-grid-3 .card h3 {
+            font-size: 1.05rem;
+            margin-bottom: 0.4rem;
+        }
+
+        .card-grid-4 .card h3 {
+            font-size: 0.95rem;
+            margin-bottom: 0.3rem;
+        }
+
+        .card-grid-3 .card p {
+            font-size: 0.85rem;
+            line-height: 1.3;
+        }
+        
+        .card-grid-4 .card p {
+            font-size: 0.75rem;
+            line-height: 1.25;
+        }
+
+        .card {
+            background: var(--bg-soft);
+            border: 1px solid #E5E7EB;
+            border-top: 6px solid var(--accent);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.04);
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: center;
+            text-align: center;
+            aspect-ratio: 1 / 1;
+            page-break-inside: avoid;
+            min-width: 0;
+            overflow: hidden;
+            word-break: break-word;
+        }
+        
+        .card.card-primary {
+            border-top-color: var(--primary);
+            background: linear-gradient(180deg, #ffffff 0%, #f0fdf4 100%);
+        }
+
+        .card-icon-wrap {
+            width: 55px;
+            height: 55px;
+            background: var(--primary-dark) !important;
+            color: var(--accent) !important;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.6rem;
+            margin: 0 auto 1.2rem auto;
+            box-shadow: 0 6px 15px rgba(27,94,63,0.25);
+            flex-shrink: 0;
+        }
+
+        .card h3 {
+            font-size: 1.25rem;
+            margin-bottom: 0.6rem;
+            font-weight: 800;
+        }
+
+        .card p {
+            color: var(--text-gray);
+            font-size: 1rem;
+            line-height: 1.4;
+            max-width: 95%;
+        }
+
+        /* ---------------- Full Width Highlight Card ---------------- */
+        .card-highlight {
+            background: linear-gradient(135deg, var(--white) 0%, var(--bg-soft) 100%);
+            border: 1px solid #E5E7EB;
+            border-left: 8px solid var(--primary);
+            padding: 2rem;
+            border-radius: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            margin-bottom: 2rem;
+        }
+        .card-highlight i {
+            font-size: 3rem;
+            color: var(--accent);
+            margin-top: 5px;
+        }
+        .card-highlight h3 {
+            font-size: 1.6rem;
+            color: var(--primary);
+            margin-bottom: 0.5rem;
+        }
+        .card-highlight p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-gray);
+        }
+
+        /* ---------------- Badges & Roles ---------------- */
+        .role-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .role-badge {
+            display: flex;
+            align-items: flex-start;
+            gap: 20px;
+            background: white;
+            border: 1px solid #E5E7EB;
+            padding: 20px;
+            border-radius: 16px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            page-break-inside: avoid;
+            transition: all 0.3s ease;
+        }
+
+        .role-badge:hover {
+            border-color: var(--accent);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+        }
+
+        .role-badge i {
+            color: var(--primary);
+            font-size: 1.8rem;
+            margin-top: 2px;
+            background: var(--bg-soft);
+            width: 45px; height: 45px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 10px;
+        }
+
+        .role-badge h4 {
+            font-size: 1.25rem;
+            color: var(--text-dark);
+            margin-bottom: 4px;
+        }
+
+        .role-badge p {
+            font-size: 1rem;
+            color: var(--text-gray);
+        }
+
+        /* ---------------- Profiles & Badges ---------------- */
+        .ceo-section {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            background: var(--bg-soft);
+            padding: 2rem;
+            border-radius: 20px;
+            border: 1px solid #E5E7EB;
+            page-break-inside: avoid;
+            margin-bottom: 2rem;
+        }
+
+        .ceo-img {
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 5px solid white;
+            box-shadow: 0 15px 30px rgba(0,0,0,0.15);
+        }
+
+        .cert-box {
+            display: flex;
+            align-items: center;
+            gap: 30px;
+            background: linear-gradient(135deg, var(--white) 0%, var(--bg-soft) 100%);
+            padding: 2rem;
+            border-radius: 20px;
+            border: 2px solid var(--accent-light);
+            page-break-inside: avoid;
+            margin-bottom: 2rem;
+        }
+
+        .cert-box img {
+            width: 150px;
+            height: 150px;
+            object-fit: contain;
+            filter: drop-shadow(0 5px 8px rgba(0,0,0,0.15));
+        }
+
+        /* Contact Details */
+        .contact-wrap {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+            color: white;
+            border-radius: 20px;
+            padding: 2.5rem;
+            box-shadow: 0 15px 40px rgba(27,94,63,0.3);
+            page-break-inside: avoid;
+        }
+
+        .contact-item {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            font-size: 1.2rem;
+            font-weight: 500;
+            margin-bottom: 1.5rem;
+            page-break-inside: avoid;
+        }
+
+        .contact-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .contact-item i {
+            width: 45px;
+            height: 45px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--accent);
+            font-size: 1.4rem;
+        }
+
+        /* ---------------- Print Media ---------------- */
+        @media print {
+            body {
+                background: none;
+                padding: 0;
+                gap: 0;
+            }
+            .page {
+                box-shadow: none;
+                margin: 0;
+                border-radius: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- PAGE 1: COVER -->
+    <div class="page cover-page">
+        <div class="cover-top">
+            <div class="cover-overlay">
+                <div class="cover-logo">
+                    <img src="../public/logo.webp" alt="KSOSHTC Logo" class="img-logo">
+                </div>
+                <h1 class="cover-h1">Company Profile</h1>
+                <h2 class="cover-h2">KIGALI SAFETY OSH TRAINING CENTER</h2>
+            </div>
+        </div>
+        <div class="cover-bottom">
+            <div class="cover-motto">
+                Safety Today,<br>
+                <span>Prosperity Tomorrow.</span>
+            </div>
+            <div class="cover-sub">
+                Professional Occupational Safety and Health (OSH) Training Institution
+            </div>
+        </div>
+    </div>
+
+    <!-- PAGE 2: ABOUT US -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-logo-wrap">
+                <img src="../public/logo.webp" alt="Logo" class="header-logo">
+            </div>
+            <div class="header-title">www.kigalisafetytraining.com</div>
+        </div>
+        
+        <div class="content-wrap">
+            <h2 class="section-title"><i class="fa-solid fa-building-shield"></i> About Us</h2>
+            
+            <img src="../public/about-emmanuel-2.webp" alt="Training" class="img-showcase" onerror="this.onerror=null; this.src='classroom.webp';" style="height: 380px;">
+
+            <div class="card-highlight">
+                <i class="fa-solid fa-graduation-cap"></i>
+                <div>
+                    <h3>Building Competent Safety Professionals</h3>
+                    <p>
+                        <strong>Kigali Safety OSH Training Center (KSOHTC)</strong> is a professional training institution based in Kicukiro, Kigali. We dedicate ourselves to thoroughly advancing occupational health and safety across major operational sectors. We build competent safety professionals designed to drastically reduce workplace hazards and maintain uncompromised, regulation-aligned safety environments.
+                    </p>
+                </div>
+            </div>
+            
+            <div class="text-lead" style="margin-bottom: 0;">
+                Our institute specializes in delivering highly practical, industry-focused safety competency. We cater to individuals, private organizations, and corporate bodies navigating Rwanda’s rapidly expanding heavy industry and infrastructure projects.
+            </div>
+        </div>
+
+        <div class="page-footer">
+            <span>Kigali Safety OSH Training Center | Company Profile</span>
+            <span>Page 2</span>
+        </div>
+    </div>
+
+    <!-- PAGE 3: MISSION & VISION -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-logo-wrap">
+                <img src="../public/logo.webp" alt="Logo" class="header-logo">
+            </div>
+            <div class="header-title">www.kigalisafetytraining.com</div>
+        </div>
+
+        <div class="content-wrap">
+            <h2 class="section-title"><i class="fa-solid fa-compass"></i> Mission & Vision</h2>
+            
+            <div class="card-grid-2">
+                <div class="card card-primary">
+                    <div class="card-icon-wrap"><i class="fa-solid fa-rocket"></i></div>
+                    <h3>Our Mission</h3>
+                    <p>To deliver high-quality, practically grounded OSH training that successfully develops competent professionals, aggressively prevents workplace accidents, and promotes a proactive safety culture.</p>
+                </div>
+
+                <div class="card card-primary">
+                    <div class="card-icon-wrap"><i class="fa-solid fa-eye"></i></div>
+                    <h3>Our Vision</h3>
+                    <p>To proactively be an active, long-term contributor to national safety, recognized for training excellence, structured international certification, and leadership in OSH quality assurance.</p>
+                </div>
+            </div>
+            
+            <img src="../public/ksohtc-3.webp" alt="Safety Vision" class="img-fill" onerror="this.onerror=null; this.src='teaching.webp';">
+        </div>
+
+        <div class="page-footer">
+            <span>Kigali Safety OSH Training Center | Company Profile</span>
+            <span>Page 3</span>
+        </div>
+    </div>
+
+    <!-- PAGE 4: WHAT WE PROVIDE -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-logo-wrap">
+                <img src="../public/logo.webp" alt="Logo" class="header-logo">
+            </div>
+            <div class="header-title">www.kigalisafetytraining.com</div>
+        </div>
+
+        <div class="content-wrap">
+            <h2 class="section-title"><i class="fa-solid fa-handshake-angle"></i> What We Provide</h2>
+            
+            <img src="../public/ksohtc-7.webp" alt="Provide" class="img-fill" style="margin-bottom: 1.5rem;" onerror="this.onerror=null; this.src='classroom.webp';">
+
+            <div class="text-lead" style="margin-bottom: 1.5rem;">
+                We are fiercely dedicated to building a resilient workforce capable of installing and maintaining rigorous safety protocols starting from day one of field operation.
+            </div>
+            
+            <div class="card-grid-4">
+                <div class="card">
+                    <div class="card-icon-wrap"><i class="fa-solid fa-book-open"></i></div>
+                    <h3>Structured Programs</h3>
+                    <p>Intensive theory intertwined with vital practical field application.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon-wrap"><i class="fa-solid fa-briefcase"></i></div>
+                    <h3>Industry-Ready</h3>
+                    <p>Training crafted for immediate job integration into tangible ops.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon-wrap"><i class="fa-solid fa-list-check"></i></div>
+                    <h3>Competency-Based</h3>
+                    <p>Powered by expansive real cases and on-site risk evaluations.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon-wrap"><i class="fa-solid fa-shield-cat"></i></div>
+                    <h3>Incident Reduction</h3>
+                    <p>Fostering zero-harm mentalities. Protecting major operations.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-footer">
+            <span>Kigali Safety OSH Training Center | Company Profile</span>
+            <span>Page 4</span>
+        </div>
+    </div>
+
+    <!-- PAGE 5: INDUSTRIES WE SERVE -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-logo-wrap">
+                <img src="../public/logo.webp" alt="Logo" class="header-logo">
+            </div>
+            <div class="header-title">www.kigalisafetytraining.com</div>
+        </div>
+        
+        <div class="content-wrap">
+            <h2 class="section-title"><i class="fa-solid fa-industry"></i> Industries We Serve</h2>
+            <div class="text-lead">
+                We provide heavily specialized training thoroughly tailored for Rwanda's rapidly growing economic arenas, ensuring absolute regulatory compliance and immaculate field operations.
+            </div>
+
+            <img src="../public/ksohtc-8.webp" alt="Field training" class="img-fill" style="margin-bottom: 1.5rem;" onerror="this.onerror=null; this.src='Instructors.webp';">
+
+            <div class="card-grid-3" style="margin-bottom: 0;">
+                <div class="card">
+                    <div class="card-icon-wrap"><i class="fa-solid fa-helmet-safety"></i></div>
+                    <h3>Construction</h3>
+                    <p>Working at height, scaffolding, PPE management, and structural risks.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon-wrap"><i class="fa-solid fa-building"></i></div>
+                    <h3>Industrial</h3>
+                    <p>Manufacturing safety, LOTO, chemical processing, & fire mapping.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon-wrap"><i class="fa-solid fa-hammer"></i></div>
+                    <h3>Mining</h3>
+                    <p>Blasting safety, ventilation, extraction protocols, and hazard mitigation.</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-footer">
+            <span>Kigali Safety OSH Training Center | Company Profile</span>
+            <span>Page 5</span>
+        </div>
+    </div>
+
+    <!-- PAGE 6: GRADUATE CAPABILITIES & CERTIFICATION -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-logo-wrap">
+                <img src="../public/logo.webp" alt="Logo" class="header-logo">
+            </div>
+            <div class="header-title">www.kigalisafetytraining.com</div>
+        </div>
+
+        <div class="content-wrap">
+            <h2 class="section-title"><i class="fa-solid fa-user-graduate"></i> What Our Graduates Can Do</h2>
+            <div class="text-lead">
+                Our detailed, robust training mechanics reliably output highly skilled professionals uniquely equipped to manage corporate teams, audit complex sites, and strictly enforce regulations in key pivotal roles.
+            </div>
+            
+            <div class="card-grid-3">
+                <div class="card">
+                    <div class="card-icon-wrap"><i class="fa-solid fa-circle-check"></i></div>
+                    <h3>Safety Officer</h3>
+                    <p>Core, independent action-ready capability upon certification.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon-wrap"><i class="fa-solid fa-hard-hat"></i></div>
+                    <h3>Safety Supervisor</h3>
+                    <p>Advanced, decisive operational oversight at construction sites.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon-wrap"><i class="fa-solid fa-magnifying-glass-chart"></i></div>
+                    <h3>Safety Inspector</h3>
+                    <p>Detailed compliance evaluations, auditing, and inspections.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon-wrap"><i class="fa-solid fa-clipboard-check"></i></div>
+                    <h3>HSE Assistant</h3>
+                    <p>Broad-scale Health, Safety, and Environment departmental support.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon-wrap"><i class="fa-solid fa-sitemap"></i></div>
+                    <h3>Safety Manager</h3>
+                    <p>Administrative leadership managing entire OSH enterprise ops.</p>
+                </div>
+                <div class="card">
+                    <div class="card-icon-wrap"><i class="fa-solid fa-scale-balanced"></i></div>
+                    <h3>Compliance Expert</h3>
+                    <p>Ironclad legal alignment to national labor standards.</p>
+                </div>
+            </div>
+
+            <h2 class="section-title"><i class="fa-solid fa-award"></i> Certification & Quality Assurance</h2>
+            <div class="text-lead" style="margin-bottom: 2rem;">
+                Through comprehensive, practical assessments, we continuously and rigorously guarantee competency. Successful stakeholders receive globally recognized qualifications, ensuring total credibility in their respective sectors.
+            </div>
+            
+            <div class="cert-box">
+                <img src="stamp.webp" alt="Certification Stamp"> 
+                <div>
+                    <h3 style="font-size: 1.6rem; color: var(--primary); margin-bottom: 8px;">Certificate of Competence</h3>
+                    <p style="color: var(--text-gray); font-size: 1.15rem; line-height: 1.6;">
+                        Proudly issued by the overarching KSOHTC governing board exclusively upon verified successful completion of core theoretical evaluations, arduous practical assessments, and specialized occupational safety modeling.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <div class="page-footer">
+            <span>Kigali Safety OSH Training Center | Company Profile</span>
+            <span>Page 6</span>
+        </div>
+    </div>
+
+    <!-- PAGE 7: LEADERSHIP & CONTACT -->
+    <div class="page">
+        <div class="page-header">
+            <div class="header-logo-wrap">
+                <img src="../public/logo.webp" alt="Logo" class="header-logo">
+            </div>
+            <div class="header-title">www.kigalisafetytraining.com</div>
+        </div>
+        
+        <div class="content-wrap">
+            <img src="../public/hero-team.webp" alt="Team" class="img-showcase" onerror="this.onerror=null; this.src='teaching.webp';" style="height: 350px;">
+            
+            <h2 class="section-title"><i class="fa-solid fa-user-tie"></i> Directorate</h2>
+            <div class="text-lead">
+                Led by visionaries focused entirely on expanding Rwanda's safety infrastructure. Our leadership guarantees training programs remain sharp, modernized, and profoundly beneficial to learners.
+            </div>
+
+            <div class="ceo-section">
+                <img src="ceo.webp" alt="Emmanuel Niyobuhungiro" class="ceo-img">
+                <div>
+                    <h3 style="font-size: 2rem; color: var(--primary); margin-bottom: 5px;">Emmanuel Niyobuhungiro</h3>
+                    <p style="color: var(--accent); font-weight: 800; font-size: 1.3rem; margin-bottom: 12px;">Director – KSOHTC</p>
+                    <p style="color: var(--text-gray); font-size: 1.15rem; line-height: 1.6;">Deeply committed to building Rwanda's most competent OSH workforce by tirelessly establishing industry-standard protocols, leading comprehensive sector audits, and actively shaping national safety policies for tomorrow.</p>
+                </div>
+            </div>
+
+            <h2 class="section-title"><i class="fa-solid fa-id-card"></i> Contact Us</h2>
+            
+            <div class="contact-wrap flex-grow-spacer">
+                <div>
+                    <div style="font-size: 1.6rem; font-weight: 800; margin-bottom: 2rem; border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 1rem;">
+                        Partner With Us
+                    </div>
+                    <div class="contact-item">
+                        <i class="fa-solid fa-location-dot"></i>
+                        <span>Kicukiro Center, Kigali, Rwanda</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fa-brands fa-whatsapp"></i>
+                        <span>+250 785 072 512</span>
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size: 1.6rem; font-weight: 800; margin-bottom: 2rem; border-bottom: 2px solid rgba(255,255,255,0.2); padding-bottom: 1rem; color: transparent;">
+                        .
+                    </div>
+                    <div class="contact-item">
+                        <i class="fa-solid fa-envelope"></i>
+                        <span>ksoshtc@gmail.com</span>
+                    </div>
+                    <div class="contact-item">
+                        <i class="fa-solid fa-globe"></i>
+                        <span>www.kigalisafetytraining.com</span>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+
+        <div class="page-footer">
+            <span>Kigali Safety OSH Training Center | Company Profile</span>
+            <span>Page 7</span>
+        </div>
+    </div>
+
+</body>
+</html>

@@ -173,12 +173,7 @@ export default function AdminCertificate() {
     setCurrentId(null);
   };
 
-  const updateTranscriptItem = (idx: number, field: string, value: any) => {
-    const newT = [...formData.transcript];
-    if (newT.length === 0 || !newT[idx]) return;
-    
-    newT[idx][field] = value;
-    
+  const recalculateTranscript = (newT: any[]) => {
     let totalHrs = 0;
     let totalScorePoints = 0;
     let totalGradePoints = 0;
@@ -206,6 +201,10 @@ export default function AdminCertificate() {
        newTotalHrs = totalHrs;
        newAvg = Math.round(totalScorePoints / totalHrs);
        newGpa = (totalGradePoints / totalHrs).toFixed(2);
+    } else {
+       newTotalHrs = 0;
+       newAvg = 0;
+       newGpa = "0.00";
     }
 
     setFormData(prev => ({
@@ -215,6 +214,13 @@ export default function AdminCertificate() {
       averageScore: newAvg,
       gpa: newGpa
     }));
+  };
+
+  const updateTranscriptItem = (idx: number, field: string, value: any) => {
+    const newT = [...formData.transcript];
+    if (!newT[idx]) return;
+    newT[idx][field] = value;
+    recalculateTranscript(newT);
   };
 
 
@@ -512,7 +518,7 @@ export default function AdminCertificate() {
                     />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-xs">GPA</Label>
+                    <Label className="text-xs">GPA (4)</Label>
                     <Input 
                       value={formData.gpa} 
                       className="bg-gray-100 font-bold"
@@ -569,9 +575,7 @@ export default function AdminCertificate() {
                             className="h-8 w-8 text-red-500"
                             onClick={() => {
                               const newT = formData.transcript.filter((_, i) => i !== idx);
-                              setFormData({...formData, transcript: newT});
-                              // Quick calculation reset when a row is removed
-                              setTimeout(() => { updateTranscriptItem(0, "hours", newT[0]?.hours || 0); }, 50);
+                              recalculateTranscript(newT);
                             }}
                           >
                             <Trash2 className="h-4 w-4" />
@@ -585,10 +589,10 @@ export default function AdminCertificate() {
                     variant="ghost" 
                     size="sm" 
                     className="w-full border-dashed border-2 h-9 text-gray-500 hover:text-primary hover:border-primary"
-                    onClick={() => setFormData({
-                      ...formData, 
-                      transcript: [...formData.transcript, { title: "", score: 100, date: formData.dateIssued, hours: 6.0 }]
-                    })}
+                    onClick={() => recalculateTranscript([
+                      ...formData.transcript, 
+                      { title: "", score: 100, date: formData.dateIssued, hours: 6.0 }
+                    ])}
                   >
                     <Plus className="h-4 w-4 mr-2" /> Add Course to Transcript
                   </Button>
