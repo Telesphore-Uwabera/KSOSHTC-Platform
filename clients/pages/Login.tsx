@@ -50,12 +50,18 @@ export default function Login() {
       const adminSessionWarning = (data as { adminSessionWarning?: string }).adminSessionWarning;
       if (user && typeof user === "object" && "id" in user) {
         const role = (user as { role?: string }).role;
-        if (role === "admin") setAdminSessionToken(adminSessionToken ?? null);
+        if (role === "admin" || role === "instructor") setAdminSessionToken(adminSessionToken ?? null);
         else setAdminSessionToken(null);
         setAdminSessionPolicyFromLogin({ adminSessionToken, adminSessionWarning }, role);
         setStoredUser(user as Parameters<typeof setStoredUser>[0]);
-        const redirectTo = from.startsWith("/courses/") ? "/dashboard" : from;
-        navigate(redirectTo, { replace: true });
+        if (role === "admin") {
+          navigate(from.startsWith("/admin") ? from : "/admin", { replace: true });
+        } else if (role === "instructor") {
+          navigate(from.startsWith("/admin") ? from : "/admin/course-content", { replace: true });
+        } else {
+          const redirectTo = from.startsWith("/courses/") ? "/dashboard" : from;
+          navigate(redirectTo, { replace: true });
+        }
       }
     } catch {
       setError("Unable to reach the server. Check your connection and try again.");

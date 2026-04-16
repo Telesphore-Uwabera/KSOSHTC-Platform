@@ -1,3 +1,5 @@
+import { clearStoredUser, getStoredUser } from "./auth";
+
 const STORAGE_KEY = "ksohtc_admin_session";
 /** "yes" = server issues Bearer tokens; "no" = ADMIN_SESSION_SECRET unset (admin APIs work without token). Set from /api/login response. */
 const POLICY_KEY = "ksohtc_admin_session_required";
@@ -7,7 +9,7 @@ export function setAdminSessionPolicyFromLogin(data: {
   adminSessionWarning?: string;
 }, role: string | undefined): void {
   try {
-    if (role !== "admin") {
+    if (role !== "admin" && role !== "instructor") {
       sessionStorage.removeItem(POLICY_KEY);
       return;
     }
@@ -78,14 +80,17 @@ export async function adminFetch(input: string | Request, init?: RequestInit): P
         const data = await res.clone().json();
         const msg = (data?.error ?? "").toLowerCase();
         
-        if (msg.includes("admin session") || msg.includes("unauthorized") || msg.includes("token")) {
+        if (msg.includes("admin session") || msg.includes("unauthorized") || msg.includes("token") || msg.includes("session expired")) {
           setAdminSessionToken(null);
           try {
             sessionStorage.setItem(POLICY_KEY, "yes");
           } catch { /* ignore */ }
           
-          console.warn("Admin session expired. Redirecting...");
-          window.location.replace("/admin/login?reason=session");
+          const u = getStoredUser();
+          const role = u && typeof u === "object" ? (u as { role?: string }).role : undefined;
+          clearStoredUser();
+          console.warn("Session expired. Redirecting...");
+          window.location.replace(role === "instructor" ? "/login?reason=session" : "/admin/login?reason=session");
           
           // Return a dummy promise that never resolves/rejects to prevent the caller from continuing
           return new Promise(() => {});

@@ -1,39 +1,69 @@
 import { Link, Outlet, NavLink, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useRef } from "react";
-import { ArrowLeft, LayoutDashboard, BookOpen, Users, MessageSquareQuote, BarChart3, FolderOpen, Settings, ClipboardList, LogOut, FileSpreadsheet, ShieldCheck } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, BookOpen, Users, MessageSquareQuote, BarChart3, FolderOpen, Settings, ClipboardList, LogOut, FileSpreadsheet, ShieldCheck, UserCog } from "lucide-react";
 import Header from "../../components/Header";
 import { cn } from "@/lib/utils";
 import { clearStoredUser, getStoredUser } from "@/lib/auth";
 import { clearAdminSessionPolicy, getAdminSessionToken, serverExpectsAdminBearer, setAdminSessionToken } from "@/lib/adminApi";
 
-const nav = [
-  { to: "/admin", end: true, label: "Dashboard", icon: BarChart3 },
-  { to: "/admin/courses", end: false, label: "Courses & Quizzes", icon: BookOpen },
-  { to: "/admin/course-content", end: true, label: "Course content", icon: FolderOpen },
-  { to: "/admin/learners", end: true, label: "Learners", icon: Users },
-  { to: "/admin/assignment-submissions", end: true, label: "Assignments", icon: ClipboardList },
-  { to: "/admin/distribute-pdf", end: true, label: "Distribute files", icon: FileSpreadsheet },
-  { to: "/admin/certificate", end: true, label: "Certificates", icon: ShieldCheck },
-  { to: "/admin/testimonials", end: true, label: "Testimonials", icon: MessageSquareQuote },
-  { to: "/admin/settings", end: true, label: "Settings", icon: Settings },
-];
+function navForRole(role: string | undefined) {
+  const staffCore = [
+    { to: "/admin/courses", end: false, label: "Courses & Quizzes", icon: BookOpen },
+    { to: "/admin/course-content", end: true, label: "Course content", icon: FolderOpen },
+    { to: "/admin/assignment-submissions", end: true, label: "Assignments", icon: ClipboardList },
+    { to: "/admin/distribute-pdf", end: true, label: "Distribute files", icon: FileSpreadsheet },
+  ];
+  if (role === "admin") {
+    return [
+      { to: "/admin", end: true, label: "Dashboard", icon: BarChart3 },
+      ...staffCore,
+      { to: "/admin/learners", end: true, label: "Learners", icon: Users },
+      { to: "/admin/instructors", end: true, label: "Instructors", icon: UserCog },
+      { to: "/admin/certificate", end: true, label: "Certificates", icon: ShieldCheck },
+      { to: "/admin/testimonials", end: true, label: "Testimonials", icon: MessageSquareQuote },
+      { to: "/admin/settings", end: true, label: "Settings", icon: Settings },
+    ];
+  }
+  return staffCore;
+}
 
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
   const adminVerifiedRef = useRef(false);
   const user = getStoredUser();
-  const isAdmin = user && (user as { role?: string }).role === "admin";
+  const role = user && typeof user === "object" ? (user as { role?: string }).role : undefined;
+  const isStaff = role === "admin" || role === "instructor";
 
-  if (!user || !isAdmin) adminVerifiedRef.current = false;
+  if (!user || !isStaff) adminVerifiedRef.current = false;
   if (!adminVerifiedRef.current) {
-    if (!isAdmin) return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
+    if (!isStaff) return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
     adminVerifiedRef.current = true;
   }
 
-  if (isAdmin && !getAdminSessionToken() && serverExpectsAdminBearer()) {
-    return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
+  if (isStaff && !getAdminSessionToken() && serverExpectsAdminBearer()) {
+    return (
+      <Navigate
+        to={role === "instructor" ? "/login" : "/admin/login"}
+        replace
+        state={{ from: location.pathname }}
+      />
+    );
   }
+
+  if (role === "instructor") {
+    const p = location.pathname;
+    const adminOnly =
+      p === "/admin" ||
+      p.startsWith("/admin/learners") ||
+      p.startsWith("/admin/instructors") ||
+      p.startsWith("/admin/certificate") ||
+      p.startsWith("/admin/testimonials") ||
+      p.startsWith("/admin/settings");
+    if (adminOnly) return <Navigate to="/admin/course-content" replace />;
+  }
+
+  const nav = navForRole(role);
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
@@ -50,7 +80,7 @@ export default function AdminLayout() {
             <aside className="bg-white rounded-[30px] border border-gray-200 shadow-sm p-4 sm:p-5 lg:sticky lg:top-28">
               <div className="flex items-center gap-2 mb-4">
                 <LayoutDashboard className="w-5 h-5 text-primary" />
-                <p className="font-bold text-gray-900">Admin</p>
+                <p className="font-bold text-gray-900">{role === "admin" ? "Admin" : "Instructor"}</p>
               </div>
               <nav className="space-y-2">
                 {nav.map(({ to, end, label, icon: Icon }) => (

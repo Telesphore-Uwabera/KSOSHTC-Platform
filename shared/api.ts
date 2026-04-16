@@ -28,6 +28,8 @@ export type TestimonialCreate = Omit<Testimonial, "id" | "createdAt">;
 /** Sector chosen at registration: determines which main course (+ safety-management) the learner sees */
 export type LearnerSector = "construction" | "industrial-safety" | "mining";
 
+export type UserRole = "learner" | "admin" | "instructor";
+
 /** User (registrant); access to courses only after admin approval */
 export interface User {
   id: string;
@@ -39,12 +41,32 @@ export interface User {
   /** Sector of interest: learner sees only this course + safety-management. Omit = see all. */
   sector?: LearnerSector;
   approved: boolean;
-  role?: "learner" | "admin";
+  role?: UserRole;
   createdAt: string;
 }
 
 export type UserCreate = Pick<User, "email" | "password" | "name" | "phone" | "organization" | "sector">;
 export type UserPublic = Omit<User, "password">;
+
+/** Instructor profile (admin-managed); linked to a User with role=instructor */
+export interface Instructor {
+  id: string;
+  userId: string;
+  name: string;
+  email: string;
+  phone?: string;
+  staffId?: string;
+  organization?: string;
+  sector?: LearnerSector;
+  /** Courses this instructor may manage/review. Empty/omitted means none. */
+  allowedCourseIds: CourseId[];
+  active: boolean;
+  notes?: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export type InstructorCreate = Omit<Instructor, "id" | "createdAt" | "updatedAt">;
 
 /** Course identifier (must match client course ids). safety-for-all = common safety course after the three main courses */
 export type CourseId =

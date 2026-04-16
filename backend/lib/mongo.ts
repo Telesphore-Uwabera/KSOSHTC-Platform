@@ -45,6 +45,8 @@ export function mongoCollection<TSchema extends Document = Document>(name: strin
 export const MONGO_COLLECTIONS = {
   /** Learner and admin accounts (register / login / approve). */
   users: "users",
+  /** Instructor profiles (admin-managed), linked to users.role=instructor via userId. */
+  instructors: "instructors",
   testimonials: "testimonials",
   courses: "courses",
   modules: "modules",

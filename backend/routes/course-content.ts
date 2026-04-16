@@ -16,6 +16,7 @@ import { isValidCourseSlug } from "../lib/course-constants";
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { notifyLearnerModuleQuizResult } from "../lib/notify";
 import { isAdminSessionAuthorized } from "../lib/adminSession";
+import { getStaffSessionPayload, requireInstructorCourseAccess } from "../lib/instructorAccess";
 
 function omitMongoId<T extends { _id?: unknown }>(doc: T | null | undefined): Omit<T, "_id"> | null {
   if (doc == null) return null;
@@ -40,6 +41,8 @@ export async function uploadCoursePdf(req: Request, res: Response): Promise<void
       res.status(400).json({ error: "courseId is required." });
       return;
     }
+    const gate = await requireInstructorCourseAccess(req, res, courseId);
+    if (!gate.ok) return;
     const body = req.body as { filename?: string; contentBase64?: string };
     const filename = typeof body.filename === "string" ? body.filename.trim() : "";
     const contentBase64 = body.contentBase64;
@@ -90,6 +93,8 @@ const COVER_IMAGE_TYPES: Record<string, string> = { "image/jpeg": "jpg", "image/
 export async function uploadCourseCover(req: Request, res: Response): Promise<void> {
   try {
     const { courseId } = req.params;
+    const gate = await requireInstructorCourseAccess(req, res, courseId);
+    if (!gate.ok) return;
     const body = req.body as { contentBase64?: string; contentType?: string };
     const contentBase64 = body.contentBase64;
     if (!contentBase64) {
@@ -213,6 +218,8 @@ export async function createCourse(req: Request, res: Response): Promise<void> {
 export async function updateCourse(req: Request, res: Response): Promise<void> {
   try {
     const { courseId } = req.params;
+    const gate = await requireInstructorCourseAccess(req, res, courseId);
+    if (!gate.ok) return;
     const body = req.body as Partial<Pick<CourseDoc, "title" | "description" | "sector" | "duration" | "coverImageUrl" | "published" | "order">>;
     const col = mongoCollection<CourseDoc>(MONGO_COLLECTIONS.courses);
     const snap = await col.findOne({ id: courseId });
@@ -295,6 +302,8 @@ export async function listModules(req: Request, res: Response): Promise<void> {
 export async function createModule(req: Request, res: Response): Promise<void> {
   try {
     const { courseId } = req.params;
+    const gate = await requireInstructorCourseAccess(req, res, courseId);
+    if (!gate.ok) return;
     const body = req.body as { title: string; order?: number };
     const courseSnap = await mongoCollection<CourseDoc>(MONGO_COLLECTIONS.courses).findOne({ id: courseId });
     if (!courseSnap) {
@@ -324,6 +333,8 @@ export async function createModule(req: Request, res: Response): Promise<void> {
 export async function updateModule(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId } = req.params;
+    const gate = await requireInstructorCourseAccess(req, res, courseId);
+    if (!gate.ok) return;
     const body = req.body as { title?: string; order?: number };
     const col = mongoCollection<ModuleDoc>(MONGO_COLLECTIONS.modules);
     const snap = await col.findOne({ id: moduleId, courseId });
@@ -351,6 +362,8 @@ export async function updateModule(req: Request, res: Response): Promise<void> {
 export async function deleteModule(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId } = req.params;
+    const gate = await requireInstructorCourseAccess(req, res, courseId);
+    if (!gate.ok) return;
     const modCol = mongoCollection<ModuleDoc>(MONGO_COLLECTIONS.modules);
     const snap = await modCol.findOne({ id: moduleId, courseId });
     if (!snap) {
@@ -387,6 +400,8 @@ export async function listLessons(req: Request, res: Response): Promise<void> {
 export async function createLesson(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId } = req.params;
+    const gate = await requireInstructorCourseAccess(req, res, courseId);
+    if (!gate.ok) return;
     const body = req.body as { title: string; order?: number; youtubeUrl?: string; pdfUrl?: string; contentHtml?: string };
     const moduleSnap = await mongoCollection<ModuleDoc>(MONGO_COLLECTIONS.modules).findOne({ id: moduleId, courseId });
     if (!moduleSnap) {
@@ -422,6 +437,8 @@ export async function createLesson(req: Request, res: Response): Promise<void> {
 export async function updateLesson(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId, lessonId } = req.params;
+    const gate = await requireInstructorCourseAccess(req, res, courseId);
+    if (!gate.ok) return;
     const body = req.body as { title?: string; order?: number; youtubeUrl?: string; pdfUrl?: string; contentHtml?: string; published?: boolean };
     const col = mongoCollection<LessonDoc>(MONGO_COLLECTIONS.lessons);
     const snap = await col.findOne({ id: lessonId, courseId, moduleId });
@@ -453,6 +470,8 @@ export async function updateLesson(req: Request, res: Response): Promise<void> {
 export async function deleteLesson(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId, lessonId } = req.params;
+    const gate = await requireInstructorCourseAccess(req, res, courseId);
+    if (!gate.ok) return;
     const col = mongoCollection<LessonDoc>(MONGO_COLLECTIONS.lessons);
     const r = await col.deleteOne({ id: lessonId, courseId, moduleId });
     if (r.deletedCount === 0) {
@@ -537,6 +556,8 @@ export async function getAssessment(req: Request, res: Response): Promise<void> 
 export async function createAssessment(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId } = req.params;
+    const gate = await requireInstructorCourseAccess(req, res, courseId);
+    if (!gate.ok) return;
     const body = req.body as {
       title: string;
       description?: string;
@@ -585,6 +606,8 @@ export async function createAssessment(req: Request, res: Response): Promise<voi
 export async function updateAssessment(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId, assessmentId } = req.params;
+    const gate = await requireInstructorCourseAccess(req, res, courseId);
+    if (!gate.ok) return;
     const body = req.body as {
       title?: string;
       description?: string;
@@ -634,6 +657,8 @@ export async function updateAssessment(req: Request, res: Response): Promise<voi
 export async function deleteAssessment(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, moduleId, assessmentId } = req.params;
+    const gate = await requireInstructorCourseAccess(req, res, courseId);
+    if (!gate.ok) return;
     const r = await mongoCollection<AssessmentDoc>(MONGO_COLLECTIONS.assessments).deleteOne({
       id: assessmentId,
       courseId,
@@ -755,7 +780,15 @@ export async function getSubmissions(req: Request, res: Response): Promise<void>
     const filter: Record<string, string> = {};
     if (courseId) filter.courseId = courseId;
     if (userId) filter.userId = userId;
-    if (Object.keys(filter).length === 0 && !isAdminSessionAuthorized(req)) {
+    const staff = getStaffSessionPayload(req);
+    if (staff?.role === "instructor") {
+      if (!courseId) {
+        res.status(400).json({ error: "courseId is required for instructors." });
+        return;
+      }
+      const gate = await requireInstructorCourseAccess(req, res, courseId);
+      if (!gate.ok) return;
+    } else if (Object.keys(filter).length === 0 && !isAdminSessionAuthorized(req)) {
       res.status(401).json({ error: "Admin session required to list all quiz submissions." });
       return;
     }

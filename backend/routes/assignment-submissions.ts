@@ -5,8 +5,9 @@ import type { AssignmentSubmissionDoc, CourseDoc, EnrollmentDoc, User } from "@s
 import { enrollmentAllowsLearnerAccess } from "../../shared/learnerEnrollment.ts";
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { v2 as cloudinary } from "cloudinary";
-import { notifyAdminAssignmentSubmitted, notifyLearnerAssignmentGraded } from "../lib/notify";
+import { notifyAdminAssignmentSubmitted, notifyInstructorsAssignmentSubmitted, notifyLearnerAssignmentGraded } from "../lib/notify";
 import { isAdminSessionAuthorized } from "../lib/adminSession";
+import { getStaffSessionPayload, getActiveInstructorByUserId, requireInstructorCourseAccess } from "../lib/instructorAccess";
 import { isAllowedUploadExtension, mimeFromExtension } from "../../shared/allowedUploads.ts";
 
 function usersCol() {
@@ -47,7 +48,7 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
       res.status(403).json({ error: "Account must be approved to submit work." });
       return;
     }
-    if (user.role === "admin") {
+    if (user.role && user.role !== "learner") {
       res.status(403).json({ error: "Only learners can submit assignments." });
       return;
     }
@@ -129,6 +130,15 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
       submissionId: id,
     });
 
+    await notifyInstructorsAssignmentSubmitted({
+      courseId: courseId as any,
+      learnerName: user.name,
+      learnerEmail: user.email,
+      courseTitle: course.title,
+      assignmentTitle: title.trim(),
+      submissionId: id,
+    });
+
     res.status(201).json({ submission: doc });
   } catch (e) {
     const msg = e instanceof Error ? e.message : String(e);
@@ -140,10 +150,31 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
 export async function getAssignmentSubmissions(req: Request, res: Response): Promise<void> {
   try {
     const { userId, courseId } = req.query as { userId?: string; courseId?: string };
-    const filter: Record<string, string> = {};
+    const filter: Record<string, unknown> = {};
     if (courseId) filter.courseId = courseId;
     if (userId) filter.userId = userId;
-    if (Object.keys(filter).length === 0 && !isAdminSessionAuthorized(req)) {
+    const staff = getStaffSessionPayload(req);
+    if (staff?.role === "instructor") {
+      const inst = await getActiveInstructorByUserId(staff.userId);
+      if (!inst) {
+        res.status(403).json({ error: "Instructor account is inactive or missing. Contact an administrator." });
+        return;
+      }
+      const allowed = new Set(inst.allowedCourseIds ?? []);
+
+      if (courseId) {
+        const gate = await requireInstructorCourseAccess(req, res, courseId);
+        if (!gate.ok) return;
+      } else {
+        // Let the admin UI show all submissions as long as they belong to instructor's allowed courses.
+        const allowedList = [...allowed];
+        if (allowedList.length === 0) {
+          res.json({ submissions: [] });
+          return;
+        }
+        filter.courseId = { $in: allowedList };
+      }
+    } else if (Object.keys(filter).length === 0 && !isAdminSessionAuthorized(req)) {
       res.status(401).json({ error: "Admin session required to list all assignment submissions." });
       return;
     }
@@ -168,6 +199,8 @@ export async function patchAssignmentSubmission(req: Request, res: Response): Pr
       return;
     }
     const prev = snap;
+    const gate = await requireInstructorCourseAccess(req, res, prev.courseId);
+    if (!gate.ok) return;
     const body = req.body as { marks?: number; maxMarks?: number; feedback?: string };
     const updates: Record<string, unknown> = {};
 

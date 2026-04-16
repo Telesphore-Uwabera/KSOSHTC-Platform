@@ -159,7 +159,7 @@ export async function postLogin(req: Request, res: Response): Promise<void> {
         role: "admin",
         createdAt: now,
       };
-      const adminSessionToken = issueAdminSessionToken();
+      const adminSessionToken = issueAdminSessionToken({ role: "admin", userId: adminUser.id });
       if (adminSessionToken) {
         res.json({ user: toPublic(adminUser), adminSessionToken });
       } else {
@@ -184,8 +184,8 @@ export async function postLogin(req: Request, res: Response): Promise<void> {
     }
     if (!user.role) user.role = "learner";
     const publicUser = toPublic(user);
-    if (user.role === "admin") {
-      const adminSessionToken = issueAdminSessionToken();
+    if (user.role === "admin" || user.role === "instructor") {
+      const adminSessionToken = issueAdminSessionToken({ role: user.role, userId: user.id });
       if (adminSessionToken) {
         res.json({ user: publicUser, adminSessionToken });
       } else {

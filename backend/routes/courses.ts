@@ -2,6 +2,7 @@ import { Request, Response } from "express";
 import crypto from "node:crypto";
 import type { CourseId, CoursePublic, Quiz } from "@shared/api";
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
+import { requireInstructorCourseAccess } from "../lib/instructorAccess";
 
 /** Four courses: three sector-specific + one general safety (mining → mining + safety, construction → construction + safety, etc.). */
 const COURSES: CoursePublic[] = [
@@ -64,6 +65,8 @@ export async function getCourseQuiz(req: Request, res: Response): Promise<void> 
 export async function putCourseQuiz(req: Request, res: Response): Promise<void> {
   try {
     const { courseId: courseIdParam } = req.params;
+    const courseGate = await requireInstructorCourseAccess(req, res, courseIdParam);
+    if (!courseGate.ok) return;
     if (!(await isValidCourseId(courseIdParam))) {
       res.status(404).json({ error: "Course not found." });
       return;
@@ -109,6 +112,8 @@ export async function putCourseQuiz(req: Request, res: Response): Promise<void> 
 export async function deleteCourseQuiz(req: Request, res: Response): Promise<void> {
   try {
     const { courseId: courseIdParam } = req.params;
+    const courseGate = await requireInstructorCourseAccess(req, res, courseIdParam);
+    if (!courseGate.ok) return;
     if (!(await isValidCourseId(courseIdParam))) {
       res.status(404).json({ error: "Course not found." });
       return;

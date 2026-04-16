@@ -7,6 +7,7 @@ import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { v2 as cloudinary } from "cloudinary";
 import { notifyLearnerAdminDistributedPdf } from "../lib/notify";
 import { isAllowedUploadExtension, mimeFromExtension } from "../../shared/allowedUploads.ts";
+import { getStaffSessionPayload, getActiveInstructorByUserId, requireInstructorCourseAccessMany } from "../lib/instructorAccess";
 
 function col() {
   return mongoCollection<AdminDistributedAssignmentDoc>(MONGO_COLLECTIONS.admin_distributed_assignments);
@@ -62,6 +63,8 @@ export async function postAdminDistributedAssignment(req: Request, res: Response
       res.status(400).json({ error: "No valid published courses in selection." });
       return;
     }
+    const allowedCheck = await requireInstructorCourseAccessMany(req, res, targetCourseIds);
+    if (!allowedCheck.ok) return;
 
     const safeName = path.basename(filename).replace(/[^a-zA-Z0-9._\-\s+()]/g, "_");
     const ext = path.extname(safeName).toLowerCase();
@@ -148,6 +151,17 @@ export async function listAdminDistributedAssignments(_req: Request, res: Respon
       .find({})
       .sort({ createdAt: -1 })
       .toArray();
+    const staff = getStaffSessionPayload(_req);
+    if (staff?.role === "instructor") {
+      const inst = await getActiveInstructorByUserId(staff.userId);
+      if (!inst) {
+        res.json({ assignments: [] });
+        return;
+      }
+      const allowed = new Set(inst.allowedCourseIds ?? []);
+      res.json({ assignments: list.filter((a) => a.courseIds.some((cid) => allowed.has(cid as any))) });
+      return;
+    }
     res.json({ assignments: list });
   } catch (e) {
     console.error("listAdminDistributedAssignments:", e);

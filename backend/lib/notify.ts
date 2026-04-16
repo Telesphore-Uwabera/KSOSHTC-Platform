@@ -4,6 +4,8 @@
  */
 
 import nodemailer from "nodemailer";
+import type { CourseId, Instructor } from "@shared/api";
+import { mongoCollection, MONGO_COLLECTIONS } from "./mongo";
 
 /** Admin inbox for approvals and notifications (use ADMIN_EMAIL in .env; fallback for notifications). */
 const ADMIN_EMAIL =
@@ -712,6 +714,44 @@ export async function notifyPasswordReset(data: { name: string; email: string; t
   await sendEmail(data.email, subject, text, html);
 }
 
+/** Notify instructor when an admin creates an instructor account with credentials. */
+export async function notifyInstructorCreated(data: { name: string; email: string; tempPassword: string }): Promise<void> {
+  const subject = "[KSOSHTC] Instructor account ready — sign in";
+  const name = data.name.trim();
+  const loginUrl = `${webBase()}/login`;
+
+  const text = [
+    `Dear ${name},`,
+    "",
+    "An instructor account has been created for you on KSOSHTC.",
+    "",
+    "Sign in here:",
+    loginUrl,
+    "",
+    "Your email:",
+    data.email,
+    "",
+    "Temporary password:",
+    data.tempPassword,
+    "",
+    "For security, please change your password after your first login and do not share it with anyone.",
+  ].join("\n");
+
+  const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
+<p style="margin:0 0 1em;">Dear ${escapeHtml(name)},</p>
+<p style="margin:0 0 1em;">Your <strong>instructor account</strong> is ready on <strong>KSOSHTC</strong>.</p>
+<p style="margin:0 0 0.75em;font-size:14px;color:#444;">Sign in:</p>
+<p style="margin:0 0 1em;"><a href="${loginUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;">Go to login</a></p>
+<p style="margin:0 0 0.5em;font-size:14px;color:#555;"><strong>Email</strong><br>${escapeHtml(data.email)}</p>
+<p style="margin:0 0 0.5em;font-size:14px;color:#555;"><strong>Temporary password</strong><br><span style="font-family:monospace;">${escapeHtml(
+    data.tempPassword
+  )}</span></p>
+<p style="margin:1em 0 0;font-size:14px;color:#444;">For security, please change your password after your first login and do not share it with anyone.</p>
+</div>`;
+
+  await sendEmail(data.email, subject, text, html);
+}
+
 /** Sent after the learner successfully sets a new password via the reset link. */
 export async function notifyPasswordResetSuccessful(data: { name: string; email: string }): Promise<void> {
   const subject = "[KSOSHTC] Your password was changed";
@@ -785,6 +825,70 @@ export async function notifyAdminAssignmentSubmitted(data: {
 </div>`;
 
   await sendAdminEmail(subject, text, html);
+}
+
+/** Notify active instructors whose allowedCourseIds include the submission's course. */
+export async function notifyInstructorsAssignmentSubmitted(data: {
+  courseId: CourseId;
+  courseTitle: string;
+  learnerName: string;
+  learnerEmail: string;
+  assignmentTitle: string;
+  submissionId: string;
+}): Promise<void> {
+  try {
+    const instCol = mongoCollection<Instructor>(MONGO_COLLECTIONS.instructors);
+    const instructors = await instCol
+      .find({ active: true, allowedCourseIds: { $in: [data.courseId] } })
+      .toArray();
+    if (instructors.length === 0) return;
+
+    const gradeUrl = `${webBase()}/admin/assignment-submissions`;
+    const subject = `[KSOSHTC] New assignment submission — ${data.assignmentTitle}`;
+
+    const textBase = [
+      "A learner has uploaded an assignment for your review.",
+      "Please open the Assignments page in your admin dashboard to view the file and record marks when ready.",
+      "",
+      "SUBMISSION SUMMARY",
+      `Learner:     ${data.learnerName}`,
+      `Email:       ${data.learnerEmail}`,
+      `Course:      ${data.courseTitle}`,
+      `Title:       ${data.assignmentTitle}`,
+      `Reference:   ${data.submissionId}`,
+      "",
+      "Review submissions:",
+      gradeUrl,
+    ].join("\n");
+
+    const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
+<p style="margin:0 0 1em;">A learner has uploaded an assignment <strong>for your review</strong>.</p>
+<p style="margin:0 0 1.25em;">Open the <strong>Assignments</strong> page in your instructor dashboard to view the document and enter marks when you are ready.</p>
+<p style="margin:0 0 0.35em;font-weight:bold;letter-spacing:0.03em;">SUBMISSION SUMMARY</p>
+<table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 1.25em;">
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Learner</td><td style="padding:6px 0;"><strong>${escapeHtml(
+    data.learnerName
+  )}</strong></td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Email</td><td style="padding:6px 0;"><a href="mailto:${escapeHtml(
+    data.learnerEmail
+  )}" style="color:#0d6efd;">${escapeHtml(data.learnerEmail)}</a></td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Course</td><td style="padding:6px 0;">${escapeHtml(
+    data.courseTitle
+  )}</td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Title</td><td style="padding:6px 0;">${escapeHtml(
+    data.assignmentTitle
+  )}</td></tr>
+<tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Reference ID</td><td style="padding:6px 0;font-family:monospace;font-size:13px;">${escapeHtml(
+    data.submissionId
+  )}</td></tr>
+</table>
+<p style="margin:0;"><a href="${gradeUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Open Assignments</a></p>
+</div>`;
+
+    await Promise.all(instructors.map((i) => sendEmail(i.email, subject, textBase, html, { appendSupportFooter: true })));
+  } catch (e) {
+    console.error("[NOTIFY_INSTRUCTOR_SUBMISSION] failed:", e);
+  }
 }
 
 /** Notify learner when marks are set or updated for their submission. */

@@ -65,8 +65,9 @@ import { getProgress, patchProgress } from "./routes/progress";
 import { postContact } from "./routes/contact";
 import { createCertificate, getCertificate, getAllCertificates, updateCertificate, deleteCertificate, sendEmailCertificate, getNextId } from "./routes/certificates";
 import { getCertificateCurriculum } from "./routes/curriculum";
+import { listInstructors, createInstructor, updateInstructor, deleteInstructor } from "./routes/instructors";
 import { getMongoDb, mongoCollection, MONGO_COLLECTIONS } from "./lib/mongo";
-import { getAdminSessionSecret, requireAdminSession } from "./lib/adminSession";
+import { getAdminSessionSecret, requireAdminSession, requireStaffSession } from "./lib/adminSession";
 import { rateLimitLogin, rateLimitRegister } from "./lib/rateLimit";
 import type { LessonDoc } from "@shared/api";
 
@@ -89,6 +90,7 @@ function requestLogger(req: Request, res: Response, next: NextFunction): void {
 export function createServer(options?: { apiOnly?: boolean }) {
   const app = express();
   const apiOnly = options?.apiOnly === true;
+  const requireStaff = requireStaffSession(["admin", "instructor"]);
 
   // Middleware
   app.use(cors());
@@ -205,11 +207,17 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.put("/api/users/:id", requireAdminSession, putUser);
   app.delete("/api/users/:id", requireAdminSession, deleteUser);
 
+  // Instructors (admin-only)
+  app.get("/api/instructors", requireAdminSession, listInstructors);
+  app.post("/api/instructors", requireAdminSession, createInstructor);
+  app.put("/api/instructors/:id", requireAdminSession, updateInstructor);
+  app.delete("/api/instructors/:id", requireAdminSession, deleteInstructor);
+
   // Courses (list) and per-course quiz (get, create/update, delete)
   app.get("/api/courses", getCourses);
   app.get("/api/courses/:courseId/quiz", getCourseQuiz);
-  app.put("/api/courses/:courseId/quiz", requireAdminSession, putCourseQuiz);
-  app.delete("/api/courses/:courseId/quiz", requireAdminSession, deleteCourseQuiz);
+  app.put("/api/courses/:courseId/quiz", requireStaff, putCourseQuiz);
+  app.delete("/api/courses/:courseId/quiz", requireStaff, deleteCourseQuiz);
 
   app.post(
     "/api/admin/test-email",
@@ -229,26 +237,26 @@ export function createServer(options?: { apiOnly?: boolean }) {
 
   // Course content (Firestore): courses, modules, lessons, assessments
   app.get("/api/course-content/courses", listCourseContent);
-  app.post("/api/course-content/courses/:courseId/upload-pdf", requireAdminSession, uploadCoursePdf);
-  app.post("/api/course-content/courses/:courseId/cover-image", requireAdminSession, uploadCourseCover);
+  app.post("/api/course-content/courses/:courseId/upload-pdf", requireStaff, uploadCoursePdf);
+  app.post("/api/course-content/courses/:courseId/cover-image", requireStaff, uploadCourseCover);
   app.get("/api/course-content/courses/:courseId", getCourse);
   app.get("/api/course-content/courses/:courseId/stats", getCourseStats);
   app.post("/api/course-content/courses", requireAdminSession, createCourse);
-  app.put("/api/course-content/courses/:courseId", requireAdminSession, updateCourse);
+  app.put("/api/course-content/courses/:courseId", requireStaff, updateCourse);
   app.get("/api/course-content/courses/:courseId/modules", listModules);
-  app.post("/api/course-content/courses/:courseId/modules", requireAdminSession, createModule);
-  app.put("/api/course-content/courses/:courseId/modules/:moduleId", requireAdminSession, updateModule);
-  app.delete("/api/course-content/courses/:courseId/modules/:moduleId", requireAdminSession, deleteModule);
+  app.post("/api/course-content/courses/:courseId/modules", requireStaff, createModule);
+  app.put("/api/course-content/courses/:courseId/modules/:moduleId", requireStaff, updateModule);
+  app.delete("/api/course-content/courses/:courseId/modules/:moduleId", requireStaff, deleteModule);
   app.get("/api/course-content/courses/:courseId/modules/:moduleId/lessons", listLessons);
-  app.post("/api/course-content/courses/:courseId/modules/:moduleId/lessons", requireAdminSession, createLesson);
+  app.post("/api/course-content/courses/:courseId/modules/:moduleId/lessons", requireStaff, createLesson);
   app.put(
     "/api/course-content/courses/:courseId/modules/:moduleId/lessons/:lessonId",
-    requireAdminSession,
+    requireStaff,
     updateLesson
   );
   app.delete(
     "/api/course-content/courses/:courseId/modules/:moduleId/lessons/:lessonId",
-    requireAdminSession,
+    requireStaff,
     deleteLesson
   );
   app.get("/api/course-content/courses/:courseId/modules/:moduleId/assessments", listAssessments);
@@ -258,29 +266,29 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.get("/api/course-content/courses/:courseId/modules/:moduleId/assessments/:assessmentId", getAssessment);
   app.post(
     "/api/course-content/courses/:courseId/modules/:moduleId/assessments",
-    requireAdminSession,
+    requireStaff,
     createAssessment
   );
   app.put(
     "/api/course-content/courses/:courseId/modules/:moduleId/assessments/:assessmentId",
-    requireAdminSession,
+    requireStaff,
     updateAssessment
   );
   app.delete(
     "/api/course-content/courses/:courseId/modules/:moduleId/assessments/:assessmentId",
-    requireAdminSession,
+    requireStaff,
     deleteAssessment
   );
   app.post("/api/course-content/courses/:courseId/modules/:moduleId/assessments/:assessmentId/submit", submitAssessment);
-  app.get("/api/submissions", getSubmissions);
+  app.get("/api/submissions", requireStaff, getSubmissions);
 
   app.post("/api/assignment-submissions", postAssignmentSubmission);
   app.get("/api/assignment-submissions", getAssignmentSubmissions);
-  app.patch("/api/assignment-submissions/:id", requireAdminSession, patchAssignmentSubmission);
+  app.patch("/api/assignment-submissions/:id", requireStaff, patchAssignmentSubmission);
 
   app.get("/api/admin-distributed-assignments/for-learner", listAdminDistributedAssignmentsForLearner);
-  app.post("/api/admin-distributed-assignments", requireAdminSession, postAdminDistributedAssignment);
-  app.get("/api/admin-distributed-assignments", requireAdminSession, listAdminDistributedAssignments);
+  app.post("/api/admin-distributed-assignments", requireStaff, postAdminDistributedAssignment);
+  app.get("/api/admin-distributed-assignments", requireStaff, listAdminDistributedAssignments);
 
   app.post("/api/enrollments", postEnrollment);
   app.get("/api/enrollments", getEnrollments);
