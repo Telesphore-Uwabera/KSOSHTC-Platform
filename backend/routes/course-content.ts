@@ -15,8 +15,8 @@ import type {
 import { isValidCourseSlug } from "../lib/course-constants";
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { notifyLearnerModuleQuizResult } from "../lib/notify";
-import { isAdminSessionAuthorized } from "../lib/adminSession";
-import { getStaffSessionPayload, requireInstructorCourseAccess } from "../lib/instructorAccess";
+import { getBearerToken, isAdminSessionAuthorized, verifyAdminSessionToken } from "../lib/adminSession";
+import { getActiveInstructorByUserId, getStaffSessionPayload, requireInstructorCourseAccess } from "../lib/instructorAccess";
 
 function omitMongoId<T extends { _id?: unknown }>(doc: T | null | undefined): Omit<T, "_id"> | null {
   if (doc == null) return null;
@@ -142,6 +142,22 @@ export async function uploadCourseCover(req: Request, res: Response): Promise<vo
 /** GET /api/course-content/courses – list all courses from MongoDB */
 export async function listCourses(_req: Request, res: Response): Promise<void> {
   try {
+    const staff = verifyAdminSessionToken(getBearerToken(_req));
+    if (staff.ok && staff.payload.role === "instructor") {
+      const inst = await getActiveInstructorByUserId(staff.payload.userId);
+      const allowed = new Set(inst?.allowedCourseIds ?? []);
+      if (allowed.size === 0) {
+        res.json({ courses: [] });
+        return;
+      }
+      const col = mongoCollection<CourseDoc>(MONGO_COLLECTIONS.courses);
+      const raw = await col.find({ id: { $in: [...allowed] } }).sort({ order: 1 }).toArray();
+      const courses: CourseDoc[] = raw.map((c) => ({ ...c, duration: DISPLAY_DURATION }));
+      res.setHeader("Cache-Control", "no-store");
+      res.json({ courses });
+      return;
+    }
+
     if (coursesCache && Date.now() - coursesCache.fetchedAt < COURSES_CACHE_TTL_MS) {
       res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=300");
       res.json({ courses: coursesCache.data });

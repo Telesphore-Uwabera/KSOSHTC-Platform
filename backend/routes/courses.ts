@@ -3,6 +3,8 @@ import crypto from "node:crypto";
 import type { CourseId, CoursePublic, Quiz } from "@shared/api";
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { requireInstructorCourseAccess } from "../lib/instructorAccess";
+import { getBearerToken, verifyAdminSessionToken } from "../lib/adminSession";
+import { getActiveInstructorByUserId } from "../lib/instructorAccess";
 
 /** Four courses: three sector-specific + one general safety (mining → mining + safety, construction → construction + safety, etc.). */
 const COURSES: CoursePublic[] = [
@@ -21,6 +23,7 @@ async function isValidCourseId(id: string): Promise<boolean> {
 /** GET /api/courses – list courses (for admin) */
 export async function getCourses(_req: Request, res: Response): Promise<void> {
   try {
+    const staff = verifyAdminSessionToken(getBearerToken(_req));
     const col = mongoCollection<CoursePublic & { slug?: CourseId; description?: string }>(MONGO_COLLECTIONS.courses);
     const raw = await col.find({}).sort({ order: 1 }).toArray();
     const dbCourses: CoursePublic[] = raw.map((d) => ({
@@ -29,6 +32,12 @@ export async function getCourses(_req: Request, res: Response): Promise<void> {
       sector: d.sector,
       duration: d.duration || "3 months",
     }));
+    if (staff.ok && staff.payload.role === "instructor") {
+      const inst = await getActiveInstructorByUserId(staff.payload.userId);
+      const allowed = new Set(inst?.allowedCourseIds ?? []);
+      res.json({ courses: dbCourses.filter((c) => allowed.has(c.id)) });
+      return;
+    }
     if (dbCourses.length > 0) {
       res.json({ courses: dbCourses });
     } else {
