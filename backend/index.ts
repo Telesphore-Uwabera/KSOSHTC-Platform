@@ -283,7 +283,7 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.get("/api/submissions", requireStaff, getSubmissions);
 
   app.post("/api/assignment-submissions", postAssignmentSubmission);
-  app.get("/api/assignment-submissions", getAssignmentSubmissions);
+  app.get("/api/assignment-submissions", requireStaff, getAssignmentSubmissions);
   app.patch("/api/assignment-submissions/:id", requireStaff, patchAssignmentSubmission);
 
   app.get("/api/admin-distributed-assignments/for-learner", listAdminDistributedAssignmentsForLearner);
