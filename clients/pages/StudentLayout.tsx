@@ -17,6 +17,7 @@ export default function StudentLayout() {
   const navigate = useNavigate();
   const user = getStoredUser();
   if (!user) return <Navigate to="/login" replace state={{ from: "/dashboard" }} />;
+  if ((user as { role?: string }).role === "instructor") return <Navigate to="/instructor" replace />;
   if ((user as { role?: string }).role === "admin") return <Navigate to="/admin" replace />;
 
   return (

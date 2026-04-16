@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import {
   BookOpen,
@@ -221,6 +221,8 @@ function UploadCoverBlock({
 
 export default function AdminCourseContentDetail() {
   const { courseId } = useParams<{ courseId: string }>();
+  const location = useLocation();
+  const staffBase = location.pathname.startsWith("/instructor") ? "/instructor" : "/admin";
   const queryClient = useQueryClient();
   const [expandedModule, setExpandedModule] = useState<string | null>(null);
   const [addingModule, setAddingModule] = useState(false);
@@ -356,7 +358,7 @@ export default function AdminCourseContentDetail() {
     return (
       <div className="bg-white rounded-[30px] border border-gray-200 p-8 text-center">
         <p className="text-gray-500">Course not found.</p>
-        <Link to="/admin/course-content" className="mt-4 inline-block text-primary font-medium hover:underline">
+        <Link to={`${staffBase}/course-content`} className="mt-4 inline-block text-primary font-medium hover:underline">
           Back to course content
         </Link>
       </div>
@@ -367,7 +369,7 @@ export default function AdminCourseContentDetail() {
     <div className="space-y-6">
       <div className="flex items-center gap-4">
         <Link
-          to="/admin/course-content"
+          to={`${staffBase}/course-content`}
           className="inline-flex items-center gap-2 text-gray-600 hover:text-primary font-medium"
         >
           <ArrowLeft className="w-4 h-4" /> Back
@@ -445,6 +447,7 @@ export default function AdminCourseContentDetail() {
               <ModuleBlock
                 key={mod.id}
                 courseId={courseId}
+                staffBase={staffBase}
                 module={mod}
                 expanded={expandedModule === mod.id}
                 onToggle={() => setExpandedModule(expandedModule === mod.id ? null : mod.id)}
@@ -523,6 +526,7 @@ export default function AdminCourseContentDetail() {
 
 function ModuleBlock({
   courseId,
+  staffBase,
   module: mod,
   expanded,
   onToggle,
@@ -542,6 +546,7 @@ function ModuleBlock({
   deleteAssessmentMutation,
 }: {
   courseId: string;
+  staffBase: string;
   module: ModuleDoc;
   expanded: boolean;
   onToggle: () => void;
@@ -683,7 +688,7 @@ function ModuleBlock({
                       <span key={a.id} className="inline-flex items-center gap-1 text-xs bg-primary/10 text-primary px-2 py-1 rounded-lg">
                         <ClipboardList className="w-3 h-3" />
                         Break here: {a.title}
-                        <Link to={`/admin/course-content/${courseId}/modules/${mod.id}/assessments/${a.id}`} className="font-medium hover:underline">Edit</Link>
+                        <Link to={`${staffBase}/course-content/${courseId}/modules/${mod.id}/assessments/${a.id}`} className="font-medium hover:underline">Edit</Link>
                         <button
                           type="button"
                           onClick={() => deleteAssessmentMutation.mutate({ moduleId: mod.id, assessmentId: a.id })}
@@ -791,7 +796,7 @@ function ModuleBlock({
                     </div>
                     <div className="flex items-center gap-3">
                       <Link
-                        to={`/admin/course-content/${courseId}/modules/${mod.id}/assessments/${a.id}`}
+                        to={`${staffBase}/course-content/${courseId}/modules/${mod.id}/assessments/${a.id}`}
                         className="text-primary text-sm font-medium hover:underline"
                       >
                         Edit

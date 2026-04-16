@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
+import { useParams, Link, useNavigate, useLocation } from "react-router-dom";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Save, Loader2, Trash2, Plus, ArrowLeft } from "lucide-react";
 import type { Quiz, QuizQuestion, CourseId } from "@shared/api";
@@ -40,6 +40,8 @@ const emptyQuestion = (): QuizQuestion => ({
 export default function AdminCourseQuiz() {
   const { courseId } = useParams<{ courseId: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const staffBase = location.pathname.startsWith("/instructor") ? "/instructor" : "/admin";
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("Course assessment");
   const [description, setDescription] = useState("");
@@ -76,7 +78,7 @@ export default function AdminCourseQuiz() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["quiz", courseId] });
       queryClient.invalidateQueries({ queryKey: ["quiz-exists", courseId] });
-      navigate("/admin/courses");
+      navigate(`${staffBase}/courses`);
     },
   });
 
@@ -122,7 +124,7 @@ export default function AdminCourseQuiz() {
   return (
     <div className="space-y-6">
       <Link
-        to="/admin/courses"
+        to={`${staffBase}/courses`}
         className="inline-flex items-center gap-2 text-primary hover:text-secondary font-medium"
       >
         <ArrowLeft className="w-4 h-4" /> Back to courses

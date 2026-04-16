@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { SiteImage } from "@/components/SiteImage";
-import { Menu, X, Home, Info, BookOpen, Building2, GraduationCap, Mail, HardHat, Building, Pickaxe, ChevronDown, LayoutDashboard, Shield } from "lucide-react";
+import { Menu, X, Home, Info, BookOpen, Building2, GraduationCap, Mail, HardHat, Building, Pickaxe, ChevronDown, LayoutDashboard, Shield, UserCog } from "lucide-react";
 
 const courseDropdownItems = [
   { label: "Construction", path: "/courses/construction", icon: HardHat },
@@ -26,6 +26,7 @@ export default function Header() {
   const location = useLocation();
   const [scrolled, setScrolled] = useState(false);
   const isAdminRoute = location.pathname.startsWith("/admin");
+  const isInstructorRoute = location.pathname.startsWith("/instructor");
   const isCoursesActive = location.pathname === "/courses" || courseDropdownItems.some((c) => location.pathname === c.path);
 
   useEffect(() => {
@@ -131,15 +132,25 @@ export default function Header() {
                   );
                 })}
 <Link
-                to={isAdminRoute ? "/admin" : "/dashboard"}
+                to={isAdminRoute ? "/admin" : isInstructorRoute ? "/instructor" : "/dashboard"}
                 className={`inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-semibold transition-all duration-300 text-xs sm:text-sm lg:text-base border-2 ${
-                    (isAdminRoute ? location.pathname === "/admin" : location.pathname === "/dashboard")
+                    (isAdminRoute
+                      ? location.pathname === "/admin"
+                      : isInstructorRoute
+                        ? location.pathname === "/instructor"
+                        : location.pathname === "/dashboard")
                       ? "bg-primary text-white border-primary shadow-md"
                       : "border-primary text-primary bg-primary/10 hover:bg-primary hover:text-white hover:shadow-md"
                   }`}
                 >
-                  {isAdminRoute ? <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" /> : <LayoutDashboard className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />}
-                  {isAdminRoute ? "Admin" : "Dashboard"}
+                  {isAdminRoute ? (
+                    <Shield className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  ) : isInstructorRoute ? (
+                    <UserCog className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  ) : (
+                    <LayoutDashboard className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                  )}
+                  {isAdminRoute ? "Admin" : isInstructorRoute ? "Instructor" : "Dashboard"}
                 </Link>
               </nav>
             </div>

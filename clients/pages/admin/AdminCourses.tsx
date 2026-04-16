@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { ClipboardList, Edit, Plus } from "lucide-react";
 import type { CoursePublic } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
@@ -18,6 +18,8 @@ async function fetchQuizExists(courseId: string): Promise<boolean> {
 }
 
 function CourseRow({ course }: { course: CoursePublic }) {
+  const location = useLocation();
+  const staffBase = location.pathname.startsWith("/instructor") ? "/instructor" : "/admin";
   const { data: hasQuiz } = useQuery({
     queryKey: ["quiz-exists", course.id],
     queryFn: () => fetchQuizExists(course.id),
@@ -30,7 +32,7 @@ function CourseRow({ course }: { course: CoursePublic }) {
         <p className="text-sm text-gray-500">{course.sector} · {course.duration}</p>
       </div>
       <Link
-        to={`/admin/courses/${course.id}/quiz`}
+        to={`${staffBase}/courses/${course.id}/quiz`}
         className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90"
       >
         {hasQuiz ? (

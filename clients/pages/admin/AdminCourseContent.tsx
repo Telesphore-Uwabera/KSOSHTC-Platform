@@ -1,5 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import { BookOpen, ChevronRight, FolderOpen, Loader2 } from "lucide-react";
 import type { CourseDoc } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
@@ -13,6 +13,8 @@ async function fetchCourseContent(): Promise<CourseDoc[]> {
 }
 
 export default function AdminCourseContent() {
+  const location = useLocation();
+  const staffBase = location.pathname.startsWith("/instructor") ? "/instructor" : "/admin";
   const { data: courses = [], isLoading } = useQuery({
     queryKey: ["course-content", "courses"],
     queryFn: fetchCourseContent,
@@ -50,7 +52,7 @@ export default function AdminCourseContent() {
             {courses.map((c) => (
               <li key={c.id}>
                 <Link
-                  to={`/admin/course-content/${c.id}`}
+                  to={`${staffBase}/course-content/${c.id}`}
                   className="flex items-center justify-between gap-3 p-4 h-full rounded-2xl border border-gray-200 hover:border-primary/40 hover:bg-gray-50/50 transition-all group"
                 >
                   <div className="flex items-center gap-3 min-w-0">

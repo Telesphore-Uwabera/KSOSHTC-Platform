@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useLocation } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Save, Loader2, Trash2, Plus, ArrowLeft, CheckCircle } from "lucide-react";
 import type { AssessmentDoc, QuizQuestion, LessonDoc } from "@shared/api";
@@ -34,6 +34,8 @@ function emptyQuestion(): QuizQuestion {
 
 export default function AdminModuleAssessment() {
   const { courseId, moduleId, assessmentId } = useParams<{ courseId: string; moduleId: string; assessmentId: string }>();
+  const location = useLocation();
+  const staffBase = location.pathname.startsWith("/instructor") ? "/instructor" : "/admin";
   const queryClient = useQueryClient();
   const [title, setTitle] = useState("Assessment");
   const [description, setDescription] = useState("");
@@ -131,7 +133,7 @@ export default function AdminModuleAssessment() {
     return (
       <div className="p-6">
         <p className="text-gray-500">Missing course or module or assessment.</p>
-        <Link to="/admin/course-content" className="mt-2 inline-block text-primary font-medium">Back to course content</Link>
+        <Link to={`${staffBase}/course-content`} className="mt-2 inline-block text-primary font-medium">Back to course content</Link>
       </div>
     );
   }
@@ -148,14 +150,14 @@ export default function AdminModuleAssessment() {
     return (
       <div className="p-6">
         <p className="text-gray-500">Assessment not found.</p>
-        <Link to={`/admin/course-content/${courseId}`} className="mt-2 inline-block text-primary font-medium">Back to course</Link>
+        <Link to={`${staffBase}/course-content/${courseId}`} className="mt-2 inline-block text-primary font-medium">Back to course</Link>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <Link to={`/admin/course-content/${courseId}`} className="inline-flex items-center gap-2 text-gray-600 hover:text-primary font-medium">
+      <Link to={`${staffBase}/course-content/${courseId}`} className="inline-flex items-center gap-2 text-gray-600 hover:text-primary font-medium">
         <ArrowLeft className="w-4 h-4" /> Back to course
       </Link>
 
