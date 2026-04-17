@@ -98,6 +98,13 @@ export async function postAdminDistributedAssignment(req: Request, res: Response
     const pdfUrl = result.secure_url;
 
     const now = new Date().toISOString();
+    const staff = getStaffSessionPayload(req);
+    const creatorName =
+      staff?.role === "instructor"
+        ? (await getActiveInstructorByUserId(staff.userId))?.name
+        : staff?.role === "admin"
+          ? "Administrator"
+          : undefined;
     const doc: AdminDistributedAssignmentDoc = {
       id,
       title: title.trim(),
@@ -105,6 +112,9 @@ export async function postAdminDistributedAssignment(req: Request, res: Response
       pdfUrl,
       originalFilename: safeName,
       courseIds: targetCourseIds,
+      createdByUserId: staff?.userId,
+      createdByRole: staff?.role,
+      createdByName: creatorName,
       createdAt: now,
     };
     await col().insertOne(doc as any);
@@ -155,10 +165,11 @@ export async function listAdminDistributedAssignments(_req: Request, res: Respon
     if (staff?.role === "instructor") {
       const inst = await getActiveInstructorByUserId(staff.userId);
       if (!inst) {
-        res.json({ assignments: [] });
+        res.status(403).json({ error: "Instructor account is inactive or missing. Contact an administrator." });
         return;
       }
       const allowed = new Set(inst.allowedCourseIds ?? []);
+      // Instructors see files for courses they manage, including their own published items.
       res.json({ assignments: list.filter((a) => a.courseIds.some((cid) => allowed.has(cid as any))) });
       return;
     }

@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import path from "node:path";
 import crypto from "node:crypto";
-import type { AssignmentSubmissionDoc, CourseDoc, EnrollmentDoc, User } from "@shared/api";
+import type { AdminDistributedAssignmentDoc, AssignmentSubmissionDoc, CourseDoc, EnrollmentDoc, User } from "@shared/api";
 import { enrollmentAllowsLearnerAccess } from "../../shared/learnerEnrollment.ts";
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { v2 as cloudinary } from "cloudinary";
@@ -22,6 +22,9 @@ function coursesCol() {
 function assignmentSubsCol() {
   return mongoCollection<AssignmentSubmissionDoc>(MONGO_COLLECTIONS.assignment_submissions);
 }
+function distributedAssignmentsCol() {
+  return mongoCollection<AdminDistributedAssignmentDoc>(MONGO_COLLECTIONS.admin_distributed_assignments);
+}
 
 /** POST /api/assignment-submissions – learner uploads a file for an assigned/enrolled course. */
 export async function postAssignmentSubmission(req: Request, res: Response): Promise<void> {
@@ -29,11 +32,12 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
     const body = req.body as {
       userId?: string;
       courseId?: string;
+      assignmentId?: string;
       title?: string;
       filename?: string;
       contentBase64?: string;
     };
-    const { userId, courseId, title, filename, contentBase64 } = body;
+    const { userId, courseId, assignmentId, title, filename, contentBase64 } = body;
     if (!userId || !courseId || !title?.trim() || !filename || !contentBase64) {
       res.status(400).json({ error: "userId, courseId, title, filename, and contentBase64 are required." });
       return;
@@ -74,6 +78,19 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
       return;
     }
 
+    let linkedAssignment: AdminDistributedAssignmentDoc | null = null;
+    if (assignmentId && assignmentId.trim()) {
+      linkedAssignment = await distributedAssignmentsCol().findOne({ id: assignmentId.trim() });
+      if (!linkedAssignment) {
+        res.status(400).json({ error: "Selected assignment was not found." });
+        return;
+      }
+      if (!linkedAssignment.courseIds.includes(courseId)) {
+        res.status(400).json({ error: "Selected assignment is not linked to this course." });
+        return;
+      }
+    }
+
     const safeName = path.basename(filename).replace(/[^a-zA-Z0-9._\-\s+()]/g, "_");
     const ext = path.extname(safeName).toLowerCase();
     if (!isAllowedUploadExtension(ext)) {
@@ -106,11 +123,13 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
 
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
+    const resolvedTitle = (title ?? "").trim() || linkedAssignment?.title || "Assignment submission";
     const doc: AssignmentSubmissionDoc = {
       id,
       userId,
       courseId,
-      title: title.trim(),
+      ...(linkedAssignment?.id ? { assignmentId: linkedAssignment.id } : {}),
+      title: resolvedTitle,
       pdfUrl,
       originalFilename: safeName,
       submittedAt: now,
@@ -126,7 +145,7 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
       learnerName: user.name,
       learnerEmail: user.email,
       courseTitle: course.title,
-      assignmentTitle: title.trim(),
+      assignmentTitle: resolvedTitle,
       submissionId: id,
     });
 
@@ -135,7 +154,7 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
       learnerName: user.name,
       learnerEmail: user.email,
       courseTitle: course.title,
-      assignmentTitle: title.trim(),
+      assignmentTitle: resolvedTitle,
       submissionId: id,
     });
 
@@ -154,6 +173,8 @@ export async function getAssignmentSubmissions(req: Request, res: Response): Pro
     if (courseId) filter.courseId = courseId;
     if (userId) filter.userId = userId;
     const staff = getStaffSessionPayload(req);
+    let instructorOwnAssignmentIds: Set<string> | null = null;
+    let instructorLegacyKeys: Set<string> | null = null;
     if (staff?.role === "instructor") {
       const inst = await getActiveInstructorByUserId(staff.userId);
       if (!inst) {
@@ -161,6 +182,17 @@ export async function getAssignmentSubmissions(req: Request, res: Response): Pro
         return;
       }
       const allowed = new Set(inst.allowedCourseIds ?? []);
+      const ownAssignments = await distributedAssignmentsCol()
+        .find({ createdByUserId: staff.userId })
+        .toArray();
+      if (ownAssignments.length === 0) {
+        res.json({ submissions: [] });
+        return;
+      }
+      instructorOwnAssignmentIds = new Set(ownAssignments.map((a) => a.id));
+      instructorLegacyKeys = new Set(
+        ownAssignments.flatMap((a) => a.courseIds.map((cid) => `${cid}::${a.title.trim().toLowerCase()}`))
+      );
 
       if (courseId) {
         const gate = await requireInstructorCourseAccess(req, res, courseId);
@@ -181,7 +213,16 @@ export async function getAssignmentSubmissions(req: Request, res: Response): Pro
     const list = await assignmentSubsCol()
       .find(Object.keys(filter).length ? filter : {})
       .toArray();
-    const submissions = list.sort((a, b) => (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""));
+    const scoped =
+      staff?.role === "instructor" && instructorOwnAssignmentIds && instructorLegacyKeys
+        ? list.filter((s) => {
+            if (s.assignmentId && instructorOwnAssignmentIds!.has(s.assignmentId)) return true;
+            // Backward compatibility for legacy rows without assignmentId.
+            const key = `${s.courseId}::${(s.title ?? "").trim().toLowerCase()}`;
+            return instructorLegacyKeys!.has(key);
+          })
+        : list;
+    const submissions = scoped.sort((a, b) => (b.submittedAt ?? "").localeCompare(a.submittedAt ?? ""));
     res.json({ submissions });
   } catch (e) {
     console.error("getAssignmentSubmissions:", e);

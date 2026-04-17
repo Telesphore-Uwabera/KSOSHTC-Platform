@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { FileUp, Loader2, ExternalLink, FileText } from "lucide-react";
 import type { AssignmentSubmissionDoc } from "@shared/api";
@@ -42,6 +42,7 @@ export default function DashboardWorkSubmissions() {
   const { canAccess, courses, isLoading: coursesLoading } = useDashboardData();
   const queryClient = useQueryClient();
   const [courseId, setCourseId] = useState("");
+  const [assignmentId, setAssignmentId] = useState("");
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
@@ -70,6 +71,7 @@ export default function DashboardWorkSubmissions() {
         body: JSON.stringify({
           userId: user.id,
           courseId,
+          assignmentId: assignmentId || undefined,
           title: title.trim(),
           filename: file.name,
           contentBase64,
@@ -87,6 +89,19 @@ export default function DashboardWorkSubmissions() {
     },
     onError: (e: Error) => setFormError(e.message),
   });
+
+  const selectedAssignment = useMemo(
+    () => handouts.find((h) => h.id === assignmentId) ?? null,
+    [assignmentId, handouts]
+  );
+
+  useEffect(() => {
+    if (!selectedAssignment) return;
+    if (!selectedAssignment.courseIds.includes(courseId)) {
+      setCourseId(selectedAssignment.courseIds[0] ?? "");
+    }
+    setTitle(selectedAssignment.title);
+  }, [selectedAssignment, courseId]);
 
   if (!user) return null;
 
@@ -177,6 +192,24 @@ export default function DashboardWorkSubmissions() {
             submitMut.mutate();
           }}
         >
+          <div>
+            <label htmlFor="ws-assignment" className="block text-sm font-semibold text-gray-800 mb-1">
+              Linked assignment (optional)
+            </label>
+            <select
+              id="ws-assignment"
+              className="w-full rounded-xl border border-gray-200 px-3 py-2.5 text-sm bg-white"
+              value={assignmentId}
+              onChange={(e) => setAssignmentId(e.target.value)}
+            >
+              <option value="">Custom submission (no linked assignment)</option>
+              {handouts.map((h) => (
+                <option key={h.id} value={h.id}>
+                  {h.title}
+                </option>
+              ))}
+            </select>
+          </div>
           <div>
             <label htmlFor="ws-course" className="block text-sm font-semibold text-gray-800 mb-1">
               Course

@@ -57,7 +57,7 @@ export default function Login() {
         if (role === "admin") {
           navigate(from.startsWith("/admin") ? from : "/admin", { replace: true });
         } else if (role === "instructor") {
-          navigate(from.startsWith("/instructor") ? from : "/instructor/course-content", { replace: true });
+          navigate(from.startsWith("/instructor") ? from : "/instructor", { replace: true });
         } else {
           const redirectTo = from.startsWith("/courses/") ? "/dashboard" : from;
           navigate(redirectTo, { replace: true });

@@ -182,6 +182,10 @@ export interface AdminDistributedAssignmentDoc {
   originalFilename: string;
   /** e.g. construction, mining, industrial-safety, safety-management */
   courseIds: string[];
+  /** Who published this file (admin or instructor). Optional for legacy rows. */
+  createdByUserId?: string;
+  createdByRole?: "admin" | "instructor";
+  createdByName?: string;
   createdAt: string;
 }
 
@@ -190,6 +194,8 @@ export interface AssignmentSubmissionDoc {
   id: string;
   userId: string;
   courseId: string;
+  /** Linked distributed assignment (when learner submits from a shared assignment). */
+  assignmentId?: string;
   /** Short label, e.g. module or task name */
   title: string;
   pdfUrl: string;

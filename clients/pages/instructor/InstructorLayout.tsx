@@ -1,6 +1,6 @@
 import { Link, Outlet, NavLink, Navigate, useLocation, useNavigate } from "react-router-dom";
 import { useRef } from "react";
-import { ArrowLeft, BookOpen, FolderOpen, ClipboardList, FileSpreadsheet, LogOut, UserCog } from "lucide-react";
+import { ArrowLeft, BookOpen, FolderOpen, ClipboardList, FileSpreadsheet, LayoutDashboard, LogOut, UserCog } from "lucide-react";
 import Header from "../../components/Header";
 import { cn } from "@/lib/utils";
 import { clearStoredUser, getStoredUser } from "@/lib/auth";
@@ -8,6 +8,7 @@ import { clearAdminSessionPolicy, getAdminSessionToken, serverExpectsAdminBearer
 
 function navForInstructor() {
   return [
+    { to: "/instructor", end: true, label: "Dashboard", icon: LayoutDashboard },
     { to: "/instructor/courses", end: false, label: "Courses & Quizzes", icon: BookOpen },
     { to: "/instructor/course-content", end: true, label: "Course content", icon: FolderOpen },
     { to: "/instructor/assignment-submissions", end: true, label: "Assignments", icon: ClipboardList },

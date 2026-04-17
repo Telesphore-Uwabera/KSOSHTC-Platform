@@ -793,17 +793,29 @@ export async function submitAssessment(req: Request, res: Response): Promise<voi
 export async function getSubmissions(req: Request, res: Response): Promise<void> {
   try {
     const { courseId, userId } = req.query as { courseId?: string; userId?: string };
-    const filter: Record<string, string> = {};
+    const filter: Record<string, unknown> = {};
     if (courseId) filter.courseId = courseId;
     if (userId) filter.userId = userId;
     const staff = getStaffSessionPayload(req);
     if (staff?.role === "instructor") {
-      if (!courseId) {
-        res.status(400).json({ error: "courseId is required for instructors." });
+      const inst = await getActiveInstructorByUserId(staff.userId);
+      if (!inst) {
+        res.status(403).json({ error: "Instructor account is inactive or missing. Contact an administrator." });
         return;
       }
-      const gate = await requireInstructorCourseAccess(req, res, courseId);
-      if (!gate.ok) return;
+      const allowed = new Set(inst.allowedCourseIds ?? []);
+      if (courseId) {
+        const gate = await requireInstructorCourseAccess(req, res, courseId);
+        if (!gate.ok) return;
+      } else {
+        const allowedList = [...allowed];
+        if (allowedList.length === 0) {
+          res.json({ submissions: [] });
+          return;
+        }
+        // Instructors can list only quiz submissions for their assigned courses.
+        filter.courseId = { $in: allowedList };
+      }
     } else if (Object.keys(filter).length === 0 && !isAdminSessionAuthorized(req)) {
       res.status(401).json({ error: "Admin session required to list all quiz submissions." });
       return;
