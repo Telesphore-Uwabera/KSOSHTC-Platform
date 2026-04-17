@@ -258,8 +258,8 @@ export default function AdminInstructors() {
       </div>
 
       {(createOpen || edit) && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <div className="w-full max-w-2xl bg-white rounded-[30px] border border-gray-200 shadow-xl p-6 sm:p-8">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="w-full max-w-2xl bg-white rounded-[30px] border border-gray-200 shadow-xl p-6 sm:p-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-start justify-between gap-4">
               <div>
                 <p className="text-lg font-bold text-gray-900">{edit ? "Edit instructor" : "Add instructor"}</p>

@@ -827,7 +827,7 @@ export async function notifyAdminAssignmentSubmitted(data: {
   await sendAdminEmail(subject, text, html);
 }
 
-/** Notify active instructors whose allowedCourseIds include the submission's course. */
+/** Notify the active instructor who created the assignment, if they still have access to the submission's course. */
 export async function notifyInstructorsAssignmentSubmitted(data: {
   courseId: CourseId;
   courseTitle: string;
@@ -835,11 +835,14 @@ export async function notifyInstructorsAssignmentSubmitted(data: {
   learnerEmail: string;
   assignmentTitle: string;
   submissionId: string;
+  creatorUserId?: string;
 }): Promise<void> {
   try {
+    if (!data.creatorUserId) return; // Only notify if an explicit creator user ID is provided
+
     const instCol = mongoCollection<Instructor>(MONGO_COLLECTIONS.instructors);
     const instructors = await instCol
-      .find({ active: true, allowedCourseIds: { $in: [data.courseId] } })
+      .find({ active: true, userId: data.creatorUserId, allowedCourseIds: { $in: [data.courseId] } })
       .toArray();
     if (instructors.length === 0) return;
 

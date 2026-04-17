@@ -156,6 +156,7 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
       courseTitle: course.title,
       assignmentTitle: resolvedTitle,
       submissionId: id,
+      creatorUserId: linkedAssignment?.createdByUserId,
     });
 
     res.status(201).json({ submission: doc });
