@@ -1,5 +1,4 @@
 import { Link, Outlet, NavLink, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { useRef } from "react";
 import { ArrowLeft, LayoutDashboard, BookOpen, Users, MessageSquareQuote, BarChart3, FolderOpen, Settings, ClipboardList, LogOut, FileSpreadsheet, ShieldCheck, UserCog } from "lucide-react";
 import Header from "../../components/Header";
 import { cn } from "@/lib/utils";
@@ -30,17 +29,12 @@ function navForRole(role: string | undefined) {
 export default function AdminLayout() {
   const location = useLocation();
   const navigate = useNavigate();
-  const adminVerifiedRef = useRef(false);
   const user = getStoredUser();
   const role = user && typeof user === "object" ? (user as { role?: string }).role : undefined;
   const isAdmin = role === "admin";
 
-  if (!user || !isAdmin) adminVerifiedRef.current = false;
-  if (!adminVerifiedRef.current) {
-    if (role === "instructor") return <Navigate to="/instructor/course-content" replace />;
-    return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
-    adminVerifiedRef.current = true;
-  }
+  if (role === "instructor") return <Navigate to="/instructor/course-content" replace />;
+  if (!user || !isAdmin) return <Navigate to="/admin/login" replace state={{ from: location.pathname }} />;
 
   if (isAdmin && !getAdminSessionToken() && serverExpectsAdminBearer()) {
     return (
