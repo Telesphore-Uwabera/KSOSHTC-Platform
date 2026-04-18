@@ -380,6 +380,10 @@ export async function deleteModule(req: Request, res: Response): Promise<void> {
     const { courseId, moduleId } = req.params;
     const gate = await requireInstructorCourseAccess(req, res, courseId);
     if (!gate.ok) return;
+    if (getStaffSessionPayload(req)?.role === "instructor") {
+      res.status(403).json({ error: "Instructors cannot delete modules." });
+      return;
+    }
     const modCol = mongoCollection<ModuleDoc>(MONGO_COLLECTIONS.modules);
     const snap = await modCol.findOne({ id: moduleId, courseId });
     if (!snap) {
@@ -488,6 +492,10 @@ export async function deleteLesson(req: Request, res: Response): Promise<void> {
     const { courseId, moduleId, lessonId } = req.params;
     const gate = await requireInstructorCourseAccess(req, res, courseId);
     if (!gate.ok) return;
+    if (getStaffSessionPayload(req)?.role === "instructor") {
+      res.status(403).json({ error: "Instructors cannot delete lessons." });
+      return;
+    }
     const col = mongoCollection<LessonDoc>(MONGO_COLLECTIONS.lessons);
     const r = await col.deleteOne({ id: lessonId, courseId, moduleId });
     if (r.deletedCount === 0) {
@@ -675,6 +683,10 @@ export async function deleteAssessment(req: Request, res: Response): Promise<voi
     const { courseId, moduleId, assessmentId } = req.params;
     const gate = await requireInstructorCourseAccess(req, res, courseId);
     if (!gate.ok) return;
+    if (getStaffSessionPayload(req)?.role === "instructor") {
+      res.status(403).json({ error: "Instructors cannot delete assessments/quizzes." });
+      return;
+    }
     const r = await mongoCollection<AssessmentDoc>(MONGO_COLLECTIONS.assessments).deleteOne({
       id: assessmentId,
       courseId,

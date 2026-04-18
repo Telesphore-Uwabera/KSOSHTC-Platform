@@ -643,14 +643,16 @@ function ModuleBlock({
           <span className="font-semibold text-gray-900">{mod.title}</span>
           <span className="text-sm text-gray-500">{lessons.length} lessons · {assessments.length} assessments</span>
         </button>
-        <button
-          type="button"
-          onClick={() => deleteModuleMutation.mutate(mod.id)}
-          className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg transition-colors opacity-0 group-hover/mod:opacity-100"
-          title="Delete Module"
-        >
-          <Trash2 className="w-4 h-4" />
-        </button>
+        {staffBase === "/admin" && (
+          <button
+            type="button"
+            onClick={() => deleteModuleMutation.mutate(mod.id)}
+            className="p-1.5 text-gray-400 hover:text-red-500 rounded-lg transition-colors opacity-0 group-hover/mod:opacity-100"
+            title="Delete Module"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        )}
       </div>
       {expanded && (
         <div className="border-t border-gray-100 bg-gray-50/50 p-4 space-y-4">
@@ -674,13 +676,15 @@ function ModuleBlock({
                       >
                         <Pencil className="w-3.5 h-3.5" /> Edit
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => deleteLessonMutation.mutate({ moduleId: mod.id, lessonId: l.id })}
-                        className="inline-flex items-center gap-1 text-red-600 text-sm font-medium hover:underline ml-4"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" /> Delete
-                      </button>
+                      {staffBase === "/admin" && (
+                        <button
+                          type="button"
+                          onClick={() => deleteLessonMutation.mutate({ moduleId: mod.id, lessonId: l.id })}
+                          className="inline-flex items-center gap-1 text-red-600 text-sm font-medium hover:underline ml-4"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
+                      )}
                     </div>
                   </div>
                   <div className="pl-4 flex items-center gap-2 flex-wrap">
@@ -689,11 +693,13 @@ function ModuleBlock({
                         <ClipboardList className="w-3 h-3" />
                         Break here: {a.title}
                         <Link to={`${staffBase}/course-content/${courseId}/modules/${mod.id}/assessments/${a.id}`} className="font-medium hover:underline">Edit</Link>
-                        <button
-                          type="button"
-                          onClick={() => deleteAssessmentMutation.mutate({ moduleId: mod.id, assessmentId: a.id })}
-                          className="font-medium text-red-600 hover:underline ml-1"
-                        >Delete</button>
+                        {staffBase === "/admin" && (
+                          <button
+                            type="button"
+                            onClick={() => deleteAssessmentMutation.mutate({ moduleId: mod.id, assessmentId: a.id })}
+                            className="font-medium text-red-600 hover:underline ml-1"
+                          >Delete</button>
+                        )}
                       </span>
                     ))}
                     {addingAssessment === `after-${l.id}` ? (
@@ -801,13 +807,15 @@ function ModuleBlock({
                       >
                         Edit
                       </Link>
-                      <button
-                        type="button"
-                        onClick={() => deleteAssessmentMutation.mutate({ moduleId: mod.id, assessmentId: a.id })}
-                        className="text-red-600 text-sm font-medium hover:underline"
-                      >
-                        Delete
-                      </button>
+                      {staffBase === "/admin" && (
+                        <button
+                          type="button"
+                          onClick={() => deleteAssessmentMutation.mutate({ moduleId: mod.id, assessmentId: a.id })}
+                          className="text-red-600 text-sm font-medium hover:underline"
+                        >
+                          Delete
+                        </button>
+                      )}
                     </div>
                   </li>
                 ))}
