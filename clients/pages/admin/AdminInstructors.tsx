@@ -30,16 +30,16 @@ type InstructorForm = {
   name: string;
   email: string;
   phone?: string;
-  staffId?: string;
   organization?: string;
-  sector?: LearnerSector | "";
   active: boolean;
   notes?: string;
   allowedCourseIds: string[];
+  password?: string;
+  confirmPassword?: string;
 };
 
 function emptyForm(): InstructorForm {
-  return { name: "", email: "", phone: "", staffId: "", organization: "", sector: "", active: true, notes: "", allowedCourseIds: [] };
+  return { name: "", email: "", phone: "", organization: "", active: true, notes: "", allowedCourseIds: [], password: "", confirmPassword: "" };
 }
 
 async function createInstructor(body: InstructorForm): Promise<Instructor> {
@@ -139,12 +139,12 @@ export default function AdminInstructors() {
       name: i.name ?? "",
       email: i.email ?? "",
       phone: i.phone ?? "",
-      staffId: i.staffId ?? "",
       organization: i.organization ?? "",
-      sector: (i.sector ?? "") as any,
       active: i.active !== false,
       notes: i.notes ?? "",
       allowedCourseIds: (i.allowedCourseIds ?? []) as any,
+      password: "",
+      confirmPassword: "",
     });
   };
 
@@ -155,14 +155,22 @@ export default function AdminInstructors() {
       name: form.name.trim(),
       email: form.email.trim(),
       phone: form.phone?.trim() || undefined,
-      staffId: form.staffId?.trim() || undefined,
       organization: form.organization?.trim() || undefined,
       notes: form.notes?.trim() || undefined,
-      sector: form.sector || undefined,
       allowedCourseIds: form.allowedCourseIds,
+      password: form.password || undefined,
+      confirmPassword: form.confirmPassword || undefined,
     };
     if (!payload.name || !payload.email) {
       setError("Name and email are required.");
+      return;
+    }
+    if (!edit && !payload.password) {
+      setError("Password is required.");
+      return;
+    }
+    if (!edit && payload.password && payload.password !== payload.confirmPassword) {
+      setError("Passwords do not match.");
       return;
     }
     if (edit) updateMut.mutate({ id: edit.id, body: payload });
@@ -306,14 +314,6 @@ export default function AdminInstructors() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Staff ID</label>
-                <input
-                  value={form.staffId ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, staffId: e.target.value }))}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:outline-none focus:border-primary"
-                />
-              </div>
-              <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">Organization/Department</label>
                 <input
                   value={form.organization ?? ""}
@@ -321,20 +321,28 @@ export default function AdminInstructors() {
                   className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:outline-none focus:border-primary"
                 />
               </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Sector</label>
-                <select
-                  value={form.sector ?? ""}
-                  onChange={(e) => setForm((f) => ({ ...f, sector: e.target.value as any }))}
-                  className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:outline-none focus:border-primary bg-white"
-                >
-                  {SECTOR_OPTIONS.map((o) => (
-                    <option key={o.value} value={o.value}>
-                      {o.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
+              {!edit && (
+                <>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                    <input
+                      type="password"
+                      value={form.password ?? ""}
+                      onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">Confirm Password</label>
+                    <input
+                      type="password"
+                      value={form.confirmPassword ?? ""}
+                      onChange={(e) => setForm((f) => ({ ...f, confirmPassword: e.target.value }))}
+                      className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 focus:outline-none focus:border-primary"
+                    />
+                  </div>
+                </>
+              )}
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-700 mb-2">Allowed courses</label>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
