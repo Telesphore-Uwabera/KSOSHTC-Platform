@@ -5,7 +5,7 @@ import type { AdminDistributedAssignmentDoc, AssignmentSubmissionDoc, CourseDoc,
 import { enrollmentAllowsLearnerAccess } from "../../shared/learnerEnrollment.ts";
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { v2 as cloudinary } from "cloudinary";
-import { notifyAdminAssignmentSubmitted, notifyInstructorsAssignmentSubmitted, notifyLearnerAssignmentGraded } from "../lib/notify";
+import { notifyAdminAssignmentSubmitted, notifyInstructorsAssignmentSubmitted, notifyLearnerAssignmentGraded, notifyLearnerAssignmentSubmitted } from "../lib/notify";
 import { isAdminSessionAuthorized } from "../lib/adminSession";
 import { getStaffSessionPayload, getActiveInstructorByUserId, requireInstructorCourseAccess } from "../lib/instructorAccess";
 import { isAllowedUploadExtension, mimeFromExtension } from "../../shared/allowedUploads.ts";
@@ -157,6 +157,14 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
       assignmentTitle: resolvedTitle,
       submissionId: id,
       creatorUserId: linkedAssignment?.createdByUserId,
+    });
+
+    await notifyLearnerAssignmentSubmitted({
+      name: user.name,
+      email: user.email,
+      courseTitle: course.title,
+      assignmentTitle: resolvedTitle,
+      submissionId: id,
     });
 
     res.status(201).json({ submission: doc });

@@ -827,6 +827,66 @@ export async function notifyAdminAssignmentSubmitted(data: {
   await sendAdminEmail(subject, text, html);
 }
 
+/** Notify learner after they successfully submit an assignment. */
+export async function notifyLearnerAssignmentSubmitted(data: {
+  name: string;
+  email: string;
+  courseTitle: string;
+  assignmentTitle: string;
+  submissionId: string;
+}): Promise<void> {
+  const subject = `[KSOSHTC] Assignment submitted successfully — ${data.assignmentTitle}`;
+  const web = webBase();
+  const submissionsUrl = `${web}/dashboard/work-submissions`;
+
+  const text = [
+    `Dear ${data.name},`,
+    "",
+    "This email confirms that your assignment has been successfully submitted.",
+    "",
+    "SUBMISSION DETAILS",
+    `Course:         ${data.courseTitle}`,
+    `Assignment:     ${data.assignmentTitle}`,
+    `Reference ID:   ${data.submissionId}`,
+    "",
+    "Your instructor will review your work and provide feedback or marks when ready. You can track your submission status and see your results on your dashboard:",
+    submissionsUrl,
+    "",
+    "To prevent multiple submissions, please note that you have already successfully uploaded this file.",
+    "",
+    "Thank you for your commitment to your studies.",
+    "",
+    "Kigali Safety & OSH Training Centre (KSOS HTC)",
+  ].join("\n");
+
+  const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
+<p style="margin:0 0 1em;">Dear ${escapeHtml(data.name)},</p>
+<p style="margin:0 0 1em;">This email confirms that your <strong>assignment has been successfully submitted</strong>.</p>
+<div style="background-color:#f8f9fa;border-radius:10px;padding:20px;margin:1.5em 0;border-left:4px solid #198754;">
+  <p style="margin:0 0 0.5em;font-weight:bold;letter-spacing:0.03em;color:#198754;">SUBMISSION DETAILS</p>
+  <table style="border-collapse:collapse;width:100%;font-size:14px;">
+  <tr><td style="padding:4px 12px 4px 0;color:#666;vertical-align:top;width:120px;">Course</td><td style="padding:4px 0;">${escapeHtml(
+    data.courseTitle
+  )}</td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#666;vertical-align:top;">Assignment</td><td style="padding:4px 0;"><strong>${escapeHtml(
+    data.assignmentTitle
+  )}</strong></td></tr>
+  <tr><td style="padding:4px 12px 4px 0;color:#666;vertical-align:top;">Reference ID</td><td style="padding:4px 0;font-family:monospace;font-size:13px;">${escapeHtml(
+    data.submissionId
+  )}</td></tr>
+  </table>
+</div>
+<p style="margin:0 0 1em;">Your instructor will review your work and provide feedback or marks when ready. You can track your submission status and see your results on your dashboard:</p>
+<p style="margin:0 0 1.5em;"><a href="${submissionsUrl}" style="display:inline-block;background:#198754;color:#fff;padding:12px 22px;border-radius:8px;text-decoration:none;font-weight:600;">Open my submissions</a></p>
+<p style="margin:1em 0 0;font-size:14px;color:#157347;background:#d1e7dd;padding:10px 14px;border-radius:6px;font-style:italic;">
+  <strong>Note:</strong> Your submission was successful. To prevent multiple submissions, please do not upload the same file again.
+</p>
+<p style="margin:1.5em 0 0;font-size:14px;color:#444;">Thank you for your commitment to your studies.</p>
+</div>`;
+
+  await sendEmail(data.email, subject, text, html);
+}
+
 /** Notify the active instructor who created the assignment, if they still have access to the submission's course. */
 export async function notifyInstructorsAssignmentSubmitted(data: {
   courseId: CourseId;
