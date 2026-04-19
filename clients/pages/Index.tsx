@@ -289,7 +289,7 @@ export default function Index() {
       {/* Graduates Training Section — background image with overlay and text on top */}
       <section className="relative py-16 md:py-28 min-h-[50vh] flex flex-col justify-center overflow-hidden text-white">
         <div className="absolute inset-0">
-          <SiteImage src="/ksohtc-7.webp" alt="" hero className="w-full h-full object-cover bg-image-animate bg-image-move-endless" decoding="async" aria-hidden />
+          <SiteImage src="/what-they-do.webp" alt="" hero className="w-full h-full object-cover bg-image-animate bg-image-move-endless" decoding="async" aria-hidden />
           <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
           <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/70" aria-hidden="true" />
         </div>
