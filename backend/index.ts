@@ -54,6 +54,7 @@ import {
   postAssignmentSubmission,
   getAssignmentSubmissions,
   patchAssignmentSubmission,
+  deleteAssignmentSubmission,
 } from "./routes/assignment-submissions";
 import {
   postAdminDistributedAssignment,
@@ -285,6 +286,7 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.post("/api/assignment-submissions", postAssignmentSubmission);
   app.get("/api/assignment-submissions", requireStaff, getAssignmentSubmissions);
   app.patch("/api/assignment-submissions/:id", requireStaff, patchAssignmentSubmission);
+  app.delete("/api/assignment-submissions/:id", requireAdminSession, deleteAssignmentSubmission);
 
   app.get("/api/admin-distributed-assignments/for-learner", listAdminDistributedAssignmentsForLearner);
   app.post("/api/admin-distributed-assignments", requireStaff, postAdminDistributedAssignment);

@@ -89,6 +89,16 @@ export async function postAssignmentSubmission(req: Request, res: Response): Pro
         res.status(400).json({ error: "Selected assignment is not linked to this course." });
         return;
       }
+      const existingForAssignment = await assignmentSubsCol().findOne({
+        userId,
+        assignmentId: linkedAssignment.id,
+      });
+      if (existingForAssignment) {
+        res.status(409).json({
+          error: "You have already submitted for this assignment. Each shared assignment allows one submission.",
+        });
+        return;
+      }
     }
 
     const safeName = path.basename(filename).replace(/[^a-zA-Z0-9._\-\s+()]/g, "_");
@@ -236,6 +246,76 @@ export async function getAssignmentSubmissions(req: Request, res: Response): Pro
   } catch (e) {
     console.error("getAssignmentSubmissions:", e);
     res.status(500).json({ error: "Failed to list assignment submissions." });
+  }
+}
+
+/** Extract Cloudinary public_id for learner assignment raw uploads (ksohtc/assignment-submissions/...). */
+function cloudinaryPublicIdFromAssignmentPdfUrl(urlStr: string): string | null {
+  try {
+    const u = new URL(urlStr);
+    if (!u.hostname.endsWith("res.cloudinary.com")) return null;
+    const p = u.pathname;
+    const marker = "/raw/upload/";
+    const i = p.indexOf(marker);
+    if (i < 0) return null;
+    let rest = p.slice(i + marker.length);
+    rest = rest.replace(/^v\d+\//, "");
+    if (!rest.startsWith("ksohtc/assignment-submissions/")) return null;
+    return decodeURIComponent(rest);
+  } catch {
+    return null;
+  }
+}
+
+async function destroyAssignmentSubmissionAsset(pdfUrl: string): Promise<{ ok: true } | { ok: false; error: string }> {
+  const publicId = cloudinaryPublicIdFromAssignmentPdfUrl(pdfUrl);
+  if (!publicId) return { ok: false, error: "Stored file URL is not a removable Cloudinary assignment upload." };
+
+  cloudinary.config({
+    cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+    api_key: process.env.CLOUDINARY_API_KEY,
+    api_secret: process.env.CLOUDINARY_API_SECRET,
+  });
+
+  try {
+    const result = await cloudinary.uploader.destroy(publicId, {
+      resource_type: "raw",
+      invalidate: true,
+    });
+    if (result.result === "ok" || result.result === "not found") return { ok: true };
+    return { ok: false, error: `Cloudinary: ${String(result.result)}` };
+  } catch (e) {
+    const msg = e instanceof Error ? e.message : String(e);
+    return { ok: false, error: msg };
+  }
+}
+
+/** DELETE /api/assignment-submissions/:id — admin only; removes DB row and Cloudinary raw file when possible. */
+export async function deleteAssignmentSubmission(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const col = assignmentSubsCol();
+    const snap = await col.findOne({ id });
+    if (!snap) {
+      res.status(404).json({ error: "Submission not found." });
+      return;
+    }
+
+    const destroyed = await destroyAssignmentSubmissionAsset(snap.pdfUrl);
+    if (destroyed.ok === false) {
+      res.status(400).json({ error: destroyed.error });
+      return;
+    }
+
+    const r = await col.deleteOne({ id });
+    if (r.deletedCount === 0) {
+      res.status(404).json({ error: "Submission not found." });
+      return;
+    }
+    res.status(204).send();
+  } catch (e) {
+    console.error("deleteAssignmentSubmission:", e);
+    res.status(500).json({ error: "Failed to delete submission." });
   }
 }
 

@@ -8,6 +8,7 @@ import { Link } from "react-router-dom";
 import { useDashboardData } from "./dashboardData";
 import { buildAdminHandoutStreamUrl, fetchLearnerHandouts } from "@/lib/learnerAdminHandouts";
 import { FILE_INPUT_ACCEPT_ATTR } from "@shared/allowedUploads";
+import { toast } from "sonner";
 
 function buildStreamUrl(pdfUrl: string, filename: string): string {
   const base = getApiBase();
@@ -46,7 +47,6 @@ export default function DashboardWorkSubmissions() {
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
-  const [showSuccess, setShowSuccess] = useState(false);
 
   const { data: submissions = [], isLoading: listLoading } = useQuery({
     queryKey: ["assignment-submissions", user?.id],
@@ -79,6 +79,9 @@ export default function DashboardWorkSubmissions() {
         }),
       });
       const data = await res.json().catch(() => ({}));
+      if (res.status === 409) {
+        throw new Error((data as { error?: string }).error ?? "You already submitted for this assignment.");
+      }
       if (!res.ok) throw new Error((data as { error?: string }).error ?? "Submit failed");
       return data;
     },
@@ -86,12 +89,23 @@ export default function DashboardWorkSubmissions() {
       setTitle("");
       setFile(null);
       setFormError(null);
-      setShowSuccess(true);
       queryClient.invalidateQueries({ queryKey: ["assignment-submissions", user?.id] });
-      // Reset success message after 10 seconds if user wants to submit another
-      setTimeout(() => setShowSuccess(false), 10000);
+      toast.success("Assignment submitted successfully", {
+        description:
+          assignmentId.trim() !== ""
+            ? "Your work was received. You cannot submit again for this linked assignment."
+            : "Your work was received. You can submit another task if your instructor asks for a different assignment.",
+        duration: 9000,
+        className: "border-green-200 bg-green-50 text-green-950",
+      });
     },
-    onError: (e: Error) => setFormError(e.message),
+    onError: (e: Error) => {
+      setFormError(e.message);
+      toast.error("Submission failed", {
+        description: e.message,
+        duration: 8000,
+      });
+    },
   });
 
   const selectedAssignment = useMemo(
@@ -193,7 +207,6 @@ export default function DashboardWorkSubmissions() {
           onSubmit={(e) => {
             e.preventDefault();
             setFormError(null);
-            setShowSuccess(false);
             submitMut.mutate();
           }}
         >
@@ -266,13 +279,6 @@ export default function DashboardWorkSubmissions() {
             />
           </div>
           {formError && <p className="text-sm text-red-600">{formError}</p>}
-          {showSuccess && (
-            <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-green-700 text-sm font-medium animate-in fade-in slide-in-from-top-2 duration-300">
-              <p className="font-bold mb-1">Success!</p>
-              <p>After submission directly after submission to prevent many submission</p>
-              <p className="text-xs mt-1 opacity-80">(You will also receive a confirmation email shortly.)</p>
-            </div>
-          )}
           <button
             type="submit"
             disabled={submitMut.isPending || courses.length === 0}

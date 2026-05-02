@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { ClipboardList, ExternalLink, Loader2, Pencil } from "lucide-react";
+import { ClipboardList, ExternalLink, Loader2, Pencil, Trash2 } from "lucide-react";
 import type { AssignmentSubmissionDoc } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
 import { adminFetch } from "@/lib/adminApi";
+import { getStoredUser } from "@/lib/auth";
+import { toast } from "sonner";
 
 function buildStreamUrl(pdfUrl: string, filename: string): string {
   const base = getApiBase();
@@ -22,6 +24,8 @@ async function fetchAll(): Promise<AssignmentSubmissionDoc[]> {
 
 export default function AdminAssignmentSubmissions() {
   const queryClient = useQueryClient();
+  const user = getStoredUser();
+  const isAdmin = user && typeof user === "object" ? (user as { role?: string }).role === "admin" : false;
   const [editing, setEditing] = useState<AssignmentSubmissionDoc | null>(null);
   const [marks, setMarks] = useState("");
   const [maxMarks, setMaxMarks] = useState("100");
@@ -56,6 +60,27 @@ export default function AdminAssignmentSubmissions() {
     onError: (e: Error) => setPatchError(e.message),
   });
 
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await adminFetch(getApiBase() + "/api/assignment-submissions/" + encodeURIComponent(id), {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error ?? "Delete failed");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignment-submissions", "admin"] });
+      toast.success("Submission deleted", {
+        description: "The learner file was removed from storage and the record was deleted.",
+      });
+    },
+    onError: (e: Error) => {
+      toast.error("Could not delete submission", { description: e.message });
+    },
+  });
+
   const openEdit = (s: AssignmentSubmissionDoc) => {
     setEditing(s);
     setMarks(typeof s.marks === "number" ? String(s.marks) : "");
@@ -73,6 +98,7 @@ export default function AdminAssignmentSubmissions() {
         </h1>
         <p className="text-gray-600 text-sm sm:text-base mt-1">
           Open each submission, then record marks and optional feedback. Learners are emailed when marks are set or changed.
+          {isAdmin ? " Administrators can permanently delete a submission and its uploaded file." : ""}
         </p>
       </div>
 
@@ -89,7 +115,7 @@ export default function AdminAssignmentSubmissions() {
           <p className="text-gray-600 text-sm py-8 text-center">No submissions yet.</p>
         )}
         {!isLoading && submissions.length > 0 && (
-          <table className="w-full text-sm text-left min-w-[720px]">
+          <table className="w-full text-sm text-left min-w-[800px]">
             <thead>
               <tr className="border-b border-gray-200 text-gray-500 font-medium">
                 <th className="py-2 pr-3">Submitted</th>
@@ -98,7 +124,7 @@ export default function AdminAssignmentSubmissions() {
                 <th className="py-2 pr-3">Title</th>
                 <th className="py-2 pr-3">Marks</th>
                 <th className="py-2 pr-3">File</th>
-                <th className="py-2 pr-2 w-24">Grade</th>
+                <th className="py-2 pr-2 w-36">Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -133,13 +159,34 @@ export default function AdminAssignmentSubmissions() {
                     </a>
                   </td>
                   <td className="py-3 pr-2">
-                    <button
-                      type="button"
-                      onClick={() => openEdit(s)}
-                      className="inline-flex items-center gap-1 rounded-xl border border-gray-200 px-2.5 py-1.5 text-xs font-semibold text-gray-800 hover:bg-gray-50"
-                    >
-                      <Pencil className="w-3.5 h-3.5" /> Grade
-                    </button>
+                    <div className="flex flex-wrap gap-1.5">
+                      <button
+                        type="button"
+                        onClick={() => openEdit(s)}
+                        className="inline-flex items-center gap-1 rounded-xl border border-gray-200 px-2.5 py-1.5 text-xs font-semibold text-gray-800 hover:bg-gray-50"
+                      >
+                        <Pencil className="w-3.5 h-3.5" /> Grade
+                      </button>
+                      {isAdmin && (
+                        <button
+                          type="button"
+                          disabled={deleteMut.isPending}
+                          onClick={() => {
+                            if (
+                              !window.confirm(
+                                "Permanently delete this submission and remove the file from storage? This cannot be undone."
+                              )
+                            ) {
+                              return;
+                            }
+                            deleteMut.mutate(s.id);
+                          }}
+                          className="inline-flex items-center gap-1 rounded-xl border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-800 hover:bg-red-100 disabled:opacity-50"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                        </button>
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
