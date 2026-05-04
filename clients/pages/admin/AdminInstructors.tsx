@@ -4,6 +4,7 @@ import { Plus, Pencil, Trash2, Loader2, UserCog, CheckCircle2 } from "lucide-rea
 import type { CourseDoc, Instructor, LearnerSector } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
 import { adminFetch } from "@/lib/adminApi";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 const SECTOR_OPTIONS: { value: LearnerSector | ""; label: string }[] = [
   { value: "", label: "—" },
@@ -412,32 +413,17 @@ export default function AdminInstructors() {
         </div>
       )}
 
-      {deleteId && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center p-4 z-50">
-          <div className="w-full max-w-md bg-white rounded-[30px] border border-gray-200 shadow-xl p-6 sm:p-8">
-            <p className="text-lg font-bold text-gray-900">Delete instructor?</p>
-            <p className="text-sm text-gray-600 mt-2">This will delete the instructor profile and linked login account.</p>
-            <div className="flex justify-end gap-3 mt-6">
-              <button
-                type="button"
-                onClick={() => setDeleteId(null)}
-                className="inline-flex items-center justify-center rounded-xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-700 hover:bg-gray-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                onClick={() => deleteMut.mutate(deleteId)}
-                disabled={deleteMut.isPending}
-                className="inline-flex items-center justify-center rounded-xl border border-red-200 bg-red-50 px-4 py-2.5 text-sm font-semibold text-red-700 hover:bg-red-100 disabled:opacity-60"
-              >
-                {deleteMut.isPending && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                Delete
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      <ConfirmModal
+        isOpen={!!deleteId}
+        onClose={() => setDeleteId(null)}
+        onConfirm={() => {
+          if (deleteId) deleteMut.mutate(deleteId);
+        }}
+        title="Delete instructor?"
+        description="This will delete the instructor profile and linked login account. This cannot be undone."
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

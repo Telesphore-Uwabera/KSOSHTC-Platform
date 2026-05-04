@@ -6,6 +6,7 @@ import { getApiBase } from "@/lib/apiBase";
 import { adminFetch } from "@/lib/adminApi";
 import { getStoredUser } from "@/lib/auth";
 import { toast } from "sonner";
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 function buildStreamUrl(pdfUrl: string, filename: string): string {
   const base = getApiBase();
@@ -31,6 +32,7 @@ export default function AdminAssignmentSubmissions() {
   const [maxMarks, setMaxMarks] = useState("100");
   const [feedback, setFeedback] = useState("");
   const [patchError, setPatchError] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const { data: submissions = [], isLoading, error } = useQuery({
     queryKey: ["assignment-submissions", "admin"],
@@ -171,16 +173,7 @@ export default function AdminAssignmentSubmissions() {
                         <button
                           type="button"
                           disabled={deleteMut.isPending}
-                          onClick={() => {
-                            if (
-                              !window.confirm(
-                                "Permanently delete this submission and remove the file from storage? This cannot be undone."
-                              )
-                            ) {
-                              return;
-                            }
-                            deleteMut.mutate(s.id);
-                          }}
+                          onClick={() => setDeleteConfirmId(s.id)}
                           className="inline-flex items-center gap-1 rounded-xl border border-red-200 bg-red-50 px-2.5 py-1.5 text-xs font-semibold text-red-800 hover:bg-red-100 disabled:opacity-50"
                         >
                           <Trash2 className="w-3.5 h-3.5" /> Delete
@@ -284,6 +277,21 @@ export default function AdminAssignmentSubmissions() {
           </div>
         </div>
       )}
+
+      <ConfirmModal
+        isOpen={!!deleteConfirmId}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={() => {
+          if (deleteConfirmId) {
+            deleteMut.mutate(deleteConfirmId);
+            setDeleteConfirmId(null);
+          }
+        }}
+        title="Delete Submission"
+        description="Permanently delete this submission and remove the file from storage? This cannot be undone."
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

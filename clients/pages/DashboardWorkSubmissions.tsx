@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { FileUp, Loader2, ExternalLink, FileText } from "lucide-react";
+import { FileUp, Loader2, ExternalLink, FileText, Trash2 } from "lucide-react";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import type { AssignmentSubmissionDoc } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
 import { getStoredUser } from "../lib/auth";
@@ -47,6 +48,7 @@ export default function DashboardWorkSubmissions() {
   const [title, setTitle] = useState("");
   const [file, setFile] = useState<File | null>(null);
   const [formError, setFormError] = useState<string | null>(null);
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
 
   const { data: submissions = [], isLoading: listLoading } = useQuery({
     queryKey: ["assignment-submissions", user?.id],
@@ -105,6 +107,26 @@ export default function DashboardWorkSubmissions() {
         description: e.message,
         duration: 8000,
       });
+    },
+  });
+  
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`${getApiBase()}/api/assignment-submissions/${encodeURIComponent(id)}?userId=${encodeURIComponent(user.id)}`, {
+        method: "DELETE",
+      });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error((data as { error?: string }).error ?? "Delete failed");
+      }
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["assignment-submissions", user?.id] });
+      toast.success("Submission deleted");
+      setDeleteConfirmId(null);
+    },
+    onError: (e: Error) => {
+      toast.error("Could not delete", { description: e.message });
     },
   });
 
@@ -330,12 +352,34 @@ export default function DashboardWorkSubmissions() {
                   >
                     Open file <ExternalLink className="w-4 h-4" />
                   </a>
+                  {(!hasMarks && (Date.now() - new Date(s.submittedAt).getTime()) < 48 * 60 * 60 * 1000) && (
+                    <button
+                      type="button"
+                      onClick={() => setDeleteConfirmId(s.id)}
+                      className="p-2 text-gray-400 hover:text-red-600 transition-colors"
+                      title="Delete submission"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </li>
               );
             })}
           </ul>
         )}
       </div>
+
+      <ConfirmModal
+        isOpen={!!deleteConfirmId}
+        onClose={() => setDeleteConfirmId(null)}
+        onConfirm={() => {
+          if (deleteConfirmId) deleteMut.mutate(deleteConfirmId);
+        }}
+        title="Delete submission?"
+        description="This will permanently remove your submission. This action is only allowed within 48 hours and before grading."
+        confirmText="Delete"
+        variant="destructive"
+      />
     </div>
   );
 }

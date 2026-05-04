@@ -290,15 +290,38 @@ async function destroyAssignmentSubmissionAsset(pdfUrl: string): Promise<{ ok: t
   }
 }
 
-/** DELETE /api/assignment-submissions/:id — admin only; removes DB row and Cloudinary raw file when possible. */
+/** DELETE /api/assignment-submissions/:id — admin OR learner (within 48h) removes DB row and file. */
 export async function deleteAssignmentSubmission(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
+    const { userId } = req.query as { userId?: string };
     const col = assignmentSubsCol();
     const snap = await col.findOne({ id });
     if (!snap) {
       res.status(404).json({ error: "Submission not found." });
       return;
+    }
+
+    const isAdmin = isAdminSessionAuthorized(req);
+    const isOwner = userId && snap.userId === userId;
+
+    if (!isAdmin && !isOwner) {
+      res.status(403).json({ error: "Not authorized to delete this submission." });
+      return;
+    }
+
+    if (!isAdmin && isOwner) {
+      const submittedAt = new Date(snap.submittedAt).getTime();
+      const now = Date.now();
+      const limitMs = 48 * 60 * 60 * 1000;
+      if (now - submittedAt > limitMs) {
+        res.status(403).json({ error: "Submissions can only be deleted within 48 hours after upload." });
+        return;
+      }
+      if (snap.marks !== null && snap.marks !== undefined) {
+        res.status(403).json({ error: "Cannot delete a submission that has already been graded." });
+        return;
+      }
     }
 
     const destroyed = await destroyAssignmentSubmissionAsset(snap.pdfUrl);

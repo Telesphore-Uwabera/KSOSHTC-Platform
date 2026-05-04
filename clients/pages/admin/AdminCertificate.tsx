@@ -14,6 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { adminFetch } from "@/lib/adminApi";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
+import { ConfirmModal } from "@/components/ConfirmModal";
 
 export default function AdminCertificate() {
   const [formData, setFormData] = useState({
@@ -34,6 +35,18 @@ export default function AdminCertificate() {
   const [generatedCert, setGeneratedCert] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [currentId, setCurrentId] = useState<string | null>(null);
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+    variant?: "default" | "destructive" | "info";
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
   const queryClient = useQueryClient();
   
   useEffect(() => {
@@ -134,6 +147,7 @@ export default function AdminCertificate() {
     },
     onSuccess: () => {
       toast.success("Certificate deleted successfully");
+      setConfirmModal(prev => ({ ...prev, isOpen: false }));
       queryClient.invalidateQueries({ queryKey: ["certificates"] });
     },
     onError: (error) => toast.error(error.message),
@@ -150,7 +164,10 @@ export default function AdminCertificate() {
       }
       return res.json();
     },
-    onSuccess: (data) => toast.success(data.message),
+    onSuccess: (data) => {
+      toast.success(data.message);
+      setConfirmModal(prev => ({ ...prev, isOpen: false }));
+    },
     onError: (error) => toast.error(error.message),
   });
 
@@ -694,9 +711,13 @@ export default function AdminCertificate() {
                               size="icon"
                               title="Delete"
                               onClick={() => {
-                                if (window.confirm("Are you sure you want to delete this certificate record?")) {
-                                  deleteMutation.mutate(cert.id);
-                                }
+                                setConfirmModal({
+                                  isOpen: true,
+                                  title: "Delete Certificate",
+                                  description: "Are you sure you want to delete this certificate record?",
+                                  variant: "destructive",
+                                  onConfirm: () => deleteMutation.mutate(cert.id)
+                                });
                               }}
                             >
                               <Trash2 className="h-4 w-4 text-red-600" />
@@ -707,9 +728,13 @@ export default function AdminCertificate() {
                               title="Send Congratulations Email"
                               disabled={sendEmailMutation.isPending}
                               onClick={() => {
-                                if (window.confirm(`Send professional congratulatory email to ${cert.email}?`)) {
-                                  sendEmailMutation.mutate(cert.id);
-                                }
+                                setConfirmModal({
+                                  isOpen: true,
+                                  title: "Send Email",
+                                  description: `Send professional congratulatory email to ${cert.email}?`,
+                                  variant: "info",
+                                  onConfirm: () => sendEmailMutation.mutate(cert.id)
+                                });
                               }}
                             >
                               {sendEmailMutation.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Mail className="h-4 w-4 text-green-600" />}
@@ -732,6 +757,15 @@ export default function AdminCertificate() {
           </CardContent>
         </Card>
       </div>
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal(prev => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        description={confirmModal.description}
+        variant={confirmModal.variant}
+      />
     </div>
   );
 }

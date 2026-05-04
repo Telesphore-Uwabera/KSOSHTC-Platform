@@ -15,6 +15,7 @@ import {
   Trash2,
   ImagePlus,
 } from "lucide-react";
+import { ConfirmModal } from "@/components/ConfirmModal";
 import type { CourseDoc, ModuleDoc, LessonDoc, AssessmentDoc } from "@shared/api";
 
 import { getApiBase } from "@/lib/apiBase";
@@ -232,6 +233,18 @@ export default function AdminCourseContentDetail() {
   const [addingAssessment, setAddingAssessment] = useState<string | null>(null);
   const [editingCourseTitle, setEditingCourseTitle] = useState(false);
   const [newCourseTitle, setNewCourseTitle] = useState("");
+  const [confirmModal, setConfirmModal] = useState<{
+    isOpen: boolean;
+    title: string;
+    description: string;
+    onConfirm: () => void;
+    variant?: "default" | "destructive";
+  }>({
+    isOpen: false,
+    title: "",
+    description: "",
+    onConfirm: () => {},
+  });
 
   const { data: course, isLoading: courseLoading } = useQuery({
     queryKey: ["course-content", "course", courseId],
@@ -305,29 +318,35 @@ export default function AdminCourseContentDetail() {
 
   const deleteModuleMutation = useMutation({
     mutationFn: async (moduleId: string) => {
-      if (!window.confirm("Are you sure you want to delete this module and all its contents?")) return;
       const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete module");
     },
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["course-content", "modules", courseId] }),
+    onSuccess: () => {
+      setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      queryClient.invalidateQueries({ queryKey: ["course-content", "modules", courseId] });
+    },
   });
 
   const deleteLessonMutation = useMutation({
     mutationFn: async ({ moduleId, lessonId }: { moduleId: string, lessonId: string }) => {
-      if (!window.confirm("Are you sure you want to delete this lesson?")) return;
       const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/lessons/${lessonId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete lesson");
     },
-    onSuccess: (_, { moduleId }) => queryClient.invalidateQueries({ queryKey: ["course-content", "lessons", courseId, moduleId] }),
+    onSuccess: (_, { moduleId }) => {
+      setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      queryClient.invalidateQueries({ queryKey: ["course-content", "lessons", courseId, moduleId] });
+    },
   });
 
   const deleteAssessmentMutation = useMutation({
     mutationFn: async ({ moduleId, assessmentId }: { moduleId: string, assessmentId: string }) => {
-      if (!window.confirm("Are you sure you want to delete this assessment?")) return;
       const res = await adminFetch(`${getCourseContentApi()}/courses/${courseId}/modules/${moduleId}/assessments/${assessmentId}`, { method: "DELETE" });
       if (!res.ok) throw new Error("Failed to delete assessment");
     },
-    onSuccess: (_, { moduleId }) => queryClient.invalidateQueries({ queryKey: ["course-content", "assessments", courseId, moduleId] }),
+    onSuccess: (_, { moduleId }) => {
+      setConfirmModal((prev) => ({ ...prev, isOpen: false }));
+      queryClient.invalidateQueries({ queryKey: ["course-content", "assessments", courseId, moduleId] });
+    },
   });
 
   const updateCourseMutation = useMutation({
@@ -462,9 +481,36 @@ export default function AdminCourseContentDetail() {
                 addingAssessment={addingAssessment}
                 setAddingAssessment={setAddingAssessment}
                 queryClient={queryClient}
-                deleteModuleMutation={deleteModuleMutation}
-                deleteLessonMutation={deleteLessonMutation}
-                deleteAssessmentMutation={deleteAssessmentMutation}
+                deleteModuleMutation={{
+                  ...deleteModuleMutation,
+                  mutate: (id: string) => setConfirmModal({
+                    isOpen: true,
+                    title: "Delete Module",
+                    description: "Are you sure you want to delete this module and all its contents?",
+                    variant: "destructive",
+                    onConfirm: () => deleteModuleMutation.mutate(id),
+                  })
+                } as any}
+                deleteLessonMutation={{
+                  ...deleteLessonMutation,
+                  mutate: (args: { moduleId: string, lessonId: string }) => setConfirmModal({
+                    isOpen: true,
+                    title: "Delete Lesson",
+                    description: "Are you sure you want to delete this lesson?",
+                    variant: "destructive",
+                    onConfirm: () => deleteLessonMutation.mutate(args),
+                  })
+                } as any}
+                deleteAssessmentMutation={{
+                  ...deleteAssessmentMutation,
+                  mutate: (args: { moduleId: string, assessmentId: string }) => setConfirmModal({
+                    isOpen: true,
+                    title: "Delete Assessment",
+                    description: "Are you sure you want to delete this assessment?",
+                    variant: "destructive",
+                    onConfirm: () => deleteAssessmentMutation.mutate(args),
+                  })
+                } as any}
               />
             ))}
 
@@ -520,6 +566,15 @@ export default function AdminCourseContentDetail() {
           isSaving={updateLessonMutation.isPending}
         />
       )}
+
+      <ConfirmModal
+        isOpen={confirmModal.isOpen}
+        onClose={() => setConfirmModal((prev) => ({ ...prev, isOpen: false }))}
+        onConfirm={confirmModal.onConfirm}
+        title={confirmModal.title}
+        description={confirmModal.description}
+        variant={confirmModal.variant}
+      />
     </div>
   );
 }
