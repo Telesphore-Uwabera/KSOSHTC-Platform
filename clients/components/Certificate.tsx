@@ -63,7 +63,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
         {/* Success Statement */}
         <div className="text-center max-w-4xl mb-4">
           <p className="text-gray-700 text-lg leading-relaxed font-medium mb-4">
-            has successfully completed Occupational Safety and Health (OSH) training within a period of <span className="font-black text-[#004d40]">{data.duration}</span> and has been assessed and found competent in accordance with the applicable OSH standards for:
+            has successfully completed Occupational Safety and Health (OSH) training and has been assessed and found competent in accordance with the applicable OSH standards for:
           </p>
           <h3 className="text-[#004d40] text-4xl font-black uppercase tracking-widest">
             {data.courses || "CONSTRUCTION WORKPLACES"}
