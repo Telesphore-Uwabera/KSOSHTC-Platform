@@ -63,7 +63,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
         </div>
 
         {/* Success Statement */}
-        <div className="text-center max-w-4xl mb-6">
+        <div className="text-center w-full max-w-[900px] mb-6">
           <p className="text-gray-700 text-lg leading-relaxed font-medium mb-6">
             {isFirstAid ? (
               <>has successfully completed First Aid Training conducted by Kigali Safety OSH Training Center (KSOSHTC) and has been assessed and found competent in accordance with the applicable standards for:</>
@@ -71,9 +71,11 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
               <>has successfully completed Occupational Safety and Health (OSH) training and has been assessed and found competent in accordance with the applicable OSH standards for:</>
             )}
           </p>
-          <h3 className="text-[#004d40] text-5xl font-black uppercase tracking-widest">
-            {isFirstAid ? "FIRST AID TRAINING" : (data.courses || "CONSTRUCTION WORKPLACES")}
-          </h3>
+          <div className="flex items-center justify-center w-full overflow-visible">
+            <h3 className="text-[#004d40] text-4xl font-black uppercase tracking-widest whitespace-nowrap">
+              {isFirstAid ? "FIRST AID TRAINING" : (data.courses || "CONSTRUCTION WORKPLACES")}
+            </h3>
+          </div>
         </div>
 
         {/* ID Section */}
@@ -153,6 +155,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
                  <div className="w-4/5 h-[1px] bg-gray-400 mb-2 opacity-50"></div>
                  <p className="font-bold text-[#004d40] text-[10px] uppercase leading-none text-center">KARINGANIRE Jean Marie Vianney</p>
                  <p className="text-[#444] text-[8px] font-bold uppercase tracking-widest leading-none mt-1.5">Trainer</p>
+                 <p className="text-[#444] text-[7px] font-medium uppercase tracking-widest leading-none mt-1">Kigali Safety OSH Training Center</p>
               </div>
 
               {/* 2. QR Code */}
@@ -175,7 +178,18 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
               </div>
 
               {/* 4. Director Sign */}
-              <div className="flex flex-col items-center w-1/4">
+              <div className="flex flex-col items-center w-1/4 relative">
+                 {/* Dynamic Digital Watermark for Director */}
+                 <div className="absolute top-[-5px] left-[10px] z-[25] pointer-events-none opacity-40 transform -rotate-12 border-2 border-primary/50 text-primary px-2 py-0.5 rounded font-bold overflow-hidden select-none whitespace-nowrap scale-75 origin-center">
+                    <p className="text-[9px] leading-tight text-center tracking-widest uppercase">Verified System Signature</p>
+                    <div className="flex items-center justify-between gap-1.5 mt-0.5">
+                       <div className="h-[1px] bg-primary/30 flex-1"></div>
+                       <p className="text-[7px] font-mono leading-none">{data.certificateId}</p>
+                       <div className="h-[1px] bg-primary/30 flex-1"></div>
+                    </div>
+                    <p className="text-[5px] text-center uppercase tracking-tighter mt-0.5">Authenticated by Kigali Safety OSH Training Center</p>
+                 </div>
+
                  <div className="relative h-16 w-full flex items-center justify-center mb-1">
                    <p className="text-[#004d40] text-[55px] font-normal leading-none opacity-90" style={{ fontFamily: '"Mrs Saint Delafield", cursive', transform: 'rotate(-8deg)' }}>
                      E. N.
@@ -184,6 +198,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
                  <div className="w-4/5 h-[1px] bg-gray-400 mb-2 opacity-50"></div>
                  <p className="font-bold text-[#004d40] text-[10px] uppercase leading-none text-center">Emmanuel NIYOBUHUNGIRO</p>
                  <p className="text-[#444] text-[8px] font-bold uppercase tracking-widest leading-none mt-1.5">Director, Instructor</p>
+                 <p className="text-[#444] text-[7px] font-medium uppercase tracking-widest leading-none mt-1">Kigali Safety OSH Training Center</p>
               </div>
             </div>
           </div>
