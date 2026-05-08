@@ -19,6 +19,7 @@ import { ConfirmModal } from "@/components/ConfirmModal";
 export default function AdminCertificate() {
   const [formData, setFormData] = useState({
     title: "Mr.",
+    type: "general" as "general" | "first-aid",
     learnerName: "",
     courses: "",
     dateIssued: format(new Date(), "yyyy-MM-dd"),
@@ -174,6 +175,7 @@ export default function AdminCertificate() {
   const resetForm = () => {
     setFormData({
       title: "Mr.",
+      type: "general",
       learnerName: "",
       courses: "",
       dateIssued: format(new Date(), "yyyy-MM-dd"),
@@ -391,8 +393,32 @@ export default function AdminCertificate() {
         {/* Creation Form */}
         <Card className="border-primary/20 bg-primary/5">
           <CardHeader>
-            <CardTitle>Generate Certificate</CardTitle>
-            <CardDescription>Fill in the learner details below.</CardDescription>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+              <div>
+                <CardTitle>Generate Certificate</CardTitle>
+                <CardDescription>Fill in the learner details below.</CardDescription>
+              </div>
+              <div className="flex gap-2 bg-white p-1 rounded-lg border shadow-sm">
+                <Button 
+                  type="button"
+                  variant={formData.type === "general" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setFormData(prev => ({ ...prev, type: "general" }))}
+                  className="rounded-md h-8 text-xs px-3"
+                >
+                  New General Certificate
+                </Button>
+                <Button 
+                  type="button"
+                  variant={formData.type === "first-aid" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setFormData(prev => ({ ...prev, type: "first-aid", courses: "FIRST AID" }))}
+                  className="rounded-md h-8 text-xs px-3"
+                >
+                  First Aid Certificate
+                </Button>
+              </div>
+            </div>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -429,19 +455,27 @@ export default function AdminCertificate() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="courses">Courses Completed</Label>
-                <Select 
-                  value={formData.courses} 
-                  onValueChange={(value) => setFormData({...formData, courses: value})}
-                >
-                  <SelectTrigger id="courses">
-                    <SelectValue placeholder="Select a course types" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="MINING Workplaces">OSH in Mining</SelectItem>
-                    <SelectItem value="CONSTRUCTION Workplaces">OSH in Construction</SelectItem>
-                    <SelectItem value="INDUSTRIAL Safety">OSH in Industrial Safety</SelectItem>
-                  </SelectContent>
-                </Select>
+                {formData.type === "first-aid" ? (
+                  <Input 
+                    value="FIRST AID TRAINING" 
+                    disabled 
+                    className="bg-muted opacity-70"
+                  />
+                ) : (
+                  <Select 
+                    value={formData.courses} 
+                    onValueChange={(value) => setFormData({...formData, courses: value})}
+                  >
+                    <SelectTrigger id="courses">
+                      <SelectValue placeholder="Select a course types" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="MINING Workplaces">OSH in Mining</SelectItem>
+                      <SelectItem value="CONSTRUCTION Workplaces">OSH in Construction</SelectItem>
+                      <SelectItem value="INDUSTRIAL Safety">OSH in Industrial Safety</SelectItem>
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2">
@@ -689,6 +723,7 @@ export default function AdminCertificate() {
                                 setCurrentId(cert.id);
                                 setFormData({
                                   title: cert.title || "Mr.",
+                                  type: cert.type || "general",
                                   learnerName: cert.learnerName,
                                   courses: cert.courses,
                                   dateIssued: format(new Date(cert.dateIssued), "yyyy-MM-dd"),

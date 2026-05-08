@@ -13,6 +13,7 @@ export interface TranscriptItem {
 
 export interface Certificate {
   id: string;
+  type?: 'general' | 'first-aid';
   title: string;
   learnerName: string;
   courses: string;
@@ -56,7 +57,7 @@ async function getNextCertificateId(year: number): Promise<string> {
 
 export async function createCertificate(req: Request, res: Response): Promise<void> {
   try {
-    const { title, learnerName, courses, dateIssued, duration, email, totalHours, averageScore, gpa, transcript, startDate, completionDate } = req.body;
+    const { type, title, learnerName, courses, dateIssued, duration, email, totalHours, averageScore, gpa, transcript, startDate, completionDate } = req.body;
     
     if (!learnerName || !courses || !dateIssued) {
       res.status(400).json({ error: "Missing required fields" });
@@ -69,6 +70,7 @@ export async function createCertificate(req: Request, res: Response): Promise<vo
 
     const newCertificate: Certificate = {
       id: crypto.randomUUID(),
+      type: type || 'general',
       title: title || "Mr.",
       learnerName,
       courses,
