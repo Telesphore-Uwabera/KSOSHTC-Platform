@@ -4,7 +4,7 @@ import { Mail, Globe, Shield } from "lucide-react";
 
 interface CertificateProps {
   data: {
-    type?: 'general' | 'first-aid';
+    type?: 'general' | 'first-aid' | 'lifting-safety' | 'height-safety';
     title: string;
     learnerName: string;
     courses: string;
@@ -19,6 +19,8 @@ interface CertificateProps {
 export const Certificate: React.FC<CertificateProps> = ({ data }) => {
   const verificationUrl = `https://www.kigalisafetytraining.com/verify-certificate/${data.certificateId}`;
   const isFirstAid = data.type === 'first-aid';
+  const isLifting = data.type === 'lifting-safety';
+  const isHeight = data.type === 'height-safety';
 
   return (
     <div 
@@ -67,27 +69,56 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
           <p className="text-gray-700 text-lg leading-relaxed font-medium mb-6">
             {isFirstAid ? (
               <>has successfully completed First Aid Training conducted by Kigali Safety OSH Training Center (KSOSHTC) and has been assessed and found competent in accordance with the applicable standards for:</>
+            ) : (isLifting || isHeight) ? (
+              <>has successfully completed professional training in</>
             ) : (
               <>has successfully completed Occupational Safety and Health (OSH) training and has been assessed and found competent in accordance with the applicable OSH standards for:</>
             )}
           </p>
-          <div className="flex items-center justify-center w-full overflow-visible">
-            <h3 className="text-[#004d40] text-4xl font-black uppercase tracking-widest whitespace-nowrap">
-              {isFirstAid ? "FIRST AID TRAINING" : (data.courses || "CONSTRUCTION WORKPLACES")}
+          <div className="flex flex-col items-center justify-center w-full overflow-visible">
+            <h3 className="text-[#004d40] text-4xl font-black uppercase tracking-widest whitespace-nowrap mb-4">
+              {isFirstAid ? "FIRST AID TRAINING" : 
+               isLifting ? "SAFE LIFTING OPERATIONS" :
+               isHeight ? "WORKING AT HEIGHT SAFETY" :
+               (data.courses || "CONSTRUCTION WORKPLACES")}
             </h3>
+            {(isLifting || isHeight) && (
+              <div className="text-gray-700 text-sm font-medium leading-tight text-center">
+                <p>conducted by <span className="font-bold text-[#004d40]">Kigali Safety OSH Training Center (KSOSHTC)</span></p>
+                <p className="mt-1">
+                  {isLifting 
+                    ? "in accordance with occupational safety and lifting operation safety requirements." 
+                    : "in accordance with occupational safety and fall protection requirements."}
+                </p>
+              </div>
+            )}
           </div>
         </div>
 
         {/* ID Section */}
-        <div className="w-full max-w-3xl flex justify-center gap-14 border-t border-b border-[#c4ac6a]/50 py-3 mb-8">
+        <div className="w-full max-w-3xl flex justify-center gap-14 border-t border-b border-[#c4ac6a]/50 py-3 mb-4">
           <p className="text-sm font-bold"><span className="text-[#004d40] uppercase mr-2 opacity-60">Duration:</span> {data.duration}</p>
           <div className="w-px h-full bg-[#c4ac6a]"></div>
           <p className="text-sm font-bold"><span className="text-[#004d40] uppercase mr-2 opacity-60">Certificate ID:</span> {data.certificateId}</p>
         </div>
 
+        {/* Slogan Section for Lifting/Height */}
+        {(isLifting || isHeight) && (
+          <div className="mb-6 text-center w-full px-12">
+            <div className="flex items-center gap-4 justify-center">
+              <div className="h-[1px] bg-[#c4ac6a]/30 flex-1 max-w-[100px]"></div>
+              <p className="text-[#004d40] text-sm italic font-bold tracking-[0.2em] uppercase">
+                {isLifting ? "Safety in lifting is not optional-it is a professional responsibility" : 
+                 "One unsafe step at height can become a lifetime consequence"}
+              </p>
+              <div className="h-[1px] bg-[#c4ac6a]/30 flex-1 max-w-[100px]"></div>
+            </div>
+          </div>
+        )}
+
         {/* Signatures & QR Area - Flex Layout for better PDF rendering */}
         {!isFirstAid ? (
-          <div className="w-full mt-auto flex justify-between items-center mb-6">
+          <div className="w-full mt-auto flex justify-between items-end mb-20">
             {/* Left: Signature with Digital Overlay */}
             <div className="flex flex-col items-start h-full justify-center w-[35%] relative">
                <div className="absolute top-[30px] left-[45px] z-[25] pointer-events-none opacity-40 transform -rotate-12 border-2 border-primary/50 text-primary px-3 py-1 rounded font-bold overflow-hidden select-none whitespace-nowrap">
@@ -99,12 +130,12 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
                   </div>
                   <p className="text-[6px] text-center uppercase tracking-tighter mt-0.5">Authenticated by Kigali Safety OSH Training Center</p>
                </div>
-               <div className="pl-[65px] relative h-[140px] w-full flex flex-col justify-end">
-                 <div className="absolute top-0 left-[65px] w-56 h-[70px] flex items-center justify-center">
-                   <p className="text-[#004d40] text-[75px] font-normal leading-none opacity-90" style={{ fontFamily: '"Mrs Saint Delafield", cursive', transform: 'rotate(-8deg) scaleX(1.1)' }}>
+               <div className="pl-[65px] relative h-[110px] w-full flex flex-col justify-end">
+                  <div className="absolute top-0 left-[65px] w-56 h-[70px] flex items-center justify-center">
+                   <p className="text-[#004d40] text-[60px] font-normal leading-none opacity-90" style={{ fontFamily: '"Mrs Saint Delafield", cursive', transform: 'rotate(-8deg) scaleX(1.1)' }}>
                      E. N.
                    </p>
-                 </div>
+                  </div>
                  <div className="w-56 h-[1px] bg-gray-400 mb-2 opacity-50"></div>
                  <div className="flex flex-col items-start">
                    <p className="font-bold text-[#004d40] text-[10px] uppercase leading-none tracking-wide mb-1">Emmanuel NIYOBUHUNGIRO</p>
@@ -113,15 +144,15 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
                  </div>
                </div>
             </div>
-            <div className="flex flex-col items-center justify-center w-[30%] min-h-[200px]">
-               <div className="z-20 pointer-events-none flex items-center justify-center" style={{ width: '180px', height: '180px' }}>
-                  <img src="/certificate/stamp.webp" alt="Stamp" className="w-[180px] h-[180px]" style={{ width: '180px', height: '180px', maxWidth: '180px', maxHeight: '180px', objectFit: 'contain', mixBlendMode: 'multiply' }} />
-               </div>
-            </div>
+             <div className="flex flex-col items-center justify-center w-[30%] min-h-[160px]">
+                <div className="z-20 pointer-events-none flex items-center justify-center" style={{ width: '150px', height: '150px' }}>
+                   <img src="/certificate/stamp.webp" alt="Stamp" className="w-[150px] h-[150px]" style={{ width: '150px', height: '150px', maxWidth: '150px', maxHeight: '150px', objectFit: 'contain', mixBlendMode: 'multiply' }} />
+                </div>
+             </div>
             <div className="flex flex-col items-end justify-center h-full w-[35%]">
                <div className="flex flex-col items-center gap-2 mb-3">
                   <div className="bg-white p-1.5 border-[1px] border-[#c4ac6a] shadow-sm flex items-center justify-center">
-                     <QRCodeSVG value={verificationUrl} size={65} level="H" />
+                     <QRCodeSVG value={verificationUrl} size={55} level="H" />
                   </div>
                   <div className="text-center">
                      <p className="text-[8px] text-gray-400 font-bold uppercase tracking-widest italic leading-none mb-1">Verify Authenticity</p>
@@ -134,7 +165,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
             </div>
           </div>
         ) : (
-          <div className="w-full mt-auto flex flex-col items-center gap-6 pb-12">
+          <div className="w-full mt-auto flex flex-col items-center gap-6 pb-20">
             {/* First Aid Special Slogan - Positioned here to avoid footer overlap */}
             <div className="flex items-center gap-4 w-full justify-center mb-2">
                <div className="h-[1px] bg-[#c4ac6a]/40 flex-1"></div>
@@ -148,7 +179,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
               {/* 1. Trainer Sign */}
               <div className="flex flex-col items-center w-1/4">
                  <div className="relative h-16 w-full flex items-center justify-center mb-1">
-                   <p className="text-[#004d40] text-[55px] font-normal leading-none opacity-90" style={{ fontFamily: '"Mrs Saint Delafield", cursive', transform: 'rotate(-5deg)' }}>
+                   <p className="text-[#004d40] text-[45px] font-normal leading-none opacity-90" style={{ fontFamily: '"Mrs Saint Delafield", cursive', transform: 'rotate(-5deg)' }}>
                      K. J. M. V.
                    </p>
                  </div>
@@ -161,7 +192,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
               {/* 2. QR Code */}
               <div className="flex flex-col items-center w-1/4 pb-1">
                  <div className="bg-white p-1.5 border-[1px] border-[#c4ac6a] shadow-sm mb-2">
-                    <QRCodeSVG value={verificationUrl} size={60} level="H" />
+                    <QRCodeSVG value={verificationUrl} size={50} level="H" />
                  </div>
                  <p className="text-[7px] text-gray-400 font-bold uppercase tracking-widest italic leading-none mb-1">Verify Authenticity</p>
                  <p className="text-gray-800 font-bold text-[10px]">
@@ -172,8 +203,8 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
 
               {/* 3. Stamp */}
               <div className="flex flex-col items-center w-1/4">
-                 <div className="h-28 w-28 flex items-center justify-center">
-                    <img src="/certificate/stamp.webp" alt="Stamp" className="w-28 h-28 object-contain mix-blend-multiply" />
+                 <div className="h-24 w-24 flex items-center justify-center">
+                    <img src="/certificate/stamp.webp" alt="Stamp" className="w-24 h-24 object-contain mix-blend-multiply" />
                  </div>
               </div>
 
@@ -191,7 +222,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
                  </div>
 
                  <div className="relative h-16 w-full flex items-center justify-center mb-1">
-                   <p className="text-[#004d40] text-[55px] font-normal leading-none opacity-90" style={{ fontFamily: '"Mrs Saint Delafield", cursive', transform: 'rotate(-8deg)' }}>
+                   <p className="text-[#004d40] text-[45px] font-normal leading-none opacity-90" style={{ fontFamily: '"Mrs Saint Delafield", cursive', transform: 'rotate(-8deg)' }}>
                      E. N.
                    </p>
                  </div>
@@ -224,7 +255,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
          <div className="flex flex-row items-center justify-end gap-2 w-1/3 text-right whitespace-nowrap">
             <Shield className="h-3.5 w-3.5 text-white/90 shrink-0" />
             <p className="text-white text-[10px] italic font-bold tracking-widest uppercase leading-none">
-              {isFirstAid ? "Safety today, prosperity tomorrow." : "Safety today, prosperity tomorrow."}
+              Safety today, prosperity tomorrow.
             </p>
          </div>
        </div>

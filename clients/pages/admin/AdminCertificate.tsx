@@ -19,7 +19,7 @@ import { ConfirmModal } from "@/components/ConfirmModal";
 export default function AdminCertificate() {
   const [formData, setFormData] = useState({
     title: "Mr.",
-    type: "general" as "general" | "first-aid",
+    type: "general" as "general" | "first-aid" | "lifting-safety" | "height-safety",
     learnerName: "",
     courses: "",
     dateIssued: format(new Date(), "yyyy-MM-dd"),
@@ -398,7 +398,7 @@ export default function AdminCertificate() {
                 <CardTitle>Generate Certificate</CardTitle>
                 <CardDescription>Fill in the learner details below.</CardDescription>
               </div>
-              <div className="flex gap-2 bg-white p-1 rounded-lg border shadow-sm">
+              <div className="flex flex-wrap gap-2 bg-white p-1 rounded-lg border shadow-sm">
                 <Button 
                   type="button"
                   variant={formData.type === "general" ? "default" : "ghost"}
@@ -406,7 +406,7 @@ export default function AdminCertificate() {
                   onClick={() => setFormData(prev => ({ ...prev, type: "general" }))}
                   className="rounded-md h-8 text-xs px-3"
                 >
-                  New General Certificate
+                  General
                 </Button>
                 <Button 
                   type="button"
@@ -415,7 +415,25 @@ export default function AdminCertificate() {
                   onClick={() => setFormData(prev => ({ ...prev, type: "first-aid", courses: "FIRST AID" }))}
                   className="rounded-md h-8 text-xs px-3"
                 >
-                  First Aid Certificate
+                  First Aid
+                </Button>
+                <Button 
+                  type="button"
+                  variant={formData.type === "lifting-safety" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setFormData(prev => ({ ...prev, type: "lifting-safety", courses: "SAFE LIFTING OPERATIONS" }))}
+                  className="rounded-md h-8 text-xs px-3"
+                >
+                  Lifting Safety
+                </Button>
+                <Button 
+                  type="button"
+                  variant={formData.type === "height-safety" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setFormData(prev => ({ ...prev, type: "height-safety", courses: "WORKING AT HEIGHT SAFETY" }))}
+                  className="rounded-md h-8 text-xs px-3"
+                >
+                  Height Safety
                 </Button>
               </div>
             </div>
@@ -455,9 +473,11 @@ export default function AdminCertificate() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="courses">Courses Completed</Label>
-                {formData.type === "first-aid" ? (
+                {formData.type !== "general" ? (
                   <Input 
-                    value="FIRST AID TRAINING" 
+                    value={formData.type === "first-aid" ? "FIRST AID TRAINING" : 
+                           formData.type === "lifting-safety" ? "SAFE LIFTING OPERATIONS" : 
+                           "WORKING AT HEIGHT SAFETY"} 
                     disabled 
                     className="bg-muted opacity-70"
                   />

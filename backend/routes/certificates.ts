@@ -13,7 +13,7 @@ export interface TranscriptItem {
 
 export interface Certificate {
   id: string;
-  type?: 'general' | 'first-aid';
+  type?: 'general' | 'first-aid' | 'lifting-safety' | 'height-safety';
   title: string;
   learnerName: string;
   courses: string;
