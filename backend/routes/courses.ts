@@ -14,6 +14,9 @@ const COURSES: CoursePublic[] = [
   { id: "safety-management", title: "Safety Management (General)", sector: "General", duration: "3 months" },
 ];
 
+const COURSES_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let coursesCache: { fetchedAt: number; data: CoursePublic[] } | null = null;
+
 async function isValidCourseId(id: string): Promise<boolean> {
   if (COURSES.some((c) => c.id === id)) return true;
   const doc = await mongoCollection<{ id: string }>(MONGO_COLLECTIONS.courses).findOne({ id });
@@ -24,6 +27,12 @@ async function isValidCourseId(id: string): Promise<boolean> {
 export async function getCourses(_req: Request, res: Response): Promise<void> {
   try {
     const staff = verifyAdminSessionToken(getBearerToken(_req));
+    if (!staff.ok && coursesCache && Date.now() - coursesCache.fetchedAt < COURSES_CACHE_TTL_MS) {
+      res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=300");
+      res.json({ courses: coursesCache.data });
+      return;
+    }
+
     const col = mongoCollection<CoursePublic & { slug?: CourseId; description?: string }>(MONGO_COLLECTIONS.courses);
     const raw = await col.find({}).sort({ order: 1 }).toArray();
     const dbCourses: CoursePublic[] = raw.map((d) => ({
@@ -32,17 +41,22 @@ export async function getCourses(_req: Request, res: Response): Promise<void> {
       sector: d.sector,
       duration: d.duration || "3 months",
     }));
+
     if (staff.ok && staff.payload.role === "instructor") {
       const inst = await getActiveInstructorByUserId(staff.payload.userId);
       const allowed = new Set(inst?.allowedCourseIds ?? []);
       res.json({ courses: dbCourses.filter((c) => allowed.has(c.id)) });
       return;
     }
-    if (dbCourses.length > 0) {
-      res.json({ courses: dbCourses });
-    } else {
-      res.json({ courses: COURSES });
+
+    const finalCourses = dbCourses.length > 0 ? dbCourses : COURSES;
+    
+    if (!staff.ok) {
+      coursesCache = { fetchedAt: Date.now(), data: finalCourses };
+      res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=300");
     }
+    
+    res.json({ courses: finalCourses });
   } catch (e) {
     res.json({ courses: COURSES });
   }

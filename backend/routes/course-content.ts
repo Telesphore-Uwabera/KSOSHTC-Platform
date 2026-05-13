@@ -186,6 +186,7 @@ export async function getCourse(req: Request, res: Response): Promise<void> {
       return;
     }
     const out = omitMongoId(doc);
+    res.setHeader("Cache-Control", "public, max-age=300");
     res.json(out);
   } catch (e) {
     console.error("getCourse:", e);
@@ -307,6 +308,7 @@ export async function listModules(req: Request, res: Response): Promise<void> {
       .sort({ order: 1 })
       .toArray();
     const modules = rows.map((d) => omitMongoId(d) as ModuleDoc);
+    res.setHeader("Cache-Control", "public, max-age=300");
     res.json({ modules });
   } catch (e) {
     console.error("listModules:", e);
@@ -409,6 +411,7 @@ export async function listLessons(req: Request, res: Response): Promise<void> {
       .sort({ order: 1 })
       .toArray();
     const lessons = rows.map((d) => omitMongoId(d) as LessonDoc);
+    res.setHeader("Cache-Control", "public, max-age=300");
     res.json({ lessons });
   } catch (e) {
     console.error("listLessons:", e);
@@ -519,6 +522,7 @@ export async function listAssessments(req: Request, res: Response): Promise<void
     const assessments = rows
       .map((d) => omitMongoId(d) as AssessmentDoc)
       .sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
+    res.setHeader("Cache-Control", "public, max-age=300");
     res.json({ assessments });
   } catch (e) {
     console.error("listAssessments:", e);
@@ -569,6 +573,7 @@ export async function getAssessment(req: Request, res: Response): Promise<void> 
       res.status(404).json({ error: "Assessment not found." });
       return;
     }
+    res.setHeader("Cache-Control", "public, max-age=300");
     res.json(omitMongoId(doc));
   } catch (e) {
     console.error("getAssessment:", e);

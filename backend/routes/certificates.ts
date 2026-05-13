@@ -31,6 +31,9 @@ export interface Certificate {
   transcript?: TranscriptItem[];
 }
 
+const CERTIFICATES_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
+let certificatesCache: { fetchedAt: number; data: Certificate[] } | null = null;
+
 async function getNextCertificateId(year: number): Promise<string> {
   const col = mongoCollection<Certificate>(MONGO_COLLECTIONS.certificates);
   const pattern = `${year}-KS-`;
@@ -88,6 +91,7 @@ export async function createCertificate(req: Request, res: Response): Promise<vo
     };
 
     await col.insertOne(newCertificate as any);
+    certificatesCache = null; // Invalidate cache on new certificate
     res.json(newCertificate);
   } catch (e) {
     console.error("Create certificate error:", e);
@@ -106,6 +110,7 @@ export async function getCertificate(req: Request, res: Response): Promise<void>
       return;
     }
 
+    res.setHeader("Cache-Control", "private, max-age=300"); // Cache individual certs for 5 mins
     res.json(cert);
   } catch (e) {
     console.error("Get certificate error:", e);
@@ -115,8 +120,17 @@ export async function getCertificate(req: Request, res: Response): Promise<void>
 
 export async function getAllCertificates(req: Request, res: Response): Promise<void> {
   try {
+    if (certificatesCache && Date.now() - certificatesCache.fetchedAt < CERTIFICATES_CACHE_TTL_MS) {
+      res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=300");
+      res.json(certificatesCache.data);
+      return;
+    }
+
     const col = mongoCollection<Certificate>(MONGO_COLLECTIONS.certificates);
     const certs = await col.find({}).sort({ createdAt: -1 }).toArray();
+    
+    certificatesCache = { fetchedAt: Date.now(), data: certs };
+    res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=300");
     res.json(certs);
   } catch (e) {
     console.error("Get all certificates error:", e);
@@ -141,6 +155,7 @@ export async function updateCertificate(req: Request, res: Response): Promise<vo
       return;
     }
 
+    certificatesCache = null; // Invalidate cache on update
     res.json(result);
   } catch (e) {
     console.error("Update certificate error:", e);
@@ -160,6 +175,7 @@ export async function deleteCertificate(req: Request, res: Response): Promise<vo
       return;
     }
 
+    certificatesCache = null; // Invalidate cache on delete
     res.json({ message: "Certificate deleted successfully" });
   } catch (e) {
     console.error("Delete certificate error:", e);

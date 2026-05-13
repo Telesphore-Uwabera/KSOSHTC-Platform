@@ -195,8 +195,8 @@ async function sendEmail(
   const audience = options?.audience ?? "learner";
   const textBody = append
     ? text.trimEnd() +
-      "\n" +
-      (audience === "admin" ? emailAdminFooterText() : emailLearnerFooterText())
+    "\n" +
+    (audience === "admin" ? emailAdminFooterText() : emailLearnerFooterText())
     : text.trimEnd();
   const baseHtml = html ?? text.replace(/\n/g, "<br>\n");
   const htmlBody = append
@@ -930,20 +930,20 @@ export async function notifyInstructorsAssignmentSubmitted(data: {
 <p style="margin:0 0 0.35em;font-weight:bold;letter-spacing:0.03em;">SUBMISSION SUMMARY</p>
 <table style="border-collapse:collapse;width:100%;font-size:14px;margin:0 0 1.25em;">
 <tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Learner</td><td style="padding:6px 0;"><strong>${escapeHtml(
-    data.learnerName
-  )}</strong></td></tr>
+      data.learnerName
+    )}</strong></td></tr>
 <tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Email</td><td style="padding:6px 0;"><a href="mailto:${escapeHtml(
-    data.learnerEmail
-  )}" style="color:#0d6efd;">${escapeHtml(data.learnerEmail)}</a></td></tr>
+      data.learnerEmail
+    )}" style="color:#0d6efd;">${escapeHtml(data.learnerEmail)}</a></td></tr>
 <tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Course</td><td style="padding:6px 0;">${escapeHtml(
-    data.courseTitle
-  )}</td></tr>
+      data.courseTitle
+    )}</td></tr>
 <tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Title</td><td style="padding:6px 0;">${escapeHtml(
-    data.assignmentTitle
-  )}</td></tr>
+      data.assignmentTitle
+    )}</td></tr>
 <tr><td style="padding:6px 12px 6px 0;color:#555;vertical-align:top;">Reference ID</td><td style="padding:6px 0;font-family:monospace;font-size:13px;">${escapeHtml(
-    data.submissionId
-  )}</td></tr>
+      data.submissionId
+    )}</td></tr>
 </table>
 <p style="margin:0;"><a href="${gradeUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:10px 18px;border-radius:6px;text-decoration:none;font-weight:600;">Open Assignments</a></p>
 </div>`;
