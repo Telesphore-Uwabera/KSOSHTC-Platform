@@ -12,14 +12,29 @@ function registrationsCol() {
 }
 
 async function uploadBase64File(filename: string, contentBase64: string, folder: string): Promise<string> {
-  const safeName = path.basename(filename).replace(/[^a-zA-Z0-9._\-\s+()]/g, "_");
-  const ext = path.extname(safeName).toLowerCase();
+  let safeName = path.basename(filename).replace(/[^a-zA-Z0-9._\-\s+()]/g, "_");
+  let ext = path.extname(safeName).toLowerCase();
   if (!isAllowedUploadExtension(ext)) {
     throw new Error(`File type ${ext} is not allowed.`);
   }
-  const buf = Buffer.from(contentBase64, "base64");
+  let buf = Buffer.from(contentBase64, "base64");
   if (buf.length > 10 * 1024 * 1024) { // Max 10MB as per screenshot
     throw new Error(`File ${filename} is too large (max 10MB).`);
+  }
+
+  const IMAGE_EXTS = new Set([".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp", ".tif", ".tiff", ".heic"]);
+
+  if (IMAGE_EXTS.has(ext)) {
+    try {
+      const sharp = (await import("sharp")).default;
+      buf = await sharp(buf).webp({ quality: 80 }).toBuffer();
+      ext = ".webp";
+      safeName = `${path.parse(safeName).name}.webp`;
+      contentBase64 = buf.toString("base64");
+    } catch (err) {
+      console.warn(`Failed to convert image ${filename} to webp:`, err);
+      // Fallback to original buffer and extension if conversion fails
+    }
   }
 
   cloudinary.config({

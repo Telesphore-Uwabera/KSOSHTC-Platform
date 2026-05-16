@@ -154,11 +154,13 @@ export default function TrainingRegistration() {
       <main className="flex-1 py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
         <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-sm border border-gray-100">
           <div className="text-center mb-10">
-            <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-4">Training Registration</h1>
-            <p className="text-gray-600">Register for our comprehensive OSH training courses.</p>
+            <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-4">Welcome to KSOSHTC Registration</h1>
+            <p className="text-gray-600 max-w-2xl mx-auto">
+              Welcome to the Kigali Safety OSH Training Center. Please fill out the form below to register for our comprehensive Occupational Health and Safety training courses.
+            </p>
           </div>
 
-          <div className="bg-blue-50 text-blue-900 p-6 rounded-2xl mb-10 border border-blue-100">
+          <div className="bg-green-50 text-green-900 p-6 rounded-2xl mb-10 border border-green-100">
             <h3 className="font-semibold text-lg mb-3">Training we offer:</h3>
             <ol className="list-decimal list-inside space-y-2 ml-2">
               {COURSES_OFFERED.map((course, idx) => (
@@ -241,8 +243,8 @@ export default function TrainingRegistration() {
             </div>
 
             {/* Registration Fee */}
-            <div className="bg-gray-50 rounded-2xl p-6 border border-gray-200">
-              <h3 className="font-bold text-gray-900 mb-2 uppercase text-sm tracking-wider">Registration Fees</h3>
+            <div className="bg-green-50 rounded-2xl p-6 border border-green-200 shadow-sm">
+              <h3 className="font-bold text-green-900 mb-2 uppercase text-sm tracking-wider">Registration Fees</h3>
               <div className="text-sm text-gray-700 mb-4 space-y-1">
                 <p className="font-semibold text-lg text-primary">10,000 RWF</p>
                 <p>Account no: <strong>4025201372795</strong> (EQUITY BANK)</p>
