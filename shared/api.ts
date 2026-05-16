@@ -257,3 +257,20 @@ export interface CourseUsageItem {
   completionCount: number;
   completionRatePercent: number;
 }
+
+export interface SettingsDoc {
+  id: "singleton";
+  isRegistrationActive: boolean;
+}
+
+export interface RegistrationSubmissionDoc {
+  id: string;
+  names: string;
+  email: string;
+  phone: string;
+  courses: string[];
+  registrationFeeReceiptUrl?: string;
+  tuitionFeeReceiptUrl?: string;
+  highestDegreeUrls?: string[];
+  submittedAt: string;
+}

@@ -65,5 +65,7 @@ export const MONGO_COLLECTIONS = {
   inquiries: "inquiries",
   password_resets: "password_resets",
   certificates: "certificates",
+  settings: "settings",
+  registrations: "registrations",
 } as const;
 

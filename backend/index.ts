@@ -64,6 +64,8 @@ import {
 import { postEnrollment, getEnrollments, patchEnrollment } from "./routes/enrollments";
 import { getProgress, patchProgress } from "./routes/progress";
 import { postContact } from "./routes/contact";
+import { getSettings, patchSettings } from "./routes/settings";
+import { postRegistration, getRegistrations } from "./routes/registrations";
 import { createCertificate, getCertificate, getAllCertificates, updateCertificate, deleteCertificate, sendEmailCertificate, getNextId } from "./routes/certificates";
 import { getCertificateCurriculum } from "./routes/curriculum";
 import { listInstructors, createInstructor, updateInstructor, deleteInstructor } from "./routes/instructors";
@@ -194,6 +196,14 @@ export function createServer(options?: { apiOnly?: boolean }) {
 
   // Contact form (saved to MongoDB)
   app.post("/api/contact", postContact);
+
+  // Settings
+  app.get("/api/settings", getSettings);
+  app.patch("/api/settings", patchSettings);
+
+  // Registrations
+  app.post("/api/registrations", postRegistration);
+  app.get("/api/registrations", requireAdminSession, getRegistrations);
 
   // Users: register, login, list (admin), approve (admin), CRUD (admin)
   app.post("/api/register", rateLimitRegister, postRegister);

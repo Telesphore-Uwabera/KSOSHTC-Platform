@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { SiteImage } from "@/components/SiteImage";
-import { Menu, X, Home, Info, BookOpen, Building2, GraduationCap, Mail, HardHat, Building, Pickaxe, ChevronDown, LayoutDashboard, Shield, UserCog } from "lucide-react";
+import { Menu, X, Home, Info, BookOpen, Building2, GraduationCap, Mail, HardHat, Building, Pickaxe, ChevronDown, LayoutDashboard, Shield, UserCog, ClipboardSignature } from "lucide-react";
+import { useQuery } from "@tanstack/react-query";
+import { getApiBase } from "@/lib/apiBase";
 
 const courseDropdownItems = [
   { label: "Construction", path: "/courses/construction", icon: HardHat },
@@ -28,6 +30,17 @@ export default function Header() {
   const isAdminRoute = location.pathname.startsWith("/admin");
   const isInstructorRoute = location.pathname.startsWith("/instructor");
   const isCoursesActive = location.pathname === "/courses" || courseDropdownItems.some((c) => location.pathname === c.path);
+
+  const { data: settingsData } = useQuery({
+    queryKey: ["public", "settings"],
+    queryFn: async () => {
+      const res = await fetch(getApiBase() + "/api/settings");
+      if (!res.ok) return { isRegistrationActive: false };
+      const data = await res.json();
+      return data.settings;
+    },
+  });
+  const isRegistrationActive = settingsData?.isRegistrationActive ?? false;
 
   useEffect(() => {
     let ticking = false;
@@ -131,6 +144,16 @@ export default function Header() {
                     </Link>
                   );
                 })}
+                {isRegistrationActive && (
+                  <Link
+                    to="/training-registration"
+                    className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 font-medium transition-all duration-300 relative group text-xs sm:text-sm lg:text-base ${location.pathname === "/training-registration" ? "text-primary" : "text-gray-700 hover:text-primary"}`}
+                  >
+                    <ClipboardSignature className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                    Registration
+                    <span className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-300 ${location.pathname === "/training-registration" ? "w-full" : "w-0 group-hover:w-full"}`} />
+                  </Link>
+                )}
 <Link
                 to={isAdminRoute ? "/admin" : isInstructorRoute ? "/instructor" : "/dashboard"}
                 className={`inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-semibold transition-all duration-300 text-xs sm:text-sm lg:text-base border-2 ${
@@ -240,6 +263,18 @@ export default function Header() {
                   </Link>
                 );
               })}
+              {isRegistrationActive && (
+                <Link
+                  to="/training-registration"
+                  onClick={() => setIsOpen(false)}
+                  className={`flex items-center gap-2.5 px-4 py-3 rounded-lg font-medium transition-all duration-300 ${
+                    location.pathname === "/training-registration" ? "bg-primary/10 text-primary" : "text-gray-700 hover:bg-primary/10 hover:text-primary"
+                  }`}
+                >
+                  <ClipboardSignature className="w-4 h-4 shrink-0" />
+                  Registration
+                </Link>
+              )}
               <Link
                 to={isAdminRoute ? "/admin" : "/dashboard"}
                 onClick={() => setIsOpen(false)}
