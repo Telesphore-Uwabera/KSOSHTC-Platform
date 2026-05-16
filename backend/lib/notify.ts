@@ -184,7 +184,7 @@ export type SendEmailOptions = {
 };
 
 /** Send email to a single recipient. Uses Brevo when BREVO_API_KEY is set; otherwise SMTP. */
-async function sendEmail(
+export async function sendEmail(
   to: string,
   subject: string,
   text: string,

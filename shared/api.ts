@@ -274,3 +274,8 @@ export interface RegistrationSubmissionDoc {
   highestDegreeUrls?: string[];
   submittedAt: string;
 }
+
+export interface SubscriberDoc {
+  email: string;
+  subscribedAt: string;
+}

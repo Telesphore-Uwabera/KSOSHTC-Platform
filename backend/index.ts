@@ -66,6 +66,8 @@ import { getProgress, patchProgress } from "./routes/progress";
 import { postContact } from "./routes/contact";
 import { getSettings, patchSettings } from "./routes/settings";
 import { postRegistration, getRegistrations } from "./routes/registrations";
+import { postSubscriber, getSubscribers } from "./routes/subscribers";
+import { postCommunicationSend } from "./routes/communications";
 import { createCertificate, getCertificate, getAllCertificates, updateCertificate, deleteCertificate, sendEmailCertificate, getNextId } from "./routes/certificates";
 import { getCertificateCurriculum } from "./routes/curriculum";
 import { listInstructors, createInstructor, updateInstructor, deleteInstructor } from "./routes/instructors";
@@ -204,6 +206,11 @@ export function createServer(options?: { apiOnly?: boolean }) {
   // Registrations
   app.post("/api/registrations", postRegistration);
   app.get("/api/registrations", requireAdminSession, getRegistrations);
+
+  // Subscribers & Communications
+  app.post("/api/subscribers", postSubscriber);
+  app.get("/api/subscribers", requireAdminSession, getSubscribers);
+  app.post("/api/communications/send", requireAdminSession, postCommunicationSend);
 
   // Users: register, login, list (admin), approve (admin), CRUD (admin)
   app.post("/api/register", rateLimitRegister, postRegister);
