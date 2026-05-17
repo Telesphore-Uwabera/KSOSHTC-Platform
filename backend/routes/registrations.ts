@@ -111,6 +111,25 @@ export async function postRegistration(req: Request, res: Response): Promise<voi
 
     await registrationsCol().insertOne(doc as any);
 
+    try {
+      const { sendAdminEmail } = await import("../lib/notify.ts");
+      const adminSubject = `[KSOSHTC] New Training Registration - ${names}`;
+      const adminHtml = `
+        <h2>New Training Registration</h2>
+        <p><strong>Names:</strong> ${names}</p>
+        <p><strong>Email:</strong> ${email}</p>
+        <p><strong>Phone:</strong> ${phone}</p>
+        <p><strong>Courses:</strong> ${courses.join(", ")}</p>
+        ${registrationFeeReceiptUrl ? `<p><strong>Registration Fee Receipt:</strong> <a href="${registrationFeeReceiptUrl}">View Receipt</a></p>` : ""}
+        ${tuitionFeeReceiptUrl ? `<p><strong>Tuition Fee Receipt:</strong> <a href="${tuitionFeeReceiptUrl}">View Receipt</a></p>` : ""}
+        ${highestDegreeUrls.length > 0 ? `<p><strong>Highest Degrees:</strong><br>${highestDegreeUrls.map(u => `<a href="${u}">View Document</a>`).join("<br>")}</p>` : ""}
+      `;
+      const adminText = `New Training Registration\n\nNames: ${names}\nEmail: ${email}\nPhone: ${phone}\nCourses: ${courses.join(", ")}\n`;
+      await sendAdminEmail(adminSubject, adminText, adminHtml);
+    } catch (err) {
+      console.error("Failed to send admin email for registration:", err);
+    }
+
     res.status(201).json({ message: "Registration successful", registration: doc });
   } catch (e) {
     console.error("postRegistration error:", e);

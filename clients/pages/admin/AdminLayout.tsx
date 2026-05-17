@@ -1,5 +1,5 @@
 import { Link, Outlet, NavLink, Navigate, useLocation, useNavigate } from "react-router-dom";
-import { ArrowLeft, LayoutDashboard, BookOpen, Users, MessageSquareQuote, BarChart3, FolderOpen, Settings, ClipboardList, LogOut, FileSpreadsheet, ShieldCheck, UserCog, Send } from "lucide-react";
+import { ArrowLeft, LayoutDashboard, BookOpen, Users, MessageSquareQuote, BarChart3, FolderOpen, Settings, ClipboardList, LogOut, FileSpreadsheet, ShieldCheck, UserCog, Send, UserPlus } from "lucide-react";
 import Header from "../../components/Header";
 import { cn } from "@/lib/utils";
 import { clearStoredUser, getStoredUser } from "@/lib/auth";
@@ -16,6 +16,7 @@ function navForRole(role: string | undefined) {
     return [
       { to: "/admin", end: true, label: "Dashboard", icon: BarChart3 },
       ...staffCore,
+      { to: "/admin/registrations", end: true, label: "Registrations", icon: UserPlus },
       { to: "/admin/learners", end: true, label: "Learners", icon: Users },
       { to: "/admin/instructors", end: true, label: "Instructors", icon: UserCog },
       { to: "/admin/certificate", end: true, label: "Certificates", icon: ShieldCheck },

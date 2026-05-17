@@ -40,6 +40,7 @@ const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminAssignmentSubmissions = lazy(() => import("./pages/admin/AdminAssignmentSubmissions"));
 const AdminDistributedAssignments = lazy(() => import("./pages/admin/AdminDistributedAssignments"));
 const AdminCertificate = lazy(() => import("./pages/admin/AdminCertificate"));
+const AdminRegistrations = lazy(() => import("./pages/admin/AdminRegistrations"));
 const CertificateVerification = lazy(() => import("./pages/CertificateVerification"));
 const TakeQuiz = lazy(() => import("./pages/TakeQuiz"));
 const TakeModuleQuiz = lazy(() => import("./pages/TakeModuleQuiz"));
@@ -224,6 +225,7 @@ const App = () => {
                   <Route path="course-content/:courseId" element={<AdminCourseContentDetail />} />
                   <Route path="course-content/:courseId/modules/:moduleId/assessments/:assessmentId" element={<AdminModuleAssessment />} />
                   <Route path="learners" element={<AdminLearners />} />
+                  <Route path="registrations" element={<AdminRegistrations />} />
                   <Route path="instructors" element={<AdminInstructors />} />
                   <Route path="assignment-submissions" element={<AdminAssignmentSubmissions />} />
                   <Route path="distribute-pdf" element={<AdminDistributedAssignments />} />
