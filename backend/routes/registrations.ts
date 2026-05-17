@@ -27,7 +27,7 @@ async function uploadBase64File(filename: string, contentBase64: string, folder:
   if (IMAGE_EXTS.has(ext)) {
     try {
       const sharp = (await import("sharp")).default;
-      buf = await sharp(buf).webp({ quality: 80 }).toBuffer();
+      buf = Buffer.from(await sharp(buf).webp({ quality: 80 }).toBuffer());
       ext = ".webp";
       safeName = `${path.parse(safeName).name}.webp`;
       contentBase64 = buf.toString("base64");
