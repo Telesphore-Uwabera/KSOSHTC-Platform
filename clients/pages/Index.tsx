@@ -8,7 +8,14 @@ import { SiteImage } from "../components/SiteImage";
 import type { Testimonial } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
 
-const HERO_IMAGES = ["/ksohtc-1.webp", "/ksohtc-2.webp", "/ksohtc-3.webp", "/ksohtc-7.webp"];
+const HERO_IMAGES = [
+  "/ksohtc-1.webp",
+  "/ksohtc-site-visit.webp",
+  "/ksohtc-2.webp",
+  "/ksohtc-practical-drill.webp",
+  "/ksohtc-3.webp",
+  "/ksohtc-7.webp"
+];
 const HERO_INTERVAL_MS = 5000;
 const HERO_FADE_DURATION_MS = 1200;
 
