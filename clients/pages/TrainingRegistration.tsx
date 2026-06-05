@@ -280,7 +280,7 @@ export default function TrainingRegistration() {
               <h3 className="font-bold text-gray-900 mb-2 uppercase text-sm tracking-wider">Tuition Fees</h3>
               <div className="text-sm text-gray-700 mb-4 space-y-1">
                 <p className="font-semibold text-lg text-primary">200,000 RWF</p>
-                <p>Account no: <strong>402501372795</strong> (EQUITY BANK)</p>
+                <p>Account no: <strong>4025201372795</strong> (EQUITY BANK)</p>
                 <p>Names: <strong>KIGALI SAFETY OSH TRAINING CENTER</strong>.</p>
                 <p className="text-blue-700 font-medium mt-2 bg-blue-50 p-2 rounded-lg inline-block border border-blue-100">
                   N.B: You can pay all amount, all pay by Installments, or Pay Gradually.
