@@ -71,6 +71,7 @@ import { postCommunicationSend } from "./routes/communications";
 import { createCertificate, getCertificate, getAllCertificates, updateCertificate, deleteCertificate, sendEmailCertificate, getNextId } from "./routes/certificates";
 import { getCertificateCurriculum } from "./routes/curriculum";
 import { listInstructors, createInstructor, updateInstructor, deleteInstructor } from "./routes/instructors";
+import { getQuotations, getQuotationById, createQuotation, updateQuotation, deleteQuotation } from "./routes/quotations";
 import { getMongoDb, mongoCollection, MONGO_COLLECTIONS } from "./lib/mongo";
 import { getAdminSessionSecret, requireAdminSession, requireStaffSession } from "./lib/adminSession";
 import { rateLimitLogin, rateLimitRegister } from "./lib/rateLimit";
@@ -230,6 +231,13 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.post("/api/instructors", requireAdminSession, createInstructor);
   app.put("/api/instructors/:id", requireAdminSession, updateInstructor);
   app.delete("/api/instructors/:id", requireAdminSession, deleteInstructor);
+
+  // Quotations (admin-only)
+  app.get("/api/quotations", requireAdminSession, getQuotations);
+  app.get("/api/quotations/:id", requireAdminSession, getQuotationById);
+  app.post("/api/quotations", requireAdminSession, createQuotation);
+  app.put("/api/quotations/:id", requireAdminSession, updateQuotation);
+  app.delete("/api/quotations/:id", requireAdminSession, deleteQuotation);
 
   // Courses (list) and per-course quiz (get, create/update, delete)
   app.get("/api/courses", getCourses);

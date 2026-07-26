@@ -279,3 +279,57 @@ export interface SubscriberDoc {
   email: string;
   subscribedAt: string;
 }
+
+/** Quotation & Proforma Types */
+export interface QuotationModule {
+  id: string;
+  title: string;
+  bullets: string[];
+}
+
+export interface QuotationTrainer {
+  id: string;
+  name: string;
+  title: string;
+  bio: string;
+  certifications: string;
+}
+
+export interface Quotation {
+  id: string;
+  quotationNo: string;
+  date: string;
+  clientName: string;
+  location: string;
+  numberOfParticipants: number;
+  costPerPerson: number;
+  totalCost: number;
+  duration: string;
+  paymentInfo: {
+    bankName: string;
+    accountNo: string;
+    accountName: string;
+  };
+  modules: QuotationModule[];
+  trainingMethodology: string[];
+  includedInFee: string[];
+  paymentTerms: string[];
+  additionalInfo: string[];
+  trainers: QuotationTrainer[];
+  preparedBy: {
+    name: string;
+    title: string;
+  };
+  motto: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export const FIXED_PAYMENT_INFO = {
+  bankName: "EQUITY BANK RWANDA",
+  accountNo: "4025201372795",
+  accountName: "Kigali Safety OSH Training Center",
+};
+
+export const FIXED_MOTTO = "Safety today, prosperity tomorrow.";
+

@@ -68,5 +68,6 @@ export const MONGO_COLLECTIONS = {
   settings: "settings",
   registrations: "registrations",
   subscribers: "subscribers",
+  quotations: "quotations",
 } as const;
 
