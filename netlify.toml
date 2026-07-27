@@ -28,7 +28,7 @@
 # /register, /login, /dashboard, /admin, etc. must NOT be proxied — they are served by the fallback below.
 [[redirects]]
   from = "/courses/:sector/:file"
-  to = "https://ksohtc-platform.onrender.com/courses/:sector/:file"
+  to = "https://ksohtc-api-production.up.railway.app/courses/:sector/:file"
   status = 200
   force = true
 

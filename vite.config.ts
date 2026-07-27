@@ -4,7 +4,7 @@ import path from "path";
 import type { NextFunction, Request, Response } from "express";
 
 // https://vitejs.dev/config/
-export default defineConfig(({ mode }) => {
+export default defineConfig(({ mode, command }) => {
   // Frontend uses clients/.env only (see clients/.env.example)
   const envDir = path.resolve(__dirname, "clients");
   const env = loadEnv(mode, envDir, "");
@@ -35,10 +35,11 @@ export default defineConfig(({ mode }) => {
     build: {
       outDir: "dist/spa",
     },
-    plugins: useProxy ? [react()] : [react(), expressPlugin()],
+    plugins: command === "serve" && !useProxy ? [react(), expressPlugin()] : [react()],
     resolve: {
       alias: {
         "@": path.resolve(__dirname, "./clients"),
+        "@shared/api": path.resolve(__dirname, "./shared/api.ts"),
         "@shared": path.resolve(__dirname, "./shared"),
       },
     },
@@ -50,9 +51,9 @@ function expressPlugin(): Plugin {
     name: "express-plugin",
     apply: "serve", // Only apply during development (serve mode)
     async configureServer(server) {
-      // Lazy-load backend so the config bundle (used by `vite build` on CI) never pulls in
-      // backend routes and @shared/* aliases—which Node cannot resolve in the config .mjs shim.
-      const { createServer } = await import("./backend/index.ts");
+      // Lazy-load backend using a dynamic path string so esbuild does not trace/bundle backend routes during config load
+      const backendModule = "./backend/index.ts";
+      const { createServer } = await import(/* @vite-ignore */ backendModule);
       // apiOnly: true so Express only handles /api/*; GET / is left for Vite to serve the SPA
       const app = createServer({ apiOnly: true });
 
