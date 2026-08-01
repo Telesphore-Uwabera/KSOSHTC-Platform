@@ -75,7 +75,7 @@ import { getQuotations, getQuotationById, createQuotation, updateQuotation, dele
 import { getMongoDb, mongoCollection, MONGO_COLLECTIONS } from "./lib/mongo";
 import { getAdminSessionSecret, requireAdminSession, requireStaffSession } from "./lib/adminSession";
 import { rateLimitLogin, rateLimitRegister } from "./lib/rateLimit";
-import type { LessonDoc } from "../shared/api";
+import type { LessonDoc } from "@shared/api";
 
 /** Log each request and response to the terminal (method, path, status, duration) */
 function requestLogger(req: Request, res: Response, next: NextFunction): void {

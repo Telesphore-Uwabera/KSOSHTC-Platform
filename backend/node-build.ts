@@ -7,13 +7,8 @@ console.log("[START] Backend process starting...");
 const app = createServer();
 const port = process.env.PORT || 3000;
 
-// When API_ONLY, RENDER, or RAILWAY is set (e.g. backend on Render or Railway), only run the API; frontend is on Netlify
-const apiOnly =
-  process.env.API_ONLY === "true" ||
-  process.env.RENDER === "true" ||
-  process.env.RAILWAY === "true" ||
-  process.env.RAILWAY_ENVIRONMENT !== undefined ||
-  process.env.RAILWAY_SERVICE_ID !== undefined;
+// When API_ONLY or RENDER is set (e.g. backend on Render), only run the API; frontend is on Netlify
+const apiOnly = process.env.API_ONLY === "true" || process.env.RENDER === "true";
 
 if (!apiOnly) {
   const __dirname = import.meta.dirname;
