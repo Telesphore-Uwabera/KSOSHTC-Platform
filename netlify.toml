@@ -40,10 +40,11 @@
   status = 200
 
 # Caching and Security Headers
+# Do not set X-Frame-Options: Netlify's project thumbnail service embeds the site
+# cross-origin; DENY/SAMEORIGIN both block capture and leave the gray placeholder.
 [[headers]]
   for = "/*"
   [headers.values]
-    X-Frame-Options = "SAMEORIGIN"
     X-XSS-Protection = "1; mode=block"
     X-Content-Type-Options = "nosniff"
     Referrer-Policy = "strict-origin-when-cross-origin"
