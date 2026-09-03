@@ -169,8 +169,19 @@ function RouteLoader() {
   return isChanging ? <LoadingBar /> : null;
 }
 
+/** Returns true when running in a headless/bot context (Netlify screenshot, Googlebot, etc.) */
+function isBotOrHeadless(): boolean {
+  if (typeof navigator === "undefined") return true;
+  // Playwright / Puppeteer / Selenium set navigator.webdriver = true
+  if ((navigator as any).webdriver) return true;
+  // Check user agent for common bots and headless Chrome
+  const ua = navigator.userAgent.toLowerCase();
+  if (/bot|crawler|spider|headlesschrome|prerender|phantomjs|slurp|baiduspider/.test(ua)) return true;
+  return false;
+}
+
 const App = () => {
-  const [showSplash, setShowSplash] = useState(true);
+  const [showSplash, setShowSplash] = useState(() => !isBotOrHeadless());
 
   // Fail-safe: Ensure the app is NEVER stuck on the splash screen.
   useEffect(() => {
