@@ -78,7 +78,268 @@
   </head>
 
   <body>
-    <div id="root"></div>
+    <!-- Static pre-render shell for Netlify thumbnail capture.
+         Netlify's screenshot bot runs before React hydrates; without this
+         the page is blank white and produces a gray placeholder thumbnail.
+         React replaces this content on mount — end-users see nothing different. -->
+    <div id="root">
+      <style>
+        #root-shell {
+          font-family: system-ui, -apple-system, sans-serif;
+          background: #0f2518;
+          min-height: 100vh;
+          display: flex;
+          flex-direction: column;
+        }
+        #root-shell .shell-nav {
+          background: rgba(255,255,255,0.04);
+          backdrop-filter: blur(8px);
+          border-bottom: 1px solid rgba(255,255,255,0.08);
+          padding: 0 2rem;
+          height: 68px;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+        }
+        #root-shell .shell-logo {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        #root-shell .shell-logo img {
+          width: 44px;
+          height: 44px;
+          border-radius: 50%;
+          object-fit: cover;
+          border: 2px solid #F59E0B;
+        }
+        #root-shell .shell-logo-text {
+          color: #fff;
+          font-weight: 800;
+          font-size: 1.15rem;
+          letter-spacing: 0.02em;
+        }
+        #root-shell .shell-logo-sub {
+          color: #9ca3af;
+          font-size: 0.7rem;
+          margin-top: 1px;
+        }
+        #root-shell .shell-nav-links {
+          display: flex;
+          gap: 0.25rem;
+        }
+        #root-shell .shell-nav-links span {
+          color: #d1d5db;
+          font-size: 0.875rem;
+          padding: 6px 14px;
+          border-radius: 6px;
+        }
+        #root-shell .shell-nav-cta {
+          background: #F59E0B;
+          color: #000;
+          font-weight: 700;
+          font-size: 0.8rem;
+          padding: 8px 18px;
+          border-radius: 8px;
+          letter-spacing: 0.05em;
+        }
+        #root-shell .shell-hero {
+          flex: 1;
+          position: relative;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          padding: 3.5rem 2rem;
+          overflow: hidden;
+          background: linear-gradient(135deg, #0f2518 0%, #1B5E3F 50%, #0f2518 100%);
+        }
+        #root-shell .shell-hero-bg {
+          position: absolute;
+          inset: 0;
+          overflow: hidden;
+        }
+        #root-shell .shell-hero-bg .blob1 {
+          position: absolute;
+          top: -80px; right: -80px;
+          width: 400px; height: 400px;
+          background: radial-gradient(circle, rgba(245,158,11,0.18) 0%, transparent 70%);
+          border-radius: 50%;
+        }
+        #root-shell .shell-hero-bg .blob2 {
+          position: absolute;
+          bottom: -100px; left: -60px;
+          width: 350px; height: 350px;
+          background: radial-gradient(circle, rgba(27,94,63,0.4) 0%, transparent 70%);
+          border-radius: 50%;
+        }
+        #root-shell .shell-hero-content {
+          position: relative;
+          z-index: 1;
+          text-align: center;
+          max-width: 800px;
+        }
+        #root-shell .shell-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          background: rgba(245,158,11,0.15);
+          border: 1px solid rgba(245,158,11,0.35);
+          color: #F59E0B;
+          font-size: 0.75rem;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          text-transform: uppercase;
+          padding: 6px 16px;
+          border-radius: 100px;
+          margin-bottom: 1.5rem;
+        }
+        #root-shell .shell-badge::before {
+          content: '';
+          width: 7px; height: 7px;
+          background: #F59E0B;
+          border-radius: 50%;
+        }
+        #root-shell .shell-h1 {
+          color: #fff;
+          font-size: clamp(2.2rem, 5vw, 3.5rem);
+          font-weight: 900;
+          line-height: 1.1;
+          margin: 0 0 1rem;
+          letter-spacing: -0.02em;
+        }
+        #root-shell .shell-h1 span {
+          color: #F59E0B;
+        }
+        #root-shell .shell-tagline {
+          color: #9ca3af;
+          font-size: 1.05rem;
+          margin: 0 0 2rem;
+          line-height: 1.6;
+        }
+        #root-shell .shell-pills {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          justify-content: center;
+          margin-bottom: 2.5rem;
+        }
+        #root-shell .shell-pill {
+          background: rgba(255,255,255,0.07);
+          border: 1px solid rgba(255,255,255,0.12);
+          color: #e5e7eb;
+          font-size: 0.85rem;
+          font-weight: 600;
+          padding: 8px 20px;
+          border-radius: 100px;
+        }
+        #root-shell .shell-pill.active {
+          background: #1B5E3F;
+          border-color: #22c55e;
+          color: #fff;
+        }
+        #root-shell .shell-btns {
+          display: flex;
+          gap: 12px;
+          justify-content: center;
+          flex-wrap: wrap;
+        }
+        #root-shell .shell-btn-primary {
+          background: #F59E0B;
+          color: #000;
+          font-weight: 800;
+          padding: 14px 32px;
+          border-radius: 10px;
+          font-size: 0.95rem;
+          letter-spacing: 0.04em;
+        }
+        #root-shell .shell-btn-secondary {
+          background: transparent;
+          border: 2px solid rgba(255,255,255,0.25);
+          color: #fff;
+          font-weight: 700;
+          padding: 14px 32px;
+          border-radius: 10px;
+          font-size: 0.95rem;
+        }
+        #root-shell .shell-stats {
+          display: flex;
+          gap: 2rem;
+          justify-content: center;
+          flex-wrap: wrap;
+          margin-top: 3rem;
+          padding-top: 2rem;
+          border-top: 1px solid rgba(255,255,255,0.08);
+        }
+        #root-shell .shell-stat-num {
+          color: #F59E0B;
+          font-size: 1.8rem;
+          font-weight: 900;
+        }
+        #root-shell .shell-stat-label {
+          color: #9ca3af;
+          font-size: 0.75rem;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+          margin-top: 2px;
+        }
+      </style>
+      <div id="root-shell">
+        <nav class="shell-nav">
+          <div class="shell-logo">
+            <img src="/logo.webp" alt="KSOSHTC Logo" />
+            <div>
+              <div class="shell-logo-text">KSOSHTC</div>
+              <div class="shell-logo-sub">Kigali Safety OSH Training Center</div>
+            </div>
+          </div>
+          <div class="shell-nav-links">
+            <span>About</span>
+            <span>Programs</span>
+            <span>Industries</span>
+            <span>Contact</span>
+          </div>
+          <div class="shell-nav-cta">ENROLL NOW</div>
+        </nav>
+        <main class="shell-hero">
+          <div class="shell-hero-bg">
+            <div class="blob1"></div>
+            <div class="blob2"></div>
+          </div>
+          <div class="shell-hero-content">
+            <div class="shell-badge">Rwanda's Premier OSH Training Institution</div>
+            <h1 class="shell-h1">Kigali Safety<br/><span>OSH Training</span> Center</h1>
+            <p class="shell-tagline">Professional Occupational Safety &amp; Health (OSH) training for<br/>Construction, Industrial &amp; Mining sectors · Rwanda</p>
+            <div class="shell-pills">
+              <div class="shell-pill active">&#x1F477; Construction Safety</div>
+              <div class="shell-pill">&#x2699;&#xFE0F; Industrial Safety</div>
+              <div class="shell-pill">&#x26CF;&#xFE0F; Mining Safety</div>
+            </div>
+            <div class="shell-btns">
+              <div class="shell-btn-primary">ENROLL NOW &rarr;</div>
+              <div class="shell-btn-secondary">View Programs</div>
+            </div>
+            <div class="shell-stats">
+              <div style="text-align:center">
+                <div class="shell-stat-num">3</div>
+                <div class="shell-stat-label">Sectors Covered</div>
+              </div>
+              <div style="text-align:center">
+                <div class="shell-stat-num">3mo</div>
+                <div class="shell-stat-label">Program Duration</div>
+              </div>
+              <div style="text-align:center">
+                <div class="shell-stat-num">RW</div>
+                <div class="shell-stat-label">Rwanda Certified</div>
+              </div>
+              <div style="text-align:center">
+                <div class="shell-stat-num">OSH</div>
+                <div class="shell-stat-label">Accredited</div>
+              </div>
+            </div>
+          </div>
+        </main>
+      </div>
+    </div>
 
     <!-- Netlify form detection: backend POSTs here so submissions appear in Netlify Forms (optional). Firestore unchanged. -->
     <form name="registration" data-netlify="true" netlify-honeypot="bot" hidden aria-hidden="true">
