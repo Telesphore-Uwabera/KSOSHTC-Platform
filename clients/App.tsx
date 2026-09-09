@@ -14,7 +14,7 @@ import { getApiBase } from "@/lib/apiBase";
 import { BrandedSplashScreen } from "@/components/BrandedSplashScreen";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 
-const Index = lazy(() => import("./pages/Index"));
+import Index from "./pages/Index";
 const About = lazy(() => import("./pages/About"));
 const Programs = lazy(() => import("./pages/Programs"));
 const Industries = lazy(() => import("./pages/Industries"));
@@ -171,12 +171,23 @@ function RouteLoader() {
 
 /** Returns true when running in a headless/bot context (Netlify screenshot, Googlebot, etc.) */
 function isBotOrHeadless(): boolean {
-  if (typeof navigator === "undefined") return true;
+  if (typeof window === "undefined" || typeof navigator === "undefined") return true;
   // Playwright / Puppeteer / Selenium set navigator.webdriver = true
   if ((navigator as any).webdriver) return true;
-  // Check user agent for common bots and headless Chrome
-  const ua = navigator.userAgent.toLowerCase();
-  if (/bot|crawler|spider|headlesschrome|prerender|phantomjs|slurp|baiduspider/.test(ua)) return true;
+  // Check user agent for common bots, crawlers, and headless Chrome
+  const ua = (navigator.userAgent || "").toLowerCase();
+  if (/bot|crawler|spider|headlesschrome|headless|prerender|phantomjs|slurp|baiduspider|yandex|duckduckbot|facebookexternalhit|twitterbot|whatsapp|telegram|meta-externalagent|screaming frog|pingdom|lighthouse|chrome-lighthouse|google-inspectiontool|petalbot|netlify/.test(ua)) {
+    return true;
+  }
+  // Netlify thumbnail capture embeds the site inside an iframe — skip splash immediately
+  try {
+    if (window.self !== window.top) return true;
+  } catch {
+    // Cross-origin iframe security restriction triggers exception: definitely in iframe
+    return true;
+  }
+  // Headless capture environments often have 0 dimensions or specific headless flags
+  if (window.innerWidth === 0 || window.innerHeight === 0) return true;
   return false;
 }
 
