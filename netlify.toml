@@ -5,7 +5,7 @@
 
 [build.environment]
   NODE_VERSION = "20"
-  VITE_API_URL = "https://teletech-api.onrender.com"
+  VITE_API_URL = "https://ksoshtc-platform.onrender.com"
 
 [functions]
   external_node_modules = ["express"]
@@ -29,7 +29,7 @@
 # /register, /login, /dashboard, /admin, etc. must NOT be proxied — they are served by the fallback below.
 [[redirects]]
   from = "/courses/:sector/:file"
-  to = "https://teletech-api.onrender.com/api/ksoshtc/courses/:sector/:file"
+  to = "https://ksoshtc-platform.onrender.com/api/ksoshtc/courses/:sector/:file"
   status = 200
   force = true
 
