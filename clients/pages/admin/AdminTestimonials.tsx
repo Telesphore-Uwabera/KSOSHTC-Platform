@@ -16,6 +16,7 @@ import {
   Search,
   Sparkles,
   Calendar,
+  Star,
 } from "lucide-react";
 import type { Testimonial, TestimonialCreate, TestimonialUpdate } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
@@ -77,10 +78,13 @@ export default function AdminTestimonials() {
   const [name, setName] = useState("");
   const [role, setRole] = useState("");
   const [quote, setQuote] = useState("");
+  const [rating, setRating] = useState(5);
+  const [hoverRating, setHoverRating] = useState(0);
   const [avatarUrl, setAvatarUrl] = useState("");
   const [avatarFile, setAvatarFile] = useState<{ filename: string; contentBase64: string } | null>(null);
   const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const QUOTE_MAX = 500;
 
   // Filter/search state
   const [searchTerm, setSearchTerm] = useState("");
@@ -90,6 +94,8 @@ export default function AdminTestimonials() {
   const [editName, setEditName] = useState("");
   const [editRole, setEditRole] = useState("");
   const [editQuote, setEditQuote] = useState("");
+  const [editRating, setEditRating] = useState(5);
+  const [editHoverRating, setEditHoverRating] = useState(0);
   const [editAvatarUrl, setEditAvatarUrl] = useState("");
   const [editAvatarFile, setEditAvatarFile] = useState<{ filename: string; contentBase64: string } | null>(null);
   const [editAvatarPreview, setEditAvatarPreview] = useState<string | null>(null);
@@ -113,6 +119,8 @@ export default function AdminTestimonials() {
       setName("");
       setRole("");
       setQuote("");
+      setRating(5);
+      setHoverRating(0);
       setAvatarUrl("");
       setAvatarFile(null);
       setAvatarPreview(null);
@@ -195,6 +203,7 @@ export default function AdminTestimonials() {
       name: name.trim(),
       role: role.trim() || "Participant",
       quote: quote.trim(),
+      rating,
       avatarUrl: avatarUrl.trim() || undefined,
       avatarFile: avatarFile || undefined,
     });
@@ -206,6 +215,8 @@ export default function AdminTestimonials() {
     setEditName(t.name);
     setEditRole(t.role);
     setEditQuote(t.quote);
+    setEditRating((t as Testimonial & { rating?: number }).rating ?? 5);
+    setEditHoverRating(0);
     setEditAvatarUrl(t.avatarUrl || "");
     setEditAvatarPreview(t.avatarUrl || null);
     setEditAvatarFile(null);
@@ -257,6 +268,7 @@ export default function AdminTestimonials() {
         name: editName.trim(),
         role: editRole.trim() || "Participant",
         quote: editQuote.trim(),
+        rating: editRating,
         avatarUrl: editAvatarFile ? undefined : (editAvatarUrl.trim() || undefined),
         avatarFile: editAvatarFile || undefined,
       },
@@ -355,18 +367,49 @@ export default function AdminTestimonials() {
           </div>
 
           <div>
-            <label htmlFor="quote" className="block text-sm font-semibold text-gray-700 mb-1.5">
-              Testimonial Quote <span className="text-red-500">*</span>
-            </label>
+            <div className="flex items-center justify-between mb-1.5">
+              <label htmlFor="quote" className="block text-sm font-semibold text-gray-700">
+                Testimonial Quote <span className="text-red-500">*</span>
+              </label>
+              <span className={`text-xs font-medium ${quote.length >= QUOTE_MAX ? "text-red-500" : "text-gray-400"}`}>
+                {quote.length}/{QUOTE_MAX}
+              </span>
+            </div>
             <textarea
               id="quote"
               value={quote}
-              onChange={(e) => setQuote(e.target.value)}
+              onChange={(e) => setQuote(e.target.value.slice(0, QUOTE_MAX))}
               required
               rows={4}
+              maxLength={QUOTE_MAX}
               placeholder="What did they say about the OSH training, instructors, or practical drills?"
               className="w-full px-4 py-2.5 rounded-xl border border-gray-300 text-gray-900 placeholder-gray-400 focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all text-sm resize-y"
             />
+          </div>
+
+          {/* Star Rating Picker */}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-1.5">Star Rating</label>
+            <div className="flex items-center gap-1">
+              {[1, 2, 3, 4, 5].map((star) => (
+                <button
+                  key={star}
+                  type="button"
+                  onClick={() => setRating(star)}
+                  onMouseEnter={() => setHoverRating(star)}
+                  onMouseLeave={() => setHoverRating(0)}
+                  className="transition-transform hover:scale-110 focus:outline-none"
+                  aria-label={`Rate ${star} stars`}
+                >
+                  <Star
+                    className="w-7 h-7"
+                    fill={(hoverRating || rating) >= star ? "#f59e0b" : "none"}
+                    stroke={(hoverRating || rating) >= star ? "#f59e0b" : "#d1d5db"}
+                  />
+                </button>
+              ))}
+              <span className="ml-2 text-sm text-gray-500 font-medium">{rating} / 5</span>
+            </div>
           </div>
 
           {/* Avatar Image Uploader with WebP & Cloudinary Notice */}
@@ -589,6 +632,24 @@ export default function AdminTestimonials() {
                     </div>
                   </div>
 
+                  {/* Star rating on card */}
+                  <div className="flex items-center gap-0.5 mb-3">
+                    {[1, 2, 3, 4, 5].map((star) => {
+                      const r = (t as Testimonial & { rating?: number }).rating ?? 5;
+                      return (
+                        <Star
+                          key={star}
+                          className="w-4 h-4"
+                          fill={r >= star ? "#f59e0b" : "none"}
+                          stroke={r >= star ? "#f59e0b" : "#d1d5db"}
+                        />
+                      );
+                    })}
+                    <span className="ml-1 text-xs text-gray-400 font-medium">
+                      {(t as Testimonial & { rating?: number }).rating ?? 5}/5
+                    </span>
+                  </div>
+
                   {/* Card Body: Quote */}
                   <p className="text-gray-700 text-sm leading-relaxed italic line-clamp-4 bg-gray-50/70 p-3.5 rounded-xl border border-gray-100 mb-4">
                     &ldquo;{t.quote}&rdquo;
@@ -675,16 +736,47 @@ export default function AdminTestimonials() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-gray-700 mb-1">
-                  Quote <span className="text-red-500">*</span>
-                </label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="block text-sm font-semibold text-gray-700">
+                    Quote <span className="text-red-500">*</span>
+                  </label>
+                  <span className={`text-xs font-medium ${editQuote.length >= QUOTE_MAX ? "text-red-500" : "text-gray-400"}`}>
+                    {editQuote.length}/{QUOTE_MAX}
+                  </span>
+                </div>
                 <textarea
                   value={editQuote}
-                  onChange={(e) => setEditQuote(e.target.value)}
+                  onChange={(e) => setEditQuote(e.target.value.slice(0, QUOTE_MAX))}
                   required
                   rows={4}
+                  maxLength={QUOTE_MAX}
                   className="w-full px-4 py-2 rounded-xl border border-gray-300 text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-y"
                 />
+              </div>
+
+              {/* Edit Star Rating Picker */}
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-1">Star Rating</label>
+                <div className="flex items-center gap-1">
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setEditRating(star)}
+                      onMouseEnter={() => setEditHoverRating(star)}
+                      onMouseLeave={() => setEditHoverRating(0)}
+                      className="transition-transform hover:scale-110 focus:outline-none"
+                      aria-label={`Rate ${star} stars`}
+                    >
+                      <Star
+                        className="w-6 h-6"
+                        fill={(editHoverRating || editRating) >= star ? "#f59e0b" : "none"}
+                        stroke={(editHoverRating || editRating) >= star ? "#f59e0b" : "#d1d5db"}
+                      />
+                    </button>
+                  ))}
+                  <span className="ml-2 text-sm text-gray-500 font-medium">{editRating} / 5</span>
+                </div>
               </div>
 
               {/* Edit Avatar Photo Uploader */}

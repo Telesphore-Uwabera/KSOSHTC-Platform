@@ -139,6 +139,9 @@ export const postTestimonial: RequestHandler = async (req, res) => {
       }
     }
 
+    const rawRating = Number(body?.rating);
+    const rating = !isNaN(rawRating) && rawRating >= 1 && rawRating <= 5 ? Math.round(rawRating) : 5;
+
     const now = new Date().toISOString();
     const testimonial: Testimonial = {
       id: crypto.randomUUID(),
@@ -146,6 +149,7 @@ export const postTestimonial: RequestHandler = async (req, res) => {
       role: role || "Participant",
       quote,
       avatarUrl: avatarUrl || undefined,
+      rating,
       createdAt: now,
       updatedAt: now,
     };
@@ -202,6 +206,13 @@ export const putTestimonial: RequestHandler = async (req, res) => {
         return;
       }
       updates.quote = trimmed;
+    }
+
+    if (body.rating !== undefined) {
+      const rawRating = Number(body.rating);
+      if (!isNaN(rawRating) && rawRating >= 1 && rawRating <= 5) {
+        updates.rating = Math.round(rawRating);
+      }
     }
 
     // Check if new avatar file is provided for upload

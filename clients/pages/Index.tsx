@@ -503,47 +503,59 @@ export default function Index() {
               {marqueeItems.map((t, idx) => (
                 <div
                   key={`track1-${t.id}-${idx}`}
-                  className="w-[300px] sm:w-[360px] md:w-[410px] flex-shrink-0 flex flex-col justify-between bg-white rounded-[28px] border-2 border-gray-200/90 p-6 sm:p-7 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none cursor-default"
+                  className="w-[320px] sm:w-[380px] md:w-[430px] flex-shrink-0 flex flex-col justify-between bg-white rounded-[28px] border-2 border-gray-200/90 p-6 sm:p-7 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none cursor-default"
                 >
                   <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                        <Quote className="w-5 h-5" />
+                    {/* Header: Bigger Avatar Image Above + Name, Role, and Dynamic Stars */}
+                    <div className="flex items-start justify-between gap-3 mb-4 pb-4 border-b border-gray-100">
+                      <div className="flex items-center gap-3.5">
+                        {t.avatarUrl ? (
+                          <SiteImage
+                            src={t.avatarUrl}
+                            alt={t.name}
+                            className="w-16 h-16 sm:w-18 sm:h-18 rounded-full object-cover bg-gray-100 border-2 border-primary/25 shadow-md shrink-0 ring-2 ring-primary/5"
+                            sizes="72px"
+                            cloudinaryMaxWidth={200}
+                            decoding="async"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-2 border-primary/25 shadow-md shrink-0 text-base sm:text-lg ring-2 ring-primary/5">
+                            {t.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .slice(0, 2)
+                              .join("")
+                              .toUpperCase() || <UserCheck className="w-7 h-7 text-primary" />}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <h4 className="font-bold text-gray-900 text-sm sm:text-base leading-snug">{t.name}</h4>
+                          <p className="text-primary font-medium text-xs sm:text-sm mt-0.5">{t.role || "Participant"}</p>
+                          {/* Dynamic Star Rating */}
+                          <div className="flex items-center gap-1 mt-1.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < (t.rating ?? 5)
+                                    ? "fill-amber-400 text-amber-400"
+                                    : "fill-gray-200 text-gray-200"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 text-amber-400">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                        ))}
+
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                        <Quote className="w-4 h-4" />
                       </div>
                     </div>
-                    <p className="text-gray-700 text-sm sm:text-base leading-relaxed line-clamp-4 italic mb-6">
+
+                    {/* Full Testimony Quote Text — No line-clamp truncation */}
+                    <p className="text-gray-700 text-sm sm:text-base leading-relaxed italic">
                       &ldquo;{t.quote}&rdquo;
                     </p>
-                  </div>
-                  <div className="flex items-center gap-3.5 pt-4 border-t border-gray-100">
-                    {t.avatarUrl ? (
-                      <SiteImage
-                        src={t.avatarUrl}
-                        alt={t.name}
-                        className="w-12 h-12 rounded-full object-cover bg-gray-200 border-2 border-primary/20 shadow-sm shrink-0"
-                        sizes="48px"
-                        cloudinaryMaxWidth={128}
-                        decoding="async"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center border-2 border-primary/20 shadow-sm shrink-0 text-sm">
-                        {t.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .slice(0, 2)
-                          .join("")
-                          .toUpperCase() || <UserCheck className="w-5 h-5 text-primary" />}
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="font-bold text-gray-900 truncate text-sm sm:text-base">{t.name}</p>
-                      <p className="text-gray-500 text-xs sm:text-sm truncate">{t.role || "Participant"}</p>
-                    </div>
                   </div>
                 </div>
               ))}
@@ -553,47 +565,59 @@ export default function Index() {
                 <div
                   key={`track2-${t.id}-${idx}`}
                   aria-hidden="true"
-                  className="w-[300px] sm:w-[360px] md:w-[410px] flex-shrink-0 flex flex-col justify-between bg-white rounded-[28px] border-2 border-gray-200/90 p-6 sm:p-7 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none cursor-default"
+                  className="w-[320px] sm:w-[380px] md:w-[430px] flex-shrink-0 flex flex-col justify-between bg-white rounded-[28px] border-2 border-gray-200/90 p-6 sm:p-7 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none cursor-default"
                 >
                   <div>
-                    <div className="flex items-center justify-between mb-4">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                        <Quote className="w-5 h-5" />
+                    {/* Header: Bigger Avatar Image Above + Name, Role, and Dynamic Stars */}
+                    <div className="flex items-start justify-between gap-3 mb-4 pb-4 border-b border-gray-100">
+                      <div className="flex items-center gap-3.5">
+                        {t.avatarUrl ? (
+                          <SiteImage
+                            src={t.avatarUrl}
+                            alt={t.name}
+                            className="w-16 h-16 sm:w-18 sm:h-18 rounded-full object-cover bg-gray-100 border-2 border-primary/25 shadow-md shrink-0 ring-2 ring-primary/5"
+                            sizes="72px"
+                            cloudinaryMaxWidth={200}
+                            decoding="async"
+                          />
+                        ) : (
+                          <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-2 border-primary/25 shadow-md shrink-0 text-base sm:text-lg ring-2 ring-primary/5">
+                            {t.name
+                              .split(" ")
+                              .map((n) => n[0])
+                              .slice(0, 2)
+                              .join("")
+                              .toUpperCase() || <UserCheck className="w-7 h-7 text-primary" />}
+                          </div>
+                        )}
+                        <div className="min-w-0">
+                          <h4 className="font-bold text-gray-900 text-sm sm:text-base leading-snug">{t.name}</h4>
+                          <p className="text-primary font-medium text-xs sm:text-sm mt-0.5">{t.role || "Participant"}</p>
+                          {/* Dynamic Star Rating */}
+                          <div className="flex items-center gap-1 mt-1.5">
+                            {[...Array(5)].map((_, i) => (
+                              <Star
+                                key={i}
+                                className={`w-4 h-4 ${
+                                  i < (t.rating ?? 5)
+                                    ? "fill-amber-400 text-amber-400"
+                                    : "fill-gray-200 text-gray-200"
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-1 text-amber-400">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
-                        ))}
+
+                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                        <Quote className="w-4 h-4" />
                       </div>
                     </div>
-                    <p className="text-gray-700 text-sm sm:text-base leading-relaxed line-clamp-4 italic mb-6">
+
+                    {/* Full Testimony Quote Text — No line-clamp truncation */}
+                    <p className="text-gray-700 text-sm sm:text-base leading-relaxed italic">
                       &ldquo;{t.quote}&rdquo;
                     </p>
-                  </div>
-                  <div className="flex items-center gap-3.5 pt-4 border-t border-gray-100">
-                    {t.avatarUrl ? (
-                      <SiteImage
-                        src={t.avatarUrl}
-                        alt={t.name}
-                        className="w-12 h-12 rounded-full object-cover bg-gray-200 border-2 border-primary/20 shadow-sm shrink-0"
-                        sizes="48px"
-                        cloudinaryMaxWidth={128}
-                        decoding="async"
-                      />
-                    ) : (
-                      <div className="w-12 h-12 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center border-2 border-primary/20 shadow-sm shrink-0 text-sm">
-                        {t.name
-                          .split(" ")
-                          .map((n) => n[0])
-                          .slice(0, 2)
-                          .join("")
-                          .toUpperCase() || <UserCheck className="w-5 h-5 text-primary" />}
-                      </div>
-                    )}
-                    <div className="min-w-0 flex-1">
-                      <p className="font-bold text-gray-900 truncate text-sm sm:text-base">{t.name}</p>
-                      <p className="text-gray-500 text-xs sm:text-sm truncate">{t.role || "Participant"}</p>
-                    </div>
                   </div>
                 </div>
               ))}
