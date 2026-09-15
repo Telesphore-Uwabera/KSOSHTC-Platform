@@ -46,6 +46,22 @@ export default function Index() {
     return () => clearInterval(t);
   }, []);
 
+  useEffect(() => {
+    if (selectedTestimonial) {
+      document.body.style.overflow = "hidden";
+      const onKeyDown = (e: KeyboardEvent) => {
+        if (e.key === "Escape") setSelectedTestimonial(null);
+      };
+      window.addEventListener("keydown", onKeyDown);
+      return () => {
+        document.body.style.overflow = "unset";
+        window.removeEventListener("keydown", onKeyDown);
+      };
+    } else {
+      document.body.style.overflow = "unset";
+    }
+  }, [selectedTestimonial]);
+
   const handleContactSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setContactError("");
@@ -499,7 +515,7 @@ export default function Index() {
             <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 sm:w-24 md:w-36 bg-gradient-to-l from-gray-50 to-transparent z-10" />
 
             {/* Continuous Marquee Track (Right to Left) */}
-            <div className="animate-marquee-left flex items-stretch gap-6 px-4 py-4">
+            <div className="animate-marquee-left flex items-stretch gap-4 sm:gap-6 px-4 py-4">
               {/* Primary Track */}
               {marqueeItems.map((t, idx) => {
                 const PREVIEW_LEN = 120;
@@ -508,44 +524,44 @@ export default function Index() {
                 return (
                   <div
                     key={`track1-${t.id}-${idx}`}
-                    className="w-[340px] sm:w-[400px] md:w-[440px] flex-shrink-0 flex flex-col bg-white rounded-[28px] border-2 border-gray-200/90 overflow-hidden shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
+                    className="w-[280px] xs:w-[320px] sm:w-[380px] md:w-[420px] flex-shrink-0 flex flex-col bg-white rounded-[22px] sm:rounded-[28px] border-2 border-gray-200/90 overflow-hidden shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
                   >
-                    {/* Hero image filling top space */}
-                    <div className="w-full h-56 sm:h-64 relative bg-gray-100 overflow-hidden flex-shrink-0">
+                    {/* Hero image filling top space responsively */}
+                    <div className="w-full h-44 xs:h-52 sm:h-60 md:h-64 relative bg-gray-100 overflow-hidden flex-shrink-0">
                       {t.avatarUrl ? (
                         <SiteImage
                           src={t.avatarUrl}
                           alt={t.name}
                           className="w-full h-full object-cover object-top transition-transform duration-500 hover:scale-105"
-                          sizes="(max-width: 768px) 340px, 440px"
+                          sizes="(max-width: 640px) 280px, (max-width: 768px) 380px, 420px"
                           cloudinaryMaxWidth={600}
                           decoding="async"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center text-primary font-bold text-5xl">
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center text-primary font-bold text-4xl sm:text-5xl">
                           {t.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                         </div>
                       )}
                     </div>
 
                     {/* Card Body */}
-                    <div className="p-6 sm:p-7 flex flex-col flex-1">
-                      <div className="flex flex-col items-center mb-3">
-                        <h4 className="font-bold text-gray-900 text-lg sm:text-xl text-center leading-snug">{t.name}</h4>
+                    <div className="p-4 sm:p-6 md:p-7 flex flex-col flex-1">
+                      <div className="flex flex-col items-center mb-2.5 sm:mb-3">
+                        <h4 className="font-bold text-gray-900 text-base sm:text-lg md:text-xl text-center leading-snug">{t.name}</h4>
                         <p className="text-primary font-semibold text-xs sm:text-sm uppercase tracking-wider mt-1 text-center">{t.role || "Participant"}</p>
                         {/* Stars */}
-                        <div className="flex items-center gap-1 mt-2">
+                        <div className="flex items-center gap-1 mt-1.5 sm:mt-2">
                           {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`w-5 h-5 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
+                            <Star key={i} className={`w-4 h-4 sm:w-5 sm:h-5 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
                           ))}
                         </div>
                       </div>
 
                       {/* Separator */}
-                      <div className="w-12 h-0.5 bg-primary/20 rounded mx-auto mb-3" />
+                      <div className="w-10 sm:w-12 h-0.5 bg-primary/20 rounded mx-auto mb-2.5 sm:mb-3" />
 
                       {/* Truncated Quote */}
-                      <p className="text-gray-600 text-sm sm:text-base leading-relaxed italic text-center flex-1">
+                      <p className="text-gray-600 text-xs sm:text-sm md:text-base leading-relaxed italic text-center flex-1">
                         &ldquo;{preview}&rdquo;
                       </p>
 
@@ -554,7 +570,7 @@ export default function Index() {
                         <button
                           type="button"
                           onClick={() => setSelectedTestimonial(t)}
-                          className="mt-4 mx-auto inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
+                          className="mt-3.5 sm:mt-4 mx-auto inline-flex items-center gap-1.5 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
                         >
                           Read More
                         </button>
@@ -573,41 +589,41 @@ export default function Index() {
                   <div
                     key={`track2-${t.id}-${idx}`}
                     aria-hidden="true"
-                    className="w-[340px] sm:w-[400px] md:w-[440px] flex-shrink-0 flex flex-col bg-white rounded-[28px] border-2 border-gray-200/90 overflow-hidden shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
+                    className="w-[280px] xs:w-[320px] sm:w-[380px] md:w-[420px] flex-shrink-0 flex flex-col bg-white rounded-[22px] sm:rounded-[28px] border-2 border-gray-200/90 overflow-hidden shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
                   >
-                    {/* Hero image filling top space */}
-                    <div className="w-full h-56 sm:h-64 relative bg-gray-100 overflow-hidden flex-shrink-0">
+                    {/* Hero image filling top space responsively */}
+                    <div className="w-full h-44 xs:h-52 sm:h-60 md:h-64 relative bg-gray-100 overflow-hidden flex-shrink-0">
                       {t.avatarUrl ? (
                         <SiteImage
                           src={t.avatarUrl}
                           alt={t.name}
                           className="w-full h-full object-cover object-top transition-transform duration-500 hover:scale-105"
-                          sizes="(max-width: 768px) 340px, 440px"
+                          sizes="(max-width: 640px) 280px, (max-width: 768px) 380px, 420px"
                           cloudinaryMaxWidth={600}
                           decoding="async"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center text-primary font-bold text-5xl">
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center text-primary font-bold text-4xl sm:text-5xl">
                           {t.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                         </div>
                       )}
                     </div>
 
                     {/* Card Body */}
-                    <div className="p-6 sm:p-7 flex flex-col flex-1">
-                      <div className="flex flex-col items-center mb-3">
-                        <h4 className="font-bold text-gray-900 text-lg sm:text-xl text-center leading-snug">{t.name}</h4>
+                    <div className="p-4 sm:p-6 md:p-7 flex flex-col flex-1">
+                      <div className="flex flex-col items-center mb-2.5 sm:mb-3">
+                        <h4 className="font-bold text-gray-900 text-base sm:text-lg md:text-xl text-center leading-snug">{t.name}</h4>
                         <p className="text-primary font-semibold text-xs sm:text-sm uppercase tracking-wider mt-1 text-center">{t.role || "Participant"}</p>
-                        <div className="flex items-center gap-1 mt-2">
+                        <div className="flex items-center gap-1 mt-1.5 sm:mt-2">
                           {[...Array(5)].map((_, i) => (
                             <Star key={i} className={`w-5 h-5 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
                           ))}
                         </div>
                       </div>
 
-                      <div className="w-12 h-0.5 bg-primary/20 rounded mx-auto mb-3" />
+                      <div className="w-10 sm:w-12 h-0.5 bg-primary/20 rounded mx-auto mb-2.5 sm:mb-3" />
 
-                      <p className="text-gray-600 text-sm sm:text-base leading-relaxed italic text-center flex-1">
+                      <p className="text-gray-600 text-xs sm:text-sm md:text-base leading-relaxed italic text-center flex-1">
                         &ldquo;{preview}&rdquo;
                       </p>
 
@@ -615,7 +631,7 @@ export default function Index() {
                         <button
                           type="button"
                           onClick={() => setSelectedTestimonial(t)}
-                          className="mt-4 mx-auto inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
+                          className="mt-3.5 sm:mt-4 mx-auto inline-flex items-center gap-1.5 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
                         >
                           Read More
                         </button>
@@ -634,7 +650,7 @@ export default function Index() {
         )}
       </section>
 
-      {/* ===== TESTIMONIAL LIGHTBOX MODAL (EXPANDED TO FILL SCREEN) ===== */}
+      {/* ===== TESTIMONIAL LIGHTBOX MODAL (ULTRA RESPONSIVE) ===== */}
       {selectedTestimonial && (
         <div
           className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 md:p-6 lg:p-8"
@@ -646,23 +662,23 @@ export default function Index() {
           {/* Blurred backdrop covering entire screen */}
           <div className="absolute inset-0 bg-black/75 backdrop-blur-md" />
 
-          {/* Expanded card filling the space */}
+          {/* Expanded card filling the space responsively */}
           <div
-            className="relative z-10 bg-white rounded-3xl shadow-2xl w-[96vw] max-w-[1650px] max-h-[90vh] overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 fade-in duration-300 border border-gray-100"
+            className="relative z-10 bg-white rounded-2xl sm:rounded-3xl shadow-2xl w-[96vw] max-w-[1650px] max-h-[92vh] sm:max-h-[90vh] overflow-y-auto md:overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 fade-in duration-300 border border-gray-100"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* Close button */}
+            {/* Close button (always accessible and visible) */}
             <button
               type="button"
               onClick={() => setSelectedTestimonial(null)}
-              className="absolute top-4 right-4 z-30 w-11 h-11 flex items-center justify-center rounded-full bg-gray-100/90 hover:bg-red-50 hover:text-red-600 text-gray-600 backdrop-blur-sm transition-all shadow-sm"
+              className="absolute top-3 right-3 sm:top-4 sm:right-4 z-30 w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-full bg-white/95 hover:bg-red-50 hover:text-red-600 text-gray-700 shadow-md backdrop-blur-md border border-gray-200/50 transition-all cursor-pointer"
               aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>
 
-            {/* Left side: Hero image filling the space */}
-            <div className="w-full md:w-5/12 lg:w-1/2 min-h-[280px] md:min-h-[520px] max-h-[45vh] md:max-h-[90vh] relative bg-gray-100 overflow-hidden flex-shrink-0">
+            {/* Left/Top side: Image filling the space responsively */}
+            <div className="w-full md:w-5/12 lg:w-1/2 h-56 xs:h-64 sm:h-80 md:h-auto md:min-h-[500px] relative bg-gray-100 overflow-hidden flex-shrink-0">
               {selectedTestimonial.avatarUrl ? (
                 <SiteImage
                   src={selectedTestimonial.avatarUrl}
@@ -673,32 +689,32 @@ export default function Index() {
                   decoding="async"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center text-primary font-bold text-7xl">
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center text-primary font-bold text-5xl sm:text-6xl md:text-7xl">
                   {selectedTestimonial.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                 </div>
               )}
             </div>
 
-            {/* Right side: Information and full testimonial quote */}
-            <div className="p-6 sm:p-10 md:p-12 lg:p-16 flex-1 flex flex-col justify-between overflow-y-auto max-h-[55vh] md:max-h-[90vh]">
+            {/* Right/Bottom side: Information and full testimonial quote */}
+            <div className="p-5 sm:p-8 md:p-10 lg:p-14 xl:p-16 flex-1 flex flex-col justify-between md:overflow-y-auto md:max-h-[90vh]">
               <div>
                 {/* Participant Header Info */}
-                <div className="flex flex-wrap items-center justify-between gap-4 pr-12">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4 pr-10 sm:pr-12">
                   <div>
-                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 leading-tight">
+                    <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-900 leading-tight">
                       {selectedTestimonial.name}
                     </h3>
-                    <p className="text-primary font-bold text-sm sm:text-base uppercase tracking-wider mt-1.5">
+                    <p className="text-primary font-bold text-xs sm:text-sm md:text-base uppercase tracking-wider mt-1">
                       {selectedTestimonial.role || "Participant"}
                     </p>
                   </div>
                   {/* Star ratings badge */}
-                  <div className="flex items-center gap-2 bg-amber-50 border border-amber-200/80 px-4 py-2 rounded-2xl">
-                    <div className="flex items-center gap-1">
+                  <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200/80 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl self-start sm:self-auto">
+                    <div className="flex items-center gap-0.5 sm:gap-1">
                       {[...Array(5)].map((_, i) => (
                         <Star
                           key={i}
-                          className={`w-5 h-5 ${
+                          className={`w-4 h-4 sm:w-5 sm:h-5 ${
                             i < (selectedTestimonial.rating ?? 5)
                               ? "fill-amber-400 text-amber-400"
                               : "fill-gray-200 text-gray-200"
@@ -706,31 +722,31 @@ export default function Index() {
                         />
                       ))}
                     </div>
-                    <span className="text-xs font-bold text-amber-900 ml-1">
-                      Verified Experience
+                    <span className="text-[11px] sm:text-xs font-bold text-amber-900 ml-1">
+                      Verified
                     </span>
                   </div>
                 </div>
 
                 {/* Divider */}
-                <div className="w-20 h-1 bg-primary/25 rounded-full my-6" />
+                <div className="w-16 sm:w-20 h-1 bg-primary/25 rounded-full my-4 sm:my-6" />
 
                 {/* Full quote */}
                 <div className="relative">
-                  <Quote className="w-10 h-10 text-primary/20 mb-3" />
-                  <p className="text-gray-700 text-base sm:text-lg lg:text-xl leading-relaxed italic">
+                  <Quote className="w-8 h-8 sm:w-10 sm:h-10 text-primary/20 mb-2 sm:mb-3" />
+                  <p className="text-gray-700 text-sm sm:text-base md:text-lg lg:text-xl leading-relaxed italic">
                     &ldquo;{selectedTestimonial.quote}&rdquo;
                   </p>
                 </div>
               </div>
 
               {/* Bottom Footer Bar */}
-              <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between">
+              <div className="mt-6 sm:mt-8 pt-4 sm:pt-6 border-t border-gray-100 flex items-center justify-between">
                 <span className="text-xs text-gray-400 font-medium">KSOSHTC Training Platform</span>
                 <button
                   type="button"
                   onClick={() => setSelectedTestimonial(null)}
-                  className="px-8 py-3 rounded-full bg-primary hover:bg-primary-dark text-white font-semibold text-sm transition-all shadow-md hover:shadow-lg cursor-pointer"
+                  className="px-6 py-2 sm:px-8 sm:py-2.5 rounded-full bg-primary hover:bg-primary-dark text-white font-semibold text-xs sm:text-sm transition-all shadow-md hover:shadow-lg cursor-pointer"
                 >
                   Close
                 </button>
