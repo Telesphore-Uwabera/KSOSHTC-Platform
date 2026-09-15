@@ -508,39 +508,39 @@ export default function Index() {
                 return (
                   <div
                     key={`track1-${t.id}-${idx}`}
-                    className="w-[280px] sm:w-[320px] md:w-[360px] flex-shrink-0 flex flex-col bg-white rounded-[28px] border-2 border-gray-200/90 p-5 sm:p-6 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
+                    className="w-[340px] sm:w-[400px] md:w-[440px] flex-shrink-0 flex flex-col bg-white rounded-[28px] border-2 border-gray-200/90 p-6 sm:p-8 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
                   >
                     {/* Big Avatar centred at top */}
-                    <div className="flex flex-col items-center mb-4">
+                    <div className="flex flex-col items-center mb-5">
                       {t.avatarUrl ? (
                         <SiteImage
                           src={t.avatarUrl}
                           alt={t.name}
-                          className="w-24 h-24 rounded-full object-cover border-4 border-primary/25 shadow-lg ring-4 ring-primary/10 mb-3"
-                          sizes="96px"
-                          cloudinaryMaxWidth={256}
+                          className="w-36 h-36 rounded-full object-cover border-4 border-primary/30 shadow-2xl ring-4 ring-primary/15 mb-4"
+                          sizes="144px"
+                          cloudinaryMaxWidth={320}
                           decoding="async"
                         />
                       ) : (
-                        <div className="w-24 h-24 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-4 border-primary/25 shadow-lg ring-4 ring-primary/10 mb-3 text-2xl">
+                        <div className="w-36 h-36 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-4 border-primary/30 shadow-2xl ring-4 ring-primary/15 mb-4 text-4xl">
                           {t.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                         </div>
                       )}
-                      <h4 className="font-bold text-gray-900 text-sm sm:text-base text-center leading-snug">{t.name}</h4>
-                      <p className="text-primary font-medium text-xs sm:text-sm mt-0.5 text-center">{t.role || "Participant"}</p>
+                      <h4 className="font-bold text-gray-900 text-base sm:text-lg text-center leading-snug">{t.name}</h4>
+                      <p className="text-primary font-medium text-sm mt-1 text-center">{t.role || "Participant"}</p>
                       {/* Stars */}
-                      <div className="flex items-center gap-0.5 mt-1.5">
+                      <div className="flex items-center gap-1 mt-2">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-4 h-4 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
+                          <Star key={i} className={`w-5 h-5 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
                         ))}
                       </div>
                     </div>
 
                     {/* Separator */}
-                    <div className="w-10 h-0.5 bg-primary/20 rounded mx-auto mb-3" />
+                    <div className="w-12 h-0.5 bg-primary/20 rounded mx-auto mb-4" />
 
                     {/* Truncated Quote */}
-                    <p className="text-gray-600 text-xs sm:text-sm leading-relaxed italic text-center flex-1">
+                    <p className="text-gray-600 text-sm sm:text-base leading-relaxed italic text-center flex-1">
                       &ldquo;{preview}&rdquo;
                     </p>
 
@@ -549,7 +549,7 @@ export default function Index() {
                       <button
                         type="button"
                         onClick={() => setSelectedTestimonial(t)}
-                        className="mt-3 mx-auto inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
+                        className="mt-4 mx-auto inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
                       >
                         Read More
                       </button>
@@ -567,36 +567,36 @@ export default function Index() {
                   <div
                     key={`track2-${t.id}-${idx}`}
                     aria-hidden="true"
-                    className="w-[280px] sm:w-[320px] md:w-[360px] flex-shrink-0 flex flex-col bg-white rounded-[28px] border-2 border-gray-200/90 p-5 sm:p-6 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
+                    className="w-[340px] sm:w-[400px] md:w-[440px] flex-shrink-0 flex flex-col bg-white rounded-[28px] border-2 border-gray-200/90 p-6 sm:p-8 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
                   >
                     {/* Big Avatar centred at top */}
-                    <div className="flex flex-col items-center mb-4">
+                    <div className="flex flex-col items-center mb-5">
                       {t.avatarUrl ? (
                         <SiteImage
                           src={t.avatarUrl}
                           alt={t.name}
-                          className="w-24 h-24 rounded-full object-cover border-4 border-primary/25 shadow-lg ring-4 ring-primary/10 mb-3"
-                          sizes="96px"
-                          cloudinaryMaxWidth={256}
+                          className="w-36 h-36 rounded-full object-cover border-4 border-primary/30 shadow-2xl ring-4 ring-primary/15 mb-4"
+                          sizes="144px"
+                          cloudinaryMaxWidth={320}
                           decoding="async"
                         />
                       ) : (
-                        <div className="w-24 h-24 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-4 border-primary/25 shadow-lg ring-4 ring-primary/10 mb-3 text-2xl">
+                        <div className="w-36 h-36 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-4 border-primary/30 shadow-2xl ring-4 ring-primary/15 mb-4 text-4xl">
                           {t.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                         </div>
                       )}
-                      <h4 className="font-bold text-gray-900 text-sm sm:text-base text-center leading-snug">{t.name}</h4>
-                      <p className="text-primary font-medium text-xs sm:text-sm mt-0.5 text-center">{t.role || "Participant"}</p>
-                      <div className="flex items-center gap-0.5 mt-1.5">
+                      <h4 className="font-bold text-gray-900 text-base sm:text-lg text-center leading-snug">{t.name}</h4>
+                      <p className="text-primary font-medium text-sm mt-1 text-center">{t.role || "Participant"}</p>
+                      <div className="flex items-center gap-1 mt-2">
                         {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-4 h-4 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
+                          <Star key={i} className={`w-5 h-5 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
                         ))}
                       </div>
                     </div>
 
-                    <div className="w-10 h-0.5 bg-primary/20 rounded mx-auto mb-3" />
+                    <div className="w-12 h-0.5 bg-primary/20 rounded mx-auto mb-4" />
 
-                    <p className="text-gray-600 text-xs sm:text-sm leading-relaxed italic text-center flex-1">
+                    <p className="text-gray-600 text-sm sm:text-base leading-relaxed italic text-center flex-1">
                       &ldquo;{preview}&rdquo;
                     </p>
 
@@ -604,7 +604,7 @@ export default function Index() {
                       <button
                         type="button"
                         onClick={() => setSelectedTestimonial(t)}
-                        className="mt-3 mx-auto inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
+                        className="mt-4 mx-auto inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
                       >
                         Read More
                       </button>
@@ -655,13 +655,13 @@ export default function Index() {
                 <SiteImage
                   src={selectedTestimonial.avatarUrl}
                   alt={selectedTestimonial.name}
-                  className="w-28 h-28 rounded-full object-cover border-4 border-primary/30 shadow-xl ring-4 ring-primary/10 mb-4"
-                  sizes="112px"
-                  cloudinaryMaxWidth={300}
+                  className="w-36 h-36 rounded-full object-cover border-4 border-primary/30 shadow-2xl ring-4 ring-primary/15 mb-4"
+                  sizes="144px"
+                  cloudinaryMaxWidth={320}
                   decoding="async"
                 />
               ) : (
-                <div className="w-28 h-28 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-4 border-primary/30 shadow-xl ring-4 ring-primary/10 mb-4 text-3xl">
+                <div className="w-36 h-36 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-4 border-primary/30 shadow-2xl ring-4 ring-primary/15 mb-4 text-4xl">
                   {selectedTestimonial.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                 </div>
               )}
