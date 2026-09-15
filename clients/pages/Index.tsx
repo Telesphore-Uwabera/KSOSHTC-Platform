@@ -708,23 +708,18 @@ export default function Index() {
                       {selectedTestimonial.role || "Participant"}
                     </p>
                   </div>
-                  {/* Star ratings badge */}
-                  <div className="inline-flex items-center gap-2 bg-amber-50 border border-amber-200/80 px-3 py-1.5 sm:px-4 sm:py-2 rounded-xl sm:rounded-2xl self-start sm:self-auto">
-                    <div className="flex items-center gap-0.5 sm:gap-1">
-                      {[...Array(5)].map((_, i) => (
-                        <Star
-                          key={i}
-                          className={`w-4 h-4 sm:w-5 sm:h-5 ${
-                            i < (selectedTestimonial.rating ?? 5)
-                              ? "fill-amber-400 text-amber-400"
-                              : "fill-gray-200 text-gray-200"
-                          }`}
-                        />
-                      ))}
-                    </div>
-                    <span className="text-[11px] sm:text-xs font-bold text-amber-900 ml-1">
-                      Verified
-                    </span>
+                  {/* Star ratings */}
+                  <div className="flex items-center gap-1 self-start sm:self-auto">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-5 h-5 sm:w-6 sm:h-6 ${
+                          i < (selectedTestimonial.rating ?? 5)
+                            ? "fill-amber-400 text-amber-400"
+                            : "fill-gray-200 text-gray-200"
+                        }`}
+                      />
+                    ))}
                   </div>
                 </div>
 
