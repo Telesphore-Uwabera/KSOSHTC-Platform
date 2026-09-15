@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, MapPin, Phone, Mail, Shield, BookOpen, HardHat, Building, Pickaxe, GraduationCap, Lightbulb, Rocket, Crown, Star, Award, Target, Sparkles, Building2, UserCheck, AlertTriangle, Users, Globe, Quote, Loader2, CheckCircle } from "lucide-react";
+import { CheckCircle2, MapPin, Phone, Mail, Shield, BookOpen, HardHat, Building, Pickaxe, GraduationCap, Lightbulb, Rocket, Crown, Star, Award, Target, Sparkles, Building2, UserCheck, AlertTriangle, Users, Globe, Quote, Loader2, CheckCircle, X } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { SiteImage } from "../components/SiteImage";
@@ -34,6 +34,7 @@ export default function Index() {
   const [contactLoading, setContactLoading] = useState(false);
   const [contactError, setContactError] = useState("");
   const [contactSuccess, setContactSuccess] = useState(false);
+  const [selectedTestimonial, setSelectedTestimonial] = useState<Testimonial | null>(null);
 
   useEffect(() => {
     document.title = "KSOSHTC | Occupational Safety & Health Training Rwanda";
@@ -500,127 +501,117 @@ export default function Index() {
             {/* Continuous Marquee Track (Right to Left) */}
             <div className="animate-marquee-left flex items-stretch gap-6 px-4 py-4">
               {/* Primary Track */}
-              {marqueeItems.map((t, idx) => (
-                <div
-                  key={`track1-${t.id}-${idx}`}
-                  className="w-[320px] sm:w-[380px] md:w-[430px] flex-shrink-0 flex flex-col justify-between bg-white rounded-[28px] border-2 border-gray-200/90 p-6 sm:p-7 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none cursor-default"
-                >
-                  <div>
-                    {/* Header: Bigger Avatar Image Above + Name, Role, and Dynamic Stars */}
-                    <div className="flex items-start justify-between gap-3 mb-4 pb-4 border-b border-gray-100">
-                      <div className="flex items-center gap-3.5">
-                        {t.avatarUrl ? (
-                          <SiteImage
-                            src={t.avatarUrl}
-                            alt={t.name}
-                            className="w-16 h-16 sm:w-18 sm:h-18 rounded-full object-cover bg-gray-100 border-2 border-primary/25 shadow-md shrink-0 ring-2 ring-primary/5"
-                            sizes="72px"
-                            cloudinaryMaxWidth={200}
-                            decoding="async"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-2 border-primary/25 shadow-md shrink-0 text-base sm:text-lg ring-2 ring-primary/5">
-                            {t.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .slice(0, 2)
-                              .join("")
-                              .toUpperCase() || <UserCheck className="w-7 h-7 text-primary" />}
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-gray-900 text-sm sm:text-base leading-snug">{t.name}</h4>
-                          <p className="text-primary font-medium text-xs sm:text-sm mt-0.5">{t.role || "Participant"}</p>
-                          {/* Dynamic Star Rating */}
-                          <div className="flex items-center gap-1 mt-1.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 ${
-                                  i < (t.rating ?? 5)
-                                    ? "fill-amber-400 text-amber-400"
-                                    : "fill-gray-200 text-gray-200"
-                                }`}
-                              />
-                            ))}
-                          </div>
+              {marqueeItems.map((t, idx) => {
+                const PREVIEW_LEN = 120;
+                const isLong = t.quote.length > PREVIEW_LEN;
+                const preview = isLong ? t.quote.slice(0, PREVIEW_LEN).trimEnd() + "…" : t.quote;
+                return (
+                  <div
+                    key={`track1-${t.id}-${idx}`}
+                    className="w-[280px] sm:w-[320px] md:w-[360px] flex-shrink-0 flex flex-col bg-white rounded-[28px] border-2 border-gray-200/90 p-5 sm:p-6 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
+                  >
+                    {/* Big Avatar centred at top */}
+                    <div className="flex flex-col items-center mb-4">
+                      {t.avatarUrl ? (
+                        <SiteImage
+                          src={t.avatarUrl}
+                          alt={t.name}
+                          className="w-24 h-24 rounded-full object-cover border-4 border-primary/25 shadow-lg ring-4 ring-primary/10 mb-3"
+                          sizes="96px"
+                          cloudinaryMaxWidth={256}
+                          decoding="async"
+                        />
+                      ) : (
+                        <div className="w-24 h-24 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-4 border-primary/25 shadow-lg ring-4 ring-primary/10 mb-3 text-2xl">
+                          {t.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                         </div>
-                      </div>
-
-                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                        <Quote className="w-4 h-4" />
+                      )}
+                      <h4 className="font-bold text-gray-900 text-sm sm:text-base text-center leading-snug">{t.name}</h4>
+                      <p className="text-primary font-medium text-xs sm:text-sm mt-0.5 text-center">{t.role || "Participant"}</p>
+                      {/* Stars */}
+                      <div className="flex items-center gap-0.5 mt-1.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`w-4 h-4 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
+                        ))}
                       </div>
                     </div>
 
-                    {/* Full Testimony Quote Text — No line-clamp truncation */}
-                    <p className="text-gray-700 text-sm sm:text-base leading-relaxed italic">
-                      &ldquo;{t.quote}&rdquo;
+                    {/* Separator */}
+                    <div className="w-10 h-0.5 bg-primary/20 rounded mx-auto mb-3" />
+
+                    {/* Truncated Quote */}
+                    <p className="text-gray-600 text-xs sm:text-sm leading-relaxed italic text-center flex-1">
+                      &ldquo;{preview}&rdquo;
                     </p>
+
+                    {/* Read More */}
+                    {isLong && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedTestimonial(t)}
+                        className="mt-3 mx-auto inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
+                      >
+                        Read More
+                      </button>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
 
               {/* Duplicate Track for Seamless Infinite Loop */}
-              {marqueeItems.map((t, idx) => (
-                <div
-                  key={`track2-${t.id}-${idx}`}
-                  aria-hidden="true"
-                  className="w-[320px] sm:w-[380px] md:w-[430px] flex-shrink-0 flex flex-col justify-between bg-white rounded-[28px] border-2 border-gray-200/90 p-6 sm:p-7 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none cursor-default"
-                >
-                  <div>
-                    {/* Header: Bigger Avatar Image Above + Name, Role, and Dynamic Stars */}
-                    <div className="flex items-start justify-between gap-3 mb-4 pb-4 border-b border-gray-100">
-                      <div className="flex items-center gap-3.5">
-                        {t.avatarUrl ? (
-                          <SiteImage
-                            src={t.avatarUrl}
-                            alt={t.name}
-                            className="w-16 h-16 sm:w-18 sm:h-18 rounded-full object-cover bg-gray-100 border-2 border-primary/25 shadow-md shrink-0 ring-2 ring-primary/5"
-                            sizes="72px"
-                            cloudinaryMaxWidth={200}
-                            decoding="async"
-                          />
-                        ) : (
-                          <div className="w-16 h-16 sm:w-18 sm:h-18 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-2 border-primary/25 shadow-md shrink-0 text-base sm:text-lg ring-2 ring-primary/5">
-                            {t.name
-                              .split(" ")
-                              .map((n) => n[0])
-                              .slice(0, 2)
-                              .join("")
-                              .toUpperCase() || <UserCheck className="w-7 h-7 text-primary" />}
-                          </div>
-                        )}
-                        <div className="min-w-0">
-                          <h4 className="font-bold text-gray-900 text-sm sm:text-base leading-snug">{t.name}</h4>
-                          <p className="text-primary font-medium text-xs sm:text-sm mt-0.5">{t.role || "Participant"}</p>
-                          {/* Dynamic Star Rating */}
-                          <div className="flex items-center gap-1 mt-1.5">
-                            {[...Array(5)].map((_, i) => (
-                              <Star
-                                key={i}
-                                className={`w-4 h-4 ${
-                                  i < (t.rating ?? 5)
-                                    ? "fill-amber-400 text-amber-400"
-                                    : "fill-gray-200 text-gray-200"
-                                }`}
-                              />
-                            ))}
-                          </div>
+              {marqueeItems.map((t, idx) => {
+                const PREVIEW_LEN = 120;
+                const isLong = t.quote.length > PREVIEW_LEN;
+                const preview = isLong ? t.quote.slice(0, PREVIEW_LEN).trimEnd() + "…" : t.quote;
+                return (
+                  <div
+                    key={`track2-${t.id}-${idx}`}
+                    aria-hidden="true"
+                    className="w-[280px] sm:w-[320px] md:w-[360px] flex-shrink-0 flex flex-col bg-white rounded-[28px] border-2 border-gray-200/90 p-5 sm:p-6 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
+                  >
+                    {/* Big Avatar centred at top */}
+                    <div className="flex flex-col items-center mb-4">
+                      {t.avatarUrl ? (
+                        <SiteImage
+                          src={t.avatarUrl}
+                          alt={t.name}
+                          className="w-24 h-24 rounded-full object-cover border-4 border-primary/25 shadow-lg ring-4 ring-primary/10 mb-3"
+                          sizes="96px"
+                          cloudinaryMaxWidth={256}
+                          decoding="async"
+                        />
+                      ) : (
+                        <div className="w-24 h-24 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-4 border-primary/25 shadow-lg ring-4 ring-primary/10 mb-3 text-2xl">
+                          {t.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                         </div>
-                      </div>
-
-                      <div className="w-9 h-9 rounded-full bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                        <Quote className="w-4 h-4" />
+                      )}
+                      <h4 className="font-bold text-gray-900 text-sm sm:text-base text-center leading-snug">{t.name}</h4>
+                      <p className="text-primary font-medium text-xs sm:text-sm mt-0.5 text-center">{t.role || "Participant"}</p>
+                      <div className="flex items-center gap-0.5 mt-1.5">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className={`w-4 h-4 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
+                        ))}
                       </div>
                     </div>
 
-                    {/* Full Testimony Quote Text — No line-clamp truncation */}
-                    <p className="text-gray-700 text-sm sm:text-base leading-relaxed italic">
-                      &ldquo;{t.quote}&rdquo;
+                    <div className="w-10 h-0.5 bg-primary/20 rounded mx-auto mb-3" />
+
+                    <p className="text-gray-600 text-xs sm:text-sm leading-relaxed italic text-center flex-1">
+                      &ldquo;{preview}&rdquo;
                     </p>
+
+                    {isLong && (
+                      <button
+                        type="button"
+                        onClick={() => setSelectedTestimonial(t)}
+                        className="mt-3 mx-auto inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-xs font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
+                      >
+                        Read More
+                      </button>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Subtle notice below marquee */}
@@ -630,6 +621,81 @@ export default function Index() {
           </div>
         )}
       </section>
+
+      {/* ===== TESTIMONIAL LIGHTBOX MODAL ===== */}
+      {selectedTestimonial && (
+        <div
+          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          onClick={() => setSelectedTestimonial(null)}
+          role="dialog"
+          aria-modal="true"
+          aria-label={`Testimonial from ${selectedTestimonial.name}`}
+        >
+          {/* Blurred backdrop */}
+          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+
+          {/* Expanded card */}
+          <div
+            className="relative z-10 bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8 sm:p-10 animate-in zoom-in-95 fade-in duration-300"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Close button */}
+            <button
+              type="button"
+              onClick={() => setSelectedTestimonial(null)}
+              className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+              aria-label="Close"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
+            {/* Big avatar */}
+            <div className="flex flex-col items-center mb-6">
+              {selectedTestimonial.avatarUrl ? (
+                <SiteImage
+                  src={selectedTestimonial.avatarUrl}
+                  alt={selectedTestimonial.name}
+                  className="w-28 h-28 rounded-full object-cover border-4 border-primary/30 shadow-xl ring-4 ring-primary/10 mb-4"
+                  sizes="112px"
+                  cloudinaryMaxWidth={300}
+                  decoding="async"
+                />
+              ) : (
+                <div className="w-28 h-28 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-4 border-primary/30 shadow-xl ring-4 ring-primary/10 mb-4 text-3xl">
+                  {selectedTestimonial.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
+                </div>
+              )}
+              <h3 className="text-xl font-bold text-gray-900 text-center">{selectedTestimonial.name}</h3>
+              <p className="text-primary font-semibold text-sm mt-1 text-center">{selectedTestimonial.role || "Participant"}</p>
+              {/* Stars */}
+              <div className="flex items-center gap-1 mt-2">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className={`w-5 h-5 ${i < (selectedTestimonial.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
+                ))}
+              </div>
+            </div>
+
+            {/* Divider */}
+            <div className="w-12 h-0.5 bg-primary/20 rounded mx-auto mb-6" />
+
+            {/* Full quote */}
+            <div className="relative">
+              <Quote className="absolute -top-2 -left-1 w-8 h-8 text-primary/15" />
+              <p className="text-gray-700 text-sm sm:text-base leading-relaxed italic text-center px-4 max-h-60 overflow-y-auto">
+                &ldquo;{selectedTestimonial.quote}&rdquo;
+              </p>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setSelectedTestimonial(null)}
+              className="mt-8 w-full py-2.5 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* FAQ Section */}
       <section id="faq" className="py-12 sm:py-16 md:py-20 lg:py-24 bg-white">
