@@ -185,29 +185,39 @@ function isBotOrHeadless(): boolean {
   if ((navigator as any).webdriver) return true;
   // Check user agent for common bots, crawlers, and headless Chrome
   const ua = (navigator.userAgent || "").toLowerCase();
-  if (/bot|crawler|spider|headlesschrome|headless|prerender|phantomjs|slurp|baiduspider|yandex|duckduckbot|facebookexternalhit|twitterbot|whatsapp|telegram|meta-externalagent|screaming frog|pingdom|lighthouse|chrome-lighthouse|google-inspectiontool|petalbot|netlify/.test(ua)) {
+  if (/bot|crawler|spider|headlesschrome|headless|prerender|phantomjs|slurp|baiduspider|yandex|duckduckbot|facebookexternalhit|twitterbot|whatsapp|telegram|meta-externalagent|screaming frog|pingdom|lighthouse|chrome-lighthouse|google-inspectiontool|petalbot|netlify|screenshot|pagespeed/.test(ua)) {
     return true;
   }
-  // Netlify thumbnail capture embeds the site inside an iframe — skip splash immediately
-  try {
-    if (window.self !== window.top) return true;
-  } catch {
-    // Cross-origin iframe security restriction triggers exception: definitely in iframe
-    return true;
-  }
-  // Headless capture environments often have 0 dimensions or specific headless flags
+  // Check common automation flags
+  if ((window as any).__nightmare || (window as any).callPhantom || (window as any)._phantom) return true;
+  // Netlify thumbnail capture / preview flag in query params
+  if (window.location.search.includes("nosplash") || window.location.search.includes("preview")) return true;
+  // Check for 0 dimensions often found in headless capture environments
   if (window.innerWidth === 0 || window.innerHeight === 0) return true;
   return false;
 }
 
 const App = () => {
-  const [showSplash, setShowSplash] = useState(() => !isBotOrHeadless());
+  const [showSplash, setShowSplash] = useState(() => {
+    if (isBotOrHeadless()) return false;
+    try {
+      if (sessionStorage.getItem("ksoshtc_splash_seen") === "1") return false;
+    } catch {}
+    return true;
+  });
+
+  const handleSplashComplete = () => {
+    setShowSplash(false);
+    try {
+      sessionStorage.setItem("ksoshtc_splash_seen", "1");
+    } catch {}
+  };
 
   // Fail-safe: Ensure the app is NEVER stuck on the splash screen.
   useEffect(() => {
     const timer = setTimeout(() => {
-      setShowSplash(false);
-    }, 10000); // 10 seconds max
+      handleSplashComplete();
+    }, 6000);
     return () => clearTimeout(timer);
   }, []);
 
@@ -215,7 +225,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ErrorBoundary>
-          {showSplash && <BrandedSplashScreen onComplete={() => setShowSplash(false)} />}
+          {showSplash && <BrandedSplashScreen onComplete={handleSplashComplete} />}
           <Toaster />
           <Sonner />
           <BrowserRouter>
