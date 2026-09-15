@@ -14,9 +14,9 @@
     ]
   },
   "scripts": {
-    "dev": "vite",
+    "dev": "tsx node_modules/vite/bin/vite.js",
     "dev:backend": "tsx backend/dev.ts",
-    "dev:frontend": "vite",
+    "dev:frontend": "tsx node_modules/vite/bin/vite.js",
     "build": "npm run build:clients && npm run build:backend",
     "build:clients": "vite build",
     "build:backend": "vite build --config vite.config.server.ts",

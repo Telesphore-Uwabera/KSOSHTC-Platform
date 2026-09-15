@@ -1,6 +1,7 @@
 import path from "path";
 import { createServer } from "./index";
 import { getMongoDb } from "./lib/mongo";
+import { startKeepAlive, stopKeepAlive } from "./lib/keepAlive";
 import * as express from "express";
 
 console.log("[START] Backend process starting...");
@@ -39,15 +40,19 @@ app.listen(port, async () => {
     console.log(`[APP] Frontend: http://localhost:${port}`);
     console.log(`[API] http://localhost:${port}/api`);
   }
+  // Keep Render free tier alive by self-pinging before the 15-minute idle timeout
+  startKeepAlive();
 });
 
 // Graceful shutdown
 process.on("SIGTERM", () => {
   console.log("[STOP] Received SIGTERM, shutting down gracefully");
+  stopKeepAlive();
   process.exit(0);
 });
 
 process.on("SIGINT", () => {
   console.log("[STOP] Received SIGINT, shutting down gracefully");
+  stopKeepAlive();
   process.exit(0);
 });

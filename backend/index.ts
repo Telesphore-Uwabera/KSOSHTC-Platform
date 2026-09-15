@@ -7,7 +7,7 @@ loadEnv({ path: path.resolve(process.cwd(), "backend", ".env") });
 import express, { type Request, type Response, type NextFunction } from "express";
 import cors from "cors";
 import { handleDemo } from "./routes/demo";
-import { getTestimonials, postTestimonial } from "./routes/testimonials";
+import { getTestimonials, postTestimonial, putTestimonial, deleteTestimonial } from "./routes/testimonials";
 import {
   postRegister,
   postLogin,
@@ -196,6 +196,8 @@ export function createServer(options?: { apiOnly?: boolean }) {
   // Testimonials (admin-managed)
   app.get("/api/testimonials", getTestimonials);
   app.post("/api/testimonials", requireAdminSession, postTestimonial);
+  app.put("/api/testimonials/:id", requireAdminSession, putTestimonial);
+  app.delete("/api/testimonials/:id", requireAdminSession, deleteTestimonial);
 
   // Contact form (saved to MongoDB)
   app.post("/api/contact", postContact);

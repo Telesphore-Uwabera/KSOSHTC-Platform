@@ -20,8 +20,8 @@ export default defineConfig(({ mode, command }) => {
       host: "::",
       port: 8080,
       fs: {
-        allow: ["./clients", "./shared"],
-        deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**", "backend/**"],
+        allow: ["./clients", "./shared", "./backend"],
+        deny: [".env", ".env.*", "*.{crt,pem}", "**/.git/**"],
       },
       proxy: useProxy && backendUrl
         ? {
@@ -42,6 +42,7 @@ export default defineConfig(({ mode, command }) => {
         "@": path.resolve(__dirname, "./clients"),
         "@shared": path.resolve(__dirname, "./shared"),
       },
+      extensions: [".mjs", ".js", ".mts", ".ts", ".jsx", ".tsx", ".json"],
     },
   };
 });
@@ -51,10 +52,9 @@ function expressPlugin(): Plugin {
     name: "express-plugin",
     apply: "serve", // Only apply during development (serve mode)
     async configureServer(server) {
-      // Lazy-load backend so the config bundle (used by `vite build` on CI) never pulls in
-      // backend routes and @shared/* aliases—which Node cannot resolve in the config .mjs shim.
-      const backendModule = "./backend/index.ts";
-      const { createServer } = await import(/* @vite-ignore */ backendModule);
+      const { pathToFileURL } = await import("url");
+      const backendUrl = pathToFileURL(path.resolve(__dirname, "backend/index.ts")).href;
+      const { createServer } = await import(backendUrl);
       // apiOnly: true so Express only handles /api/*; GET / is left for Vite to serve the SPA
       const app = createServer({ apiOnly: true });
 

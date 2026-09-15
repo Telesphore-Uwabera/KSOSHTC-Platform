@@ -86,10 +86,18 @@ export default function Index() {
     queryKey: ["testimonials"],
     queryFn: fetchTestimonials,
   });
-  // Website shows only the latest 3 testimonials; layout 3 cols (lg) / 1 col (md/sm)
-  const latestTestimonials = [...testimonials]
-    .sort((a, b) => (b.createdAt ?? "").localeCompare(a.createdAt ?? ""))
-    .slice(0, 3);
+
+  // Testimonials sorted by newest first
+  const displayTestimonials = [...testimonials].sort((a, b) =>
+    (b.createdAt ?? "").localeCompare(a.createdAt ?? "")
+  );
+
+  // For continuous right-to-left marquee, build repeated sequence for seamless loop
+  const marqueeItems = displayTestimonials.length > 0
+    ? displayTestimonials.length < 5
+      ? Array.from({ length: Math.ceil(8 / displayTestimonials.length) }, () => displayTestimonials).flat()
+      : displayTestimonials
+    : [];
 
   return (
     <div className="min-h-screen bg-white overflow-x-hidden">
@@ -460,52 +468,143 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Testimonials Section (admin-managed) */}
-      <section id="testimonials" className="py-12 sm:py-16 md:py-20 lg:py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center">
-          <div className="text-center mb-10 sm:mb-14 w-full max-w-3xl">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary mb-3 scroll-reveal reveal-bounce">What Our Participants Say</h2>
-            <p className="text-gray-600 text-base sm:text-lg scroll-reveal text-reveal-fade" style={{ animationDelay: "0.15s" }}>Stories from professionals who trained with us</p>
+      {/* Testimonials Section (admin-managed continuous sliding carousel) */}
+      <section id="testimonials" className="py-14 sm:py-18 md:py-24 bg-gray-50 overflow-hidden relative">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center mb-8 sm:mb-12">
+          <div className="text-center w-full max-w-3xl">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-semibold mb-3">
+              <Sparkles className="w-4 h-4 text-primary" /> Verified Experiences
+            </div>
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary mb-3 scroll-reveal reveal-bounce">
+              What Our Participants Say
+            </h2>
+            <p className="text-gray-600 text-base sm:text-lg scroll-reveal text-reveal-fade" style={{ animationDelay: "0.15s" }}>
+              Stories and feedback from safety professionals who trained with us
+            </p>
           </div>
-          {isLoading ? (
-            <p className="text-gray-500 text-center py-8">Loading testimonials…</p>
-          ) : latestTestimonials.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No testimonials yet. Check back soon.</p>
-          ) : (
-            <div className="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-3 gap-6 w-full max-w-6xl mx-auto">
-              {latestTestimonials.map((t, idx) => (
+        </div>
+
+        {isLoading ? (
+          <div className="flex flex-col items-center justify-center py-12">
+            <Loader2 className="w-8 h-8 text-primary animate-spin mb-2" />
+            <p className="text-gray-500 text-sm">Loading participant testimonials…</p>
+          </div>
+        ) : displayTestimonials.length === 0 ? (
+          <p className="text-gray-500 text-center py-8">No testimonials yet. Check back soon.</p>
+        ) : (
+          <div className="relative w-full overflow-hidden pause-marquee group">
+            {/* Gradient Edge Masks for smooth fade on sides */}
+            <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-12 sm:w-24 md:w-36 bg-gradient-to-r from-gray-50 to-transparent z-10" />
+            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 sm:w-24 md:w-36 bg-gradient-to-l from-gray-50 to-transparent z-10" />
+
+            {/* Continuous Marquee Track (Right to Left) */}
+            <div className="animate-marquee-left flex items-stretch gap-6 px-4 py-4">
+              {/* Primary Track */}
+              {marqueeItems.map((t, idx) => (
                 <div
-                  key={t.id}
-                  className={`bg-white rounded-[30px] border-2 border-gray-200 p-6 shadow-sm hover:border-primary/40 hover:shadow-md transition-all duration-300 scroll-reveal ${idx === 0 ? "reveal-flip" : idx === 1 ? "reveal-bounce" : "reveal-spring"}`}
-                  style={{ animationDelay: `${0.1 + idx * 0.08}s` }}
+                  key={`track1-${t.id}-${idx}`}
+                  className="w-[300px] sm:w-[360px] md:w-[410px] flex-shrink-0 flex flex-col justify-between bg-white rounded-[28px] border-2 border-gray-200/90 p-6 sm:p-7 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none cursor-default"
                 >
-                  <Quote className="w-6 h-6 text-primary/60 mb-3" />
-                  <p className="text-gray-700 text-sm sm:text-base leading-relaxed mb-4">&ldquo;{t.quote}&rdquo;</p>
-                  <div className="flex items-center gap-3">
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <Quote className="w-5 h-5" />
+                      </div>
+                      <div className="flex items-center gap-1 text-amber-400">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-gray-700 text-sm sm:text-base leading-relaxed line-clamp-4 italic mb-6">
+                      &ldquo;{t.quote}&rdquo;
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3.5 pt-4 border-t border-gray-100">
                     {t.avatarUrl ? (
                       <SiteImage
                         src={t.avatarUrl}
-                        alt=""
-                        className="w-10 h-10 rounded-full object-cover bg-gray-200"
-                        sizes="40px"
+                        alt={t.name}
+                        className="w-12 h-12 rounded-full object-cover bg-gray-200 border-2 border-primary/20 shadow-sm shrink-0"
+                        sizes="48px"
                         cloudinaryMaxWidth={128}
                         decoding="async"
                       />
                     ) : (
-                      <div className="w-10 h-10 rounded-full bg-primary/20 flex items-center justify-center">
-                        <UserCheck className="w-4 h-4 text-primary" />
+                      <div className="w-12 h-12 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center border-2 border-primary/20 shadow-sm shrink-0 text-sm">
+                        {t.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .slice(0, 2)
+                          .join("")
+                          .toUpperCase() || <UserCheck className="w-5 h-5 text-primary" />}
                       </div>
                     )}
-                    <div>
-                      <p className="font-semibold text-gray-800">{t.name}</p>
-                      <p className="text-gray-500 text-sm">{t.role}</p>
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-gray-900 truncate text-sm sm:text-base">{t.name}</p>
+                      <p className="text-gray-500 text-xs sm:text-sm truncate">{t.role || "Participant"}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+
+              {/* Duplicate Track for Seamless Infinite Loop */}
+              {marqueeItems.map((t, idx) => (
+                <div
+                  key={`track2-${t.id}-${idx}`}
+                  aria-hidden="true"
+                  className="w-[300px] sm:w-[360px] md:w-[410px] flex-shrink-0 flex flex-col justify-between bg-white rounded-[28px] border-2 border-gray-200/90 p-6 sm:p-7 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none cursor-default"
+                >
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
+                        <Quote className="w-5 h-5" />
+                      </div>
+                      <div className="flex items-center gap-1 text-amber-400">
+                        {[...Array(5)].map((_, i) => (
+                          <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-gray-700 text-sm sm:text-base leading-relaxed line-clamp-4 italic mb-6">
+                      &ldquo;{t.quote}&rdquo;
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-3.5 pt-4 border-t border-gray-100">
+                    {t.avatarUrl ? (
+                      <SiteImage
+                        src={t.avatarUrl}
+                        alt={t.name}
+                        className="w-12 h-12 rounded-full object-cover bg-gray-200 border-2 border-primary/20 shadow-sm shrink-0"
+                        sizes="48px"
+                        cloudinaryMaxWidth={128}
+                        decoding="async"
+                      />
+                    ) : (
+                      <div className="w-12 h-12 rounded-full bg-primary/20 text-primary font-bold flex items-center justify-center border-2 border-primary/20 shadow-sm shrink-0 text-sm">
+                        {t.name
+                          .split(" ")
+                          .map((n) => n[0])
+                          .slice(0, 2)
+                          .join("")
+                          .toUpperCase() || <UserCheck className="w-5 h-5 text-primary" />}
+                      </div>
+                    )}
+                    <div className="min-w-0 flex-1">
+                      <p className="font-bold text-gray-900 truncate text-sm sm:text-base">{t.name}</p>
+                      <p className="text-gray-500 text-xs sm:text-sm truncate">{t.role || "Participant"}</p>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          )}
-        </div>
+
+            {/* Subtle notice below marquee */}
+            <p className="text-center text-xs text-gray-400 mt-3 select-none">
+              Hover over testimonials to pause scrolling
+            </p>
+          </div>
+        )}
       </section>
 
       {/* FAQ Section */}

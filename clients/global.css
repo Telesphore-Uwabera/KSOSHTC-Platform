@@ -1313,3 +1313,37 @@
     white-space: pre;
   }
 }
+
+/* Continuous Right-to-Left Infinite Slider (Marquee) */
+@keyframes marqueeScrollLeft {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee-left {
+  display: flex;
+  width: max-content;
+  animation: marqueeScrollLeft 40s linear infinite;
+  will-change: transform;
+}
+
+.pause-marquee:hover .animate-marquee-left,
+.animate-marquee-left:hover {
+  animation-play-state: paused;
+}
+
+@media (max-width: 640px) {
+  .animate-marquee-left {
+    animation-duration: 28s;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .animate-marquee-left {
+    animation: none !important;
+  }
+}

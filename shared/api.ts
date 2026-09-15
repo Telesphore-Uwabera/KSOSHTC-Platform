@@ -21,9 +21,17 @@ export interface Testimonial {
   quote: string;
   avatarUrl?: string;
   createdAt?: string;
+  updatedAt?: string;
 }
 
-export type TestimonialCreate = Omit<Testimonial, "id" | "createdAt">;
+export type TestimonialCreate = Omit<Testimonial, "id" | "createdAt" | "updatedAt"> & {
+  avatarFile?: {
+    filename: string;
+    contentBase64: string;
+  };
+};
+
+export type TestimonialUpdate = Partial<TestimonialCreate>;
 
 /** Sector chosen at registration: determines which main course (+ safety-management) the learner sees */
 export type LearnerSector = "construction" | "industrial-safety" | "mining";
