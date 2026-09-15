@@ -508,52 +508,58 @@ export default function Index() {
                 return (
                   <div
                     key={`track1-${t.id}-${idx}`}
-                    className="w-[340px] sm:w-[400px] md:w-[440px] flex-shrink-0 flex flex-col bg-white rounded-[28px] border-2 border-gray-200/90 p-6 sm:p-8 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
+                    className="w-[340px] sm:w-[400px] md:w-[440px] flex-shrink-0 flex flex-col bg-white rounded-[28px] border-2 border-gray-200/90 overflow-hidden shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
                   >
-                    {/* Big Avatar centred at top */}
-                    <div className="flex flex-col items-center mb-5">
+                    {/* Hero image filling top space */}
+                    <div className="w-full h-56 sm:h-64 relative bg-gray-100 overflow-hidden flex-shrink-0">
                       {t.avatarUrl ? (
                         <SiteImage
                           src={t.avatarUrl}
                           alt={t.name}
-                          className="w-36 h-36 rounded-full object-cover border-4 border-primary/30 shadow-2xl ring-4 ring-primary/15 mb-4"
-                          sizes="144px"
-                          cloudinaryMaxWidth={320}
+                          className="w-full h-full object-cover object-top transition-transform duration-500 hover:scale-105"
+                          sizes="(max-width: 768px) 340px, 440px"
+                          cloudinaryMaxWidth={600}
                           decoding="async"
                         />
                       ) : (
-                        <div className="w-36 h-36 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-4 border-primary/30 shadow-2xl ring-4 ring-primary/15 mb-4 text-4xl">
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center text-primary font-bold text-5xl">
                           {t.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                         </div>
                       )}
-                      <h4 className="font-bold text-gray-900 text-base sm:text-lg text-center leading-snug">{t.name}</h4>
-                      <p className="text-primary font-medium text-sm mt-1 text-center">{t.role || "Participant"}</p>
-                      {/* Stars */}
-                      <div className="flex items-center gap-1 mt-2">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-5 h-5 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
-                        ))}
-                      </div>
                     </div>
 
-                    {/* Separator */}
-                    <div className="w-12 h-0.5 bg-primary/20 rounded mx-auto mb-4" />
+                    {/* Card Body */}
+                    <div className="p-6 sm:p-7 flex flex-col flex-1">
+                      <div className="flex flex-col items-center mb-3">
+                        <h4 className="font-bold text-gray-900 text-lg sm:text-xl text-center leading-snug">{t.name}</h4>
+                        <p className="text-primary font-semibold text-xs sm:text-sm uppercase tracking-wider mt-1 text-center">{t.role || "Participant"}</p>
+                        {/* Stars */}
+                        <div className="flex items-center gap-1 mt-2">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`w-5 h-5 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
+                          ))}
+                        </div>
+                      </div>
 
-                    {/* Truncated Quote */}
-                    <p className="text-gray-600 text-sm sm:text-base leading-relaxed italic text-center flex-1">
-                      &ldquo;{preview}&rdquo;
-                    </p>
+                      {/* Separator */}
+                      <div className="w-12 h-0.5 bg-primary/20 rounded mx-auto mb-3" />
 
-                    {/* Read More */}
-                    {isLong && (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedTestimonial(t)}
-                        className="mt-4 mx-auto inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
-                      >
-                        Read More
-                      </button>
-                    )}
+                      {/* Truncated Quote */}
+                      <p className="text-gray-600 text-sm sm:text-base leading-relaxed italic text-center flex-1">
+                        &ldquo;{preview}&rdquo;
+                      </p>
+
+                      {/* Read More */}
+                      {isLong && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTestimonial(t)}
+                          className="mt-4 mx-auto inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
+                        >
+                          Read More
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -567,48 +573,54 @@ export default function Index() {
                   <div
                     key={`track2-${t.id}-${idx}`}
                     aria-hidden="true"
-                    className="w-[340px] sm:w-[400px] md:w-[440px] flex-shrink-0 flex flex-col bg-white rounded-[28px] border-2 border-gray-200/90 p-6 sm:p-8 shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
+                    className="w-[340px] sm:w-[400px] md:w-[440px] flex-shrink-0 flex flex-col bg-white rounded-[28px] border-2 border-gray-200/90 overflow-hidden shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
                   >
-                    {/* Big Avatar centred at top */}
-                    <div className="flex flex-col items-center mb-5">
+                    {/* Hero image filling top space */}
+                    <div className="w-full h-56 sm:h-64 relative bg-gray-100 overflow-hidden flex-shrink-0">
                       {t.avatarUrl ? (
                         <SiteImage
                           src={t.avatarUrl}
                           alt={t.name}
-                          className="w-36 h-36 rounded-full object-cover border-4 border-primary/30 shadow-2xl ring-4 ring-primary/15 mb-4"
-                          sizes="144px"
-                          cloudinaryMaxWidth={320}
+                          className="w-full h-full object-cover object-top transition-transform duration-500 hover:scale-105"
+                          sizes="(max-width: 768px) 340px, 440px"
+                          cloudinaryMaxWidth={600}
                           decoding="async"
                         />
                       ) : (
-                        <div className="w-36 h-36 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-4 border-primary/30 shadow-2xl ring-4 ring-primary/15 mb-4 text-4xl">
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center text-primary font-bold text-5xl">
                           {t.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                         </div>
                       )}
-                      <h4 className="font-bold text-gray-900 text-base sm:text-lg text-center leading-snug">{t.name}</h4>
-                      <p className="text-primary font-medium text-sm mt-1 text-center">{t.role || "Participant"}</p>
-                      <div className="flex items-center gap-1 mt-2">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className={`w-5 h-5 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
-                        ))}
-                      </div>
                     </div>
 
-                    <div className="w-12 h-0.5 bg-primary/20 rounded mx-auto mb-4" />
+                    {/* Card Body */}
+                    <div className="p-6 sm:p-7 flex flex-col flex-1">
+                      <div className="flex flex-col items-center mb-3">
+                        <h4 className="font-bold text-gray-900 text-lg sm:text-xl text-center leading-snug">{t.name}</h4>
+                        <p className="text-primary font-semibold text-xs sm:text-sm uppercase tracking-wider mt-1 text-center">{t.role || "Participant"}</p>
+                        <div className="flex items-center gap-1 mt-2">
+                          {[...Array(5)].map((_, i) => (
+                            <Star key={i} className={`w-5 h-5 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
+                          ))}
+                        </div>
+                      </div>
 
-                    <p className="text-gray-600 text-sm sm:text-base leading-relaxed italic text-center flex-1">
-                      &ldquo;{preview}&rdquo;
-                    </p>
+                      <div className="w-12 h-0.5 bg-primary/20 rounded mx-auto mb-3" />
 
-                    {isLong && (
-                      <button
-                        type="button"
-                        onClick={() => setSelectedTestimonial(t)}
-                        className="mt-4 mx-auto inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
-                      >
-                        Read More
-                      </button>
-                    )}
+                      <p className="text-gray-600 text-sm sm:text-base leading-relaxed italic text-center flex-1">
+                        &ldquo;{preview}&rdquo;
+                      </p>
+
+                      {isLong && (
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTestimonial(t)}
+                          className="mt-4 mx-auto inline-flex items-center gap-1.5 px-5 py-2 rounded-full bg-primary/10 text-primary text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
+                        >
+                          Read More
+                        </button>
+                      )}
+                    </div>
                   </div>
                 );
               })}
@@ -622,77 +634,102 @@ export default function Index() {
         )}
       </section>
 
-      {/* ===== TESTIMONIAL LIGHTBOX MODAL ===== */}
+      {/* ===== TESTIMONIAL LIGHTBOX MODAL (EXPANDED TO FILL SCREEN) ===== */}
       {selectedTestimonial && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6 md:p-10"
           onClick={() => setSelectedTestimonial(null)}
           role="dialog"
           aria-modal="true"
           aria-label={`Testimonial from ${selectedTestimonial.name}`}
         >
-          {/* Blurred backdrop */}
-          <div className="absolute inset-0 bg-black/60 backdrop-blur-md" />
+          {/* Blurred backdrop covering entire screen */}
+          <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
 
-          {/* Expanded card */}
+          {/* Expanded card filling the space */}
           <div
-            className="relative z-10 bg-white rounded-3xl shadow-2xl max-w-lg w-full p-8 sm:p-10 animate-in zoom-in-95 fade-in duration-300"
+            className="relative z-10 bg-white rounded-3xl shadow-2xl w-[94vw] max-w-5xl max-h-[88vh] overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 fade-in duration-300 border border-gray-100"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
             <button
               type="button"
               onClick={() => setSelectedTestimonial(null)}
-              className="absolute top-4 right-4 w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 text-gray-500 hover:bg-red-50 hover:text-red-600 transition-colors"
+              className="absolute top-4 right-4 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-black/10 hover:bg-red-50 hover:text-red-600 text-gray-600 backdrop-blur-sm transition-all"
               aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>
 
-            {/* Big avatar */}
-            <div className="flex flex-col items-center mb-6">
+            {/* Left side: Image filling the space */}
+            <div className="w-full md:w-5/12 lg:w-1/2 h-64 md:h-auto min-h-[260px] md:min-h-[460px] relative bg-gray-100 overflow-hidden flex-shrink-0">
               {selectedTestimonial.avatarUrl ? (
                 <SiteImage
                   src={selectedTestimonial.avatarUrl}
                   alt={selectedTestimonial.name}
-                  className="w-36 h-36 rounded-full object-cover border-4 border-primary/30 shadow-2xl ring-4 ring-primary/15 mb-4"
-                  sizes="144px"
-                  cloudinaryMaxWidth={320}
+                  className="w-full h-full object-cover object-top"
+                  sizes="(max-width: 768px) 100vw, 50vw"
+                  cloudinaryMaxWidth={800}
                   decoding="async"
                 />
               ) : (
-                <div className="w-36 h-36 rounded-full bg-primary/10 text-primary font-bold flex items-center justify-center border-4 border-primary/30 shadow-2xl ring-4 ring-primary/15 mb-4 text-4xl">
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center text-primary font-bold text-6xl">
                   {selectedTestimonial.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                 </div>
               )}
-              <h3 className="text-xl font-bold text-gray-900 text-center">{selectedTestimonial.name}</h3>
-              <p className="text-primary font-semibold text-sm mt-1 text-center">{selectedTestimonial.role || "Participant"}</p>
-              {/* Stars */}
-              <div className="flex items-center gap-1 mt-2">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className={`w-5 h-5 ${i < (selectedTestimonial.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
-                ))}
+            </div>
+
+            {/* Right side: Information and full testimonial quote */}
+            <div className="p-6 sm:p-8 md:p-10 flex-1 flex flex-col justify-between overflow-y-auto max-h-[60vh] md:max-h-[88vh]">
+              <div>
+                <div className="pr-8">
+                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">
+                    {selectedTestimonial.name}
+                  </h3>
+                  <p className="text-primary font-bold text-sm sm:text-base uppercase tracking-wider mt-1.5">
+                    {selectedTestimonial.role || "Participant"}
+                  </p>
+                  {/* Star ratings */}
+                  <div className="flex items-center gap-1.5 mt-3">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        className={`w-6 h-6 ${
+                          i < (selectedTestimonial.rating ?? 5)
+                            ? "fill-amber-400 text-amber-400"
+                            : "fill-gray-200 text-gray-200"
+                        }`}
+                      />
+                    ))}
+                    <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full ml-2">
+                      Verified Experience
+                    </span>
+                  </div>
+                </div>
+
+                {/* Divider */}
+                <div className="w-16 h-1 bg-primary/25 rounded-full my-6" />
+
+                {/* Full quote */}
+                <div className="relative">
+                  <Quote className="w-9 h-9 text-primary/20 mb-2" />
+                  <p className="text-gray-700 text-base sm:text-lg md:text-xl leading-relaxed italic">
+                    &ldquo;{selectedTestimonial.quote}&rdquo;
+                  </p>
+                </div>
+              </div>
+
+              {/* Bottom Close Button */}
+              <div className="mt-8 pt-4 border-t border-gray-100 flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => setSelectedTestimonial(null)}
+                  className="px-6 py-2.5 rounded-full bg-primary hover:bg-primary-dark text-white font-medium text-sm transition-colors shadow-sm cursor-pointer"
+                >
+                  Close
+                </button>
               </div>
             </div>
-
-            {/* Divider */}
-            <div className="w-12 h-0.5 bg-primary/20 rounded mx-auto mb-6" />
-
-            {/* Full quote */}
-            <div className="relative">
-              <Quote className="absolute -top-2 -left-1 w-8 h-8 text-primary/15" />
-              <p className="text-gray-700 text-sm sm:text-base leading-relaxed italic text-center px-4 max-h-60 overflow-y-auto">
-                &ldquo;{selectedTestimonial.quote}&rdquo;
-              </p>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => setSelectedTestimonial(null)}
-              className="mt-8 w-full py-2.5 rounded-xl bg-primary text-white font-semibold text-sm hover:bg-primary/90 transition-colors"
-            >
-              Close
-            </button>
           </div>
         </div>
       )}
