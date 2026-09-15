@@ -637,94 +637,100 @@ export default function Index() {
       {/* ===== TESTIMONIAL LIGHTBOX MODAL (EXPANDED TO FILL SCREEN) ===== */}
       {selectedTestimonial && (
         <div
-          className="fixed inset-0 z-[200] flex items-center justify-center p-3 sm:p-6 md:p-10"
+          className="fixed inset-0 z-[200] flex items-center justify-center p-2 sm:p-4 md:p-6 lg:p-8"
           onClick={() => setSelectedTestimonial(null)}
           role="dialog"
           aria-modal="true"
           aria-label={`Testimonial from ${selectedTestimonial.name}`}
         >
           {/* Blurred backdrop covering entire screen */}
-          <div className="absolute inset-0 bg-black/70 backdrop-blur-md" />
+          <div className="absolute inset-0 bg-black/75 backdrop-blur-md" />
 
           {/* Expanded card filling the space */}
           <div
-            className="relative z-10 bg-white rounded-3xl shadow-2xl w-[94vw] max-w-5xl max-h-[88vh] overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 fade-in duration-300 border border-gray-100"
+            className="relative z-10 bg-white rounded-3xl shadow-2xl w-[96vw] max-w-[1650px] max-h-[90vh] overflow-hidden flex flex-col md:flex-row animate-in zoom-in-95 fade-in duration-300 border border-gray-100"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Close button */}
             <button
               type="button"
               onClick={() => setSelectedTestimonial(null)}
-              className="absolute top-4 right-4 z-20 w-10 h-10 flex items-center justify-center rounded-full bg-black/10 hover:bg-red-50 hover:text-red-600 text-gray-600 backdrop-blur-sm transition-all"
+              className="absolute top-4 right-4 z-30 w-11 h-11 flex items-center justify-center rounded-full bg-gray-100/90 hover:bg-red-50 hover:text-red-600 text-gray-600 backdrop-blur-sm transition-all shadow-sm"
               aria-label="Close"
             >
               <X className="w-5 h-5" />
             </button>
 
-            {/* Left side: Image filling the space */}
-            <div className="w-full md:w-5/12 lg:w-1/2 h-64 md:h-auto min-h-[260px] md:min-h-[460px] relative bg-gray-100 overflow-hidden flex-shrink-0">
+            {/* Left side: Hero image filling the space */}
+            <div className="w-full md:w-5/12 lg:w-1/2 min-h-[280px] md:min-h-[520px] max-h-[45vh] md:max-h-[90vh] relative bg-gray-100 overflow-hidden flex-shrink-0">
               {selectedTestimonial.avatarUrl ? (
                 <SiteImage
                   src={selectedTestimonial.avatarUrl}
                   alt={selectedTestimonial.name}
                   className="w-full h-full object-cover object-top"
                   sizes="(max-width: 768px) 100vw, 50vw"
-                  cloudinaryMaxWidth={800}
+                  cloudinaryMaxWidth={1200}
                   decoding="async"
                 />
               ) : (
-                <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center text-primary font-bold text-6xl">
+                <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center text-primary font-bold text-7xl">
                   {selectedTestimonial.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                 </div>
               )}
             </div>
 
             {/* Right side: Information and full testimonial quote */}
-            <div className="p-6 sm:p-8 md:p-10 flex-1 flex flex-col justify-between overflow-y-auto max-h-[60vh] md:max-h-[88vh]">
+            <div className="p-6 sm:p-10 md:p-12 lg:p-16 flex-1 flex flex-col justify-between overflow-y-auto max-h-[55vh] md:max-h-[90vh]">
               <div>
-                <div className="pr-8">
-                  <h3 className="text-2xl sm:text-3xl md:text-4xl font-extrabold text-gray-900 leading-tight">
-                    {selectedTestimonial.name}
-                  </h3>
-                  <p className="text-primary font-bold text-sm sm:text-base uppercase tracking-wider mt-1.5">
-                    {selectedTestimonial.role || "Participant"}
-                  </p>
-                  {/* Star ratings */}
-                  <div className="flex items-center gap-1.5 mt-3">
-                    {[...Array(5)].map((_, i) => (
-                      <Star
-                        key={i}
-                        className={`w-6 h-6 ${
-                          i < (selectedTestimonial.rating ?? 5)
-                            ? "fill-amber-400 text-amber-400"
-                            : "fill-gray-200 text-gray-200"
-                        }`}
-                      />
-                    ))}
-                    <span className="text-xs font-semibold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full ml-2">
+                {/* Participant Header Info */}
+                <div className="flex flex-wrap items-center justify-between gap-4 pr-12">
+                  <div>
+                    <h3 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-gray-900 leading-tight">
+                      {selectedTestimonial.name}
+                    </h3>
+                    <p className="text-primary font-bold text-sm sm:text-base uppercase tracking-wider mt-1.5">
+                      {selectedTestimonial.role || "Participant"}
+                    </p>
+                  </div>
+                  {/* Star ratings badge */}
+                  <div className="flex items-center gap-2 bg-amber-50 border border-amber-200/80 px-4 py-2 rounded-2xl">
+                    <div className="flex items-center gap-1">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`w-5 h-5 ${
+                            i < (selectedTestimonial.rating ?? 5)
+                              ? "fill-amber-400 text-amber-400"
+                              : "fill-gray-200 text-gray-200"
+                          }`}
+                        />
+                      ))}
+                    </div>
+                    <span className="text-xs font-bold text-amber-900 ml-1">
                       Verified Experience
                     </span>
                   </div>
                 </div>
 
                 {/* Divider */}
-                <div className="w-16 h-1 bg-primary/25 rounded-full my-6" />
+                <div className="w-20 h-1 bg-primary/25 rounded-full my-6" />
 
                 {/* Full quote */}
                 <div className="relative">
-                  <Quote className="w-9 h-9 text-primary/20 mb-2" />
-                  <p className="text-gray-700 text-base sm:text-lg md:text-xl leading-relaxed italic">
+                  <Quote className="w-10 h-10 text-primary/20 mb-3" />
+                  <p className="text-gray-700 text-base sm:text-lg lg:text-xl leading-relaxed italic">
                     &ldquo;{selectedTestimonial.quote}&rdquo;
                   </p>
                 </div>
               </div>
 
-              {/* Bottom Close Button */}
-              <div className="mt-8 pt-4 border-t border-gray-100 flex justify-end">
+              {/* Bottom Footer Bar */}
+              <div className="mt-8 pt-6 border-t border-gray-100 flex items-center justify-between">
+                <span className="text-xs text-gray-400 font-medium">KSOSHTC Training Platform</span>
                 <button
                   type="button"
                   onClick={() => setSelectedTestimonial(null)}
-                  className="px-6 py-2.5 rounded-full bg-primary hover:bg-primary-dark text-white font-medium text-sm transition-colors shadow-sm cursor-pointer"
+                  className="px-8 py-3 rounded-full bg-primary hover:bg-primary-dark text-white font-semibold text-sm transition-all shadow-md hover:shadow-lg cursor-pointer"
                 >
                   Close
                 </button>
