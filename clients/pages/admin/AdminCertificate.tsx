@@ -15,11 +15,12 @@ import { adminFetch } from "@/lib/adminApi";
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 import { ConfirmModal } from "@/components/ConfirmModal";
+import { getCertificateTypeLabel, type CertificateType } from "@/lib/certificateTypeLabels";
 
 export default function AdminCertificate() {
   const [formData, setFormData] = useState({
     title: "Mr.",
-    type: "general" as "general" | "first-aid" | "lifting-safety" | "height-safety",
+    type: "general" as CertificateType,
     learnerName: "",
     courses: "",
     dateIssued: format(new Date(), "yyyy-MM-dd"),
@@ -435,6 +436,15 @@ export default function AdminCertificate() {
                 >
                   Height Safety
                 </Button>
+                <Button 
+                  type="button"
+                  variant={formData.type === "fire-safety-egress" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setFormData(prev => ({ ...prev, type: "fire-safety-egress", courses: "FIRE SAFETY AND EGRESS POLICY" }))}
+                  className="rounded-md h-8 text-xs px-3"
+                >
+                  Fire Safety & Egress
+                </Button>
               </div>
             </div>
           </CardHeader>
@@ -475,9 +485,7 @@ export default function AdminCertificate() {
                 <Label htmlFor="courses">Courses Completed</Label>
                 {formData.type !== "general" ? (
                   <Input 
-                    value={formData.type === "first-aid" ? "FIRST AID TRAINING" : 
-                           formData.type === "lifting-safety" ? "SAFE LIFTING OPERATIONS" : 
-                           "WORKING AT HEIGHT SAFETY"} 
+                    value={getCertificateTypeLabel(formData.type)}
                     disabled 
                     className="bg-muted opacity-70"
                   />

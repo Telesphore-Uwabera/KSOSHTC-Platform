@@ -193,10 +193,24 @@ export default function Index() {
             <div className="inline-block bg-white/20 backdrop-blur-sm text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg mb-3 sm:mb-4 shadow-lg scroll-reveal reveal-flip border border-white/20">
               <h2 className="section-header text-white">Who We Are</h2>
             </div>
-            <p className="text-white/90 text-base sm:text-lg mt-3 sm:mt-4 max-w-2xl scroll-reveal text-reveal-fade" style={{ animationDelay: "0.15s" }}>A Professional Occupational Safety and Health (OSH) Training Institution</p>
+            <p className="text-white/90 text-base sm:text-lg mt-3 sm:mt-4 max-w-2xl scroll-reveal text-reveal-fade" style={{ animationDelay: "0.15s" }}>
+              A Rwanda-accredited institution specializing in Occupational Safety and Health (OSH) short-course training.
+            </p>
           </div>
 
-          <p className="text-white/95 text-sm sm:text-base leading-relaxed max-w-3xl mb-8 scroll-reveal reveal-spring delay-1200">
+          <div className="mb-8 rounded-[32px] border border-white/25 bg-white/12 backdrop-blur-md p-5 sm:p-7 shadow-2xl scroll-reveal reveal-spring delay-1200">
+            <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-8">
+              <img src="/rtb.webp" alt="RTB Rwanda TVET Board" className="h-28 sm:h-36 w-auto object-contain rounded-2xl bg-white/90 p-3 shadow-lg" />
+              <div className="text-center sm:text-left">
+                <p className="text-sm sm:text-base uppercase tracking-[0.28em] text-accent font-black">Rwanda TVET Board</p>
+                <p className="mt-2 text-base sm:text-lg md:text-xl text-white/95 leading-relaxed font-medium">
+                  Accredited institution delivering practical and industry-relevant Occupational Safety and Health (OSH) short-course training.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-white/95 text-sm sm:text-base leading-relaxed max-w-3xl mb-8 scroll-reveal reveal-spring delay-1400">
             <span className="font-bold text-white">KSOSHTC</span> — competent safety professionals for construction, industrial & mining. Structured, regulation-aligned programs.
           </p>
 

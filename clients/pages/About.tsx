@@ -44,9 +44,24 @@ export default function About() {
           <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full animate-windy">
           <div className="mb-8 sm:mb-10">
             <h2 className="section-header text-white mb-4 scroll-reveal reveal-flip drop-shadow-md">Who We Are</h2>
-            <p className="text-white/90 text-sm sm:text-base max-w-2xl scroll-reveal text-reveal-fade drop-shadow" style={{ animationDelay: "0.15s" }}>OSH capacity-building for construction, industrial & mining.</p>
+            <p className="text-white/90 text-sm sm:text-base max-w-2xl scroll-reveal text-reveal-fade drop-shadow" style={{ animationDelay: "0.15s" }}>
+              A Rwanda-accredited institution specializing in Occupational Safety and Health (OSH) short-course training.
+            </p>
           </div>
-          <p className="text-white/95 text-sm sm:text-base mb-8 leading-relaxed max-w-3xl scroll-reveal reveal-spring delay-1200 drop-shadow">
+
+          <div className="mb-8 rounded-[32px] border border-white/25 bg-white/12 backdrop-blur-md p-5 sm:p-7 shadow-2xl scroll-reveal reveal-spring delay-1200">
+            <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-8">
+              <img src="/rtb.webp" alt="RTB Rwanda TVET Board" className="h-28 sm:h-36 w-auto object-contain rounded-2xl bg-white/90 p-3 shadow-lg" />
+              <div className="text-center sm:text-left">
+                <p className="text-sm sm:text-base uppercase tracking-[0.28em] text-accent font-black">Rwanda TVET Board</p>
+                <p className="mt-2 text-base sm:text-lg md:text-xl text-white/95 leading-relaxed font-medium">
+                  Accredited institution delivering practical and industry-relevant Occupational Safety and Health (OSH) short-course training.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <p className="text-white/95 text-sm sm:text-base mb-8 leading-relaxed max-w-3xl scroll-reveal reveal-spring delay-1400 drop-shadow">
             <span className="font-bold text-white">KSOSHTC</span> — competent safety professionals. Construction, industrial & mining. <span className="font-semibold text-accent">Safety today, Prosperity tomorrow.</span>
           </p>
 

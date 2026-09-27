@@ -1,10 +1,11 @@
 import React from "react";
 import { QRCodeSVG } from "qrcode.react";
 import { Mail, Globe, Shield } from "lucide-react";
+import { getCertificateTypeLabel, type CertificateType } from "@/lib/certificateTypeLabels";
 
 interface CertificateProps {
   data: {
-    type?: 'general' | 'first-aid' | 'lifting-safety' | 'height-safety';
+    type?: CertificateType;
     title: string;
     learnerName: string;
     courses: string;
@@ -21,6 +22,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
   const isFirstAid = data.type === 'first-aid';
   const isLifting = data.type === 'lifting-safety';
   const isHeight = data.type === 'height-safety';
+  const isFireSafetyEgress = data.type === 'fire-safety-egress';
 
   return (
     <div 
@@ -77,18 +79,17 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
           </p>
           <div className="flex flex-col items-center justify-center w-full overflow-visible">
             <h3 className="text-[#004d40] text-4xl font-black uppercase tracking-widest whitespace-nowrap mb-4">
-              {isFirstAid ? "FIRST AID TRAINING" : 
-               isLifting ? "SAFE LIFTING OPERATIONS" :
-               isHeight ? "WORKING AT HEIGHT SAFETY" :
-               (data.courses || "CONSTRUCTION WORKPLACES")}
+              {getCertificateTypeLabel(data.type || "general")}
             </h3>
-            {(isLifting || isHeight) && (
+            {(isLifting || isHeight || isFireSafetyEgress) && (
               <div className="text-gray-700 text-sm font-medium leading-tight text-center">
                 <p>conducted by <span className="font-bold text-[#004d40]">Kigali Safety OSH Training Center (KSOSHTC)</span></p>
                 <p className="mt-1">
                   {isLifting 
                     ? "in accordance with occupational safety and lifting operation safety requirements." 
-                    : "in accordance with occupational safety and fall protection requirements."}
+                    : isHeight
+                      ? "in accordance with occupational safety and fall protection requirements."
+                      : "in accordance with workplace fire prevention, emergency evacuation, and safe egress procedures."}
                 </p>
               </div>
             )}
