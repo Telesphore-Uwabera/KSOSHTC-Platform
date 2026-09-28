@@ -75,6 +75,80 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400..700&display=swap" rel="stylesheet">
+    <style>
+      #pre-react-welcome {
+        display: none;
+        min-height: 100vh;
+        padding: 2rem;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 2rem;
+        background: #1a1a1a;
+        color: #fff;
+        text-align: center;
+        font-family: system-ui, -apple-system, sans-serif;
+      }
+      #pre-react-welcome .welcome-logo {
+        width: 9rem;
+        height: 9rem;
+        padding: 1rem;
+        border: 4px solid rgba(212, 175, 55, 0.3);
+        border-radius: 50%;
+        background: #fff;
+        object-fit: contain;
+      }
+      #pre-react-welcome h1 {
+        margin: 0;
+        font-size: clamp(1.25rem, 4vw, 1.5rem);
+      }
+      #pre-react-welcome p {
+        margin: 0;
+        color: #d4af37;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-transform: uppercase;
+      }
+      #pre-react-welcome .welcome-progress {
+        width: min(15rem, 75vw);
+        height: 0.375rem;
+        overflow: hidden;
+        border-radius: 999px;
+        background: rgba(255, 255, 255, 0.1);
+      }
+      #pre-react-welcome .welcome-progress::after {
+        display: block;
+        width: 40%;
+        height: 100%;
+        border-radius: inherit;
+        background: linear-gradient(90deg, #1b5e3f, #2d7c54, #d4af37);
+        content: "";
+        animation: welcome-progress 1.6s ease-in-out infinite alternate;
+      }
+      @keyframes welcome-progress {
+        from { transform: translateX(-20%); }
+        to { transform: translateX(170%); }
+      }
+      html.show-initial-welcome #pre-react-welcome { display: flex; }
+      html.hide-preview-shell #root-shell { display: none; }
+    </style>
+    <script>
+      (() => {
+        const userAgent = (navigator.userAgent || "").toLowerCase();
+        const isBot = navigator.webdriver || /bot|crawler|spider|headless|prerender|phantomjs|slurp|baiduspider|yandex|duckduckbot|facebookexternalhit|twitterbot|whatsapp|telegram|meta-externalagent|screaming frog|pingdom|lighthouse|chrome-lighthouse|google-inspectiontool|petalbot|netlify|screenshot|pagespeed/.test(userAgent);
+        const isPreview = location.search.includes("nosplash") || location.search.includes("preview");
+        let splashSeen = false;
+        try {
+          splashSeen = sessionStorage.getItem("ksoshtc_splash_seen") === "1";
+        } catch {}
+        if (!isBot && !isPreview) {
+          document.documentElement.classList.add("hide-preview-shell");
+          if (!splashSeen) {
+            document.documentElement.classList.add("show-initial-welcome");
+          }
+        }
+      })();
+    </script>
   </head>
 
   <body>
@@ -83,6 +157,14 @@
          the page is blank white and produces a gray placeholder thumbnail.
          React replaces this content on mount — end-users see nothing different. -->
     <div id="root">
+      <div id="pre-react-welcome" aria-hidden="true">
+        <img class="welcome-logo" src="/logo.webp" alt="" />
+        <div>
+          <h1>Kigali Safety OSH Training Center</h1>
+          <p style="margin-top: 0.5rem">Safety Today, Prosperity Tomorrow</p>
+        </div>
+        <div class="welcome-progress"></div>
+      </div>
       <style>
         #root-shell {
           font-family: system-ui, -apple-system, sans-serif;

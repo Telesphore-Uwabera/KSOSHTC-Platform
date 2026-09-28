@@ -225,16 +225,19 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ErrorBoundary>
-          {showSplash && <BrandedSplashScreen onComplete={handleSplashComplete} />}
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <ScrollToTop />
-            <PrefetchKeyData />
-            <RouteLoader />
-            <ScrollRevealObserver />
-            <Suspense fallback={<PageLoaderFallback />}>
-              <Routes>
+          {showSplash ? (
+            <BrandedSplashScreen onComplete={handleSplashComplete} />
+          ) : (
+            <>
+              <Toaster />
+              <Sonner />
+              <BrowserRouter>
+                <ScrollToTop />
+                <PrefetchKeyData />
+                <RouteLoader />
+                <ScrollRevealObserver />
+                <Suspense fallback={<PageLoaderFallback />}>
+                  <Routes>
                 <Route path="/" element={<Index />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/programs" element={<Programs />} />
@@ -294,10 +297,12 @@ const App = () => {
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
                 <Route path="/courses/:courseId/quiz/take" element={<TakeQuiz />} />
                 <Route path="*" element={<NotFound />} />
-              </Routes>
-              <BackToTop />
-            </Suspense>
-          </BrowserRouter>
+                  </Routes>
+                  <BackToTop />
+                </Suspense>
+              </BrowserRouter>
+            </>
+          )}
         </ErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>
