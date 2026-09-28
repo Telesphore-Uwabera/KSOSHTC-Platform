@@ -198,94 +198,106 @@ function isBotOrHeadless(): boolean {
 }
 
 const App = () => {
-  const [showSplash, setShowSplash] = useState(false);
+  const [showSplash, setShowSplash] = useState(() => {
+    if (isBotOrHeadless()) return false;
+    try {
+      if (sessionStorage.getItem("ksoshtc_splash_seen") === "1") return false;
+    } catch {}
+    return true;
+  });
 
   const handleSplashComplete = () => {
     setShowSplash(false);
+    try {
+      sessionStorage.setItem("ksoshtc_splash_seen", "1");
+    } catch {}
   };
+
+  // Fail-safe: Ensure the app is NEVER stuck on the splash screen.
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      handleSplashComplete();
+    }, 6000);
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <ErrorBoundary>
-          {showSplash ? (
-            <BrandedSplashScreen onComplete={handleSplashComplete} />
-          ) : (
-            <>
-              <Toaster />
-              <Sonner />
-              <BrowserRouter>
-                <ScrollToTop />
-                <PrefetchKeyData />
-                <RouteLoader />
-                <ScrollRevealObserver />
-                <Suspense fallback={<PageLoaderFallback />}>
-                  <Routes>
-                    <Route path="/" element={<Index />} />
-                    <Route path="/about" element={<About />} />
-                    <Route path="/programs" element={<Programs />} />
-                    <Route path="/industries" element={<Industries />} />
-                    <Route path="/contact" element={<Contact />} />
-                    <Route path="/terms" element={<Terms />} />
-                    <Route path="/privacy" element={<Privacy />} />
-                    <Route path="/cookies" element={<Cookies />} />
-                    <Route path="/courses" element={<Courses />} />
-                    <Route path="/courses/:courseId" element={<CourseDetail />} />
-                    <Route path="/courses/:courseId/modules/:moduleId/quiz/:assessmentId" element={<TakeModuleQuiz />} />
-                    <Route path="/dashboard" element={<StudentLayout />}>
-                      <Route index element={<Dashboard />} />
-                      <Route path="courses" element={<DashboardCourses />} />
-                      <Route path="progress" element={<DashboardProgress />} />
-                      <Route path="settings" element={<DashboardSettings />} />
-                      <Route path="handouts" element={<DashboardHandouts />} />
-                      <Route path="work-submissions" element={<DashboardWorkSubmissions />} />
-                    </Route>
-                    <Route path="/training-registration" element={<TrainingRegistration />} />
-                    <Route path="/register" element={<Register />} />
-                    <Route path="/login" element={<Login />} />
-                    <Route path="/verify-certificate/:id" element={<CertificateVerification />} />
-                    <Route path="/admin/login" element={<AdminLogin />} />
-                    <Route path="/admin" element={<AdminLayout />}>
-                      <Route index element={<AdminDashboard />} />
-                      <Route path="courses" element={<AdminCourses />} />
-                      <Route path="courses/:courseId/quiz" element={<AdminCourseQuiz />} />
-                      <Route path="course-content" element={<AdminCourseContent />} />
-                      <Route path="course-content/:courseId" element={<AdminCourseContentDetail />} />
-                      <Route path="course-content/:courseId/modules/:moduleId/assessments/:assessmentId" element={<AdminModuleAssessment />} />
-                      <Route path="learners" element={<AdminLearners />} />
-                      <Route path="registrations" element={<AdminRegistrations />} />
-                      <Route path="instructors" element={<AdminInstructors />} />
-                      <Route path="assignment-submissions" element={<AdminAssignmentSubmissions />} />
-                      <Route path="distribute-pdf" element={<AdminDistributedAssignments />} />
-                      <Route path="certificate" element={<AdminCertificate />} />
-                      <Route path="quotations" element={<AdminQuotations />} />
-                      <Route path="testimonials" element={<AdminTestimonials />} />
-                      <Route path="communications" element={<AdminCommunications />} />
-                      <Route path="settings" element={<AdminSettings />} />
-                    </Route>
-                    <Route path="/instructor" element={<InstructorLayout />}>
-                      <Route index element={<InstructorDashboard />} />
-                      <Route path="courses" element={<AdminCourses />} />
-                      <Route path="courses/:courseId/quiz" element={<AdminCourseQuiz />} />
-                      <Route path="course-content" element={<AdminCourseContent />} />
-                      <Route path="course-content/:courseId" element={<AdminCourseContentDetail />} />
-                      <Route
-                        path="course-content/:courseId/modules/:moduleId/assessments/:assessmentId"
-                        element={<AdminModuleAssessment />}
-                      />
-                      <Route path="assignment-submissions" element={<AdminAssignmentSubmissions />} />
-                      <Route path="distribute-pdf" element={<AdminDistributedAssignments />} />
-                    </Route>
-                    <Route path="/forgot-password" element={<ForgotPassword />} />
-                    <Route path="/reset-password/:token" element={<ResetPassword />} />
-                    <Route path="/courses/:courseId/quiz/take" element={<TakeQuiz />} />
-                    <Route path="*" element={<NotFound />} />
-                  </Routes>
-                  <BackToTop />
-                </Suspense>
-              </BrowserRouter>
-            </>
-          )}
+          {showSplash && <BrandedSplashScreen onComplete={handleSplashComplete} />}
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <ScrollToTop />
+            <PrefetchKeyData />
+            <RouteLoader />
+            <ScrollRevealObserver />
+            <Suspense fallback={<PageLoaderFallback />}>
+              <Routes>
+                <Route path="/" element={<Index />} />
+                <Route path="/about" element={<About />} />
+                <Route path="/programs" element={<Programs />} />
+                <Route path="/industries" element={<Industries />} />
+                <Route path="/contact" element={<Contact />} />
+                <Route path="/terms" element={<Terms />} />
+                <Route path="/privacy" element={<Privacy />} />
+                <Route path="/cookies" element={<Cookies />} />
+                <Route path="/courses" element={<Courses />} />
+                <Route path="/courses/:courseId" element={<CourseDetail />} />
+                <Route path="/courses/:courseId/modules/:moduleId/quiz/:assessmentId" element={<TakeModuleQuiz />} />
+                <Route path="/dashboard" element={<StudentLayout />}>
+                  <Route index element={<Dashboard />} />
+                  <Route path="courses" element={<DashboardCourses />} />
+                  <Route path="progress" element={<DashboardProgress />} />
+                  <Route path="settings" element={<DashboardSettings />} />
+                  <Route path="handouts" element={<DashboardHandouts />} />
+                  <Route path="work-submissions" element={<DashboardWorkSubmissions />} />
+                </Route>
+                <Route path="/training-registration" element={<TrainingRegistration />} />
+                <Route path="/register" element={<Register />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/verify-certificate/:id" element={<CertificateVerification />} />
+                <Route path="/admin/login" element={<AdminLogin />} />
+                <Route path="/admin" element={<AdminLayout />}>
+                  <Route index element={<AdminDashboard />} />
+                  <Route path="courses" element={<AdminCourses />} />
+                  <Route path="courses/:courseId/quiz" element={<AdminCourseQuiz />} />
+                  <Route path="course-content" element={<AdminCourseContent />} />
+                  <Route path="course-content/:courseId" element={<AdminCourseContentDetail />} />
+                  <Route path="course-content/:courseId/modules/:moduleId/assessments/:assessmentId" element={<AdminModuleAssessment />} />
+                  <Route path="learners" element={<AdminLearners />} />
+                  <Route path="registrations" element={<AdminRegistrations />} />
+                  <Route path="instructors" element={<AdminInstructors />} />
+                  <Route path="assignment-submissions" element={<AdminAssignmentSubmissions />} />
+                  <Route path="distribute-pdf" element={<AdminDistributedAssignments />} />
+                  <Route path="certificate" element={<AdminCertificate />} />
+                  <Route path="quotations" element={<AdminQuotations />} />
+                  <Route path="testimonials" element={<AdminTestimonials />} />
+                  <Route path="communications" element={<AdminCommunications />} />
+                  <Route path="settings" element={<AdminSettings />} />
+                </Route>
+                <Route path="/instructor" element={<InstructorLayout />}>
+                  <Route index element={<InstructorDashboard />} />
+                  <Route path="courses" element={<AdminCourses />} />
+                  <Route path="courses/:courseId/quiz" element={<AdminCourseQuiz />} />
+                  <Route path="course-content" element={<AdminCourseContent />} />
+                  <Route path="course-content/:courseId" element={<AdminCourseContentDetail />} />
+                  <Route
+                    path="course-content/:courseId/modules/:moduleId/assessments/:assessmentId"
+                    element={<AdminModuleAssessment />}
+                  />
+                  <Route path="assignment-submissions" element={<AdminAssignmentSubmissions />} />
+                  <Route path="distribute-pdf" element={<AdminDistributedAssignments />} />
+                </Route>
+                <Route path="/forgot-password" element={<ForgotPassword />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
+                <Route path="/courses/:courseId/quiz/take" element={<TakeQuiz />} />
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+              <BackToTop />
+            </Suspense>
+          </BrowserRouter>
         </ErrorBoundary>
       </TooltipProvider>
     </QueryClientProvider>
