@@ -440,7 +440,7 @@ export default function AdminCertificate() {
                   type="button"
                   variant={formData.type === "fire-safety-egress" ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setFormData(prev => ({ ...prev, type: "fire-safety-egress", courses: "FIRE SAFETY AND EGRESS POLICY" }))}
+                  onClick={() => setFormData(prev => ({ ...prev, type: "fire-safety-egress", courses: "FIRE SAFETY AND EGRESS" }))}
                   className="rounded-md h-8 text-xs px-3"
                 >
                   Fire Safety & Egress

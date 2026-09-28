@@ -3,7 +3,7 @@ import { getCertificateTypeLabel, type CertificateType } from "./certificateType
 
 describe("certificateTypeLabels", () => {
   it("returns the fire safety and egress label for the new certificate type", () => {
-    expect(getCertificateTypeLabel("fire-safety-egress")).toBe("FIRE SAFETY AND EGRESS POLICY");
+    expect(getCertificateTypeLabel("fire-safety-egress")).toBe("FIRE SAFETY AND EGRESS");
   });
 
   it("keeps the existing course titles for specialized certificates", () => {

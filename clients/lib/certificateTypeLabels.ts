@@ -14,7 +14,7 @@ export const getCertificateTypeLabel = (type: CertificateType | undefined): stri
     case "height-safety":
       return "WORKING AT HEIGHT SAFETY";
     case "fire-safety-egress":
-      return "FIRE SAFETY AND EGRESS POLICY";
+      return "FIRE SAFETY AND EGRESS";
     default:
       return "CONSTRUCTION WORKPLACES";
   }

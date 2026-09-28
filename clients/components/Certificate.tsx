@@ -71,6 +71,8 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
           <p className="text-gray-700 text-lg leading-relaxed font-medium mb-6">
             {isFirstAid ? (
               <>has successfully completed First Aid Training conducted by Kigali Safety OSH Training Center (KSOSHTC) and has been assessed and found competent in accordance with the applicable standards for:</>
+            ) : isFireSafetyEgress ? (
+              <>has successfully completed training in Fire Safety and Egress in accordance with relevant NFPA and ISO principles and requirements.</>
             ) : (isLifting || isHeight) ? (
               <>has successfully completed professional training in</>
             ) : (
@@ -81,15 +83,13 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
             <h3 className="text-[#004d40] text-4xl font-black uppercase tracking-widest whitespace-nowrap mb-4">
               {getCertificateTypeLabel(data.type || "general")}
             </h3>
-            {(isLifting || isHeight || isFireSafetyEgress) && (
+            {(isLifting || isHeight) && (
               <div className="text-gray-700 text-sm font-medium leading-tight text-center">
                 <p>conducted by <span className="font-bold text-[#004d40]">Kigali Safety OSH Training Center (KSOSHTC)</span></p>
                 <p className="mt-1">
                   {isLifting 
                     ? "in accordance with occupational safety and lifting operation safety requirements." 
-                    : isHeight
-                      ? "in accordance with occupational safety and fall protection requirements."
-                      : "in accordance with workplace fire prevention, emergency evacuation, and safe egress procedures."}
+                    : "in accordance with occupational safety and fall protection requirements."}
                 </p>
               </div>
             )}
