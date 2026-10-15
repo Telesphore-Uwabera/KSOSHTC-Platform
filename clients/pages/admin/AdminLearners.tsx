@@ -290,25 +290,25 @@ export default function AdminLearners() {
                             {u.name}
                           </button>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{u.email}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600">{u.organization ?? "—"}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
+                        <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{u.email}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{u.organization ?? "—"}</td>
+                        <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
                           {SECTOR_OPTIONS.find((o) => o.value === u.sector)?.label ?? "—"}
                         </td>
-                        <td className="px-4 py-3">
-                          {u.approved ? (
-                            <span className="text-green-600 font-medium">Approved</span>
-                          ) : (
-                            <span className="text-amber-600 font-medium">Pending</span>
-                          )}
+                        <td className="px-4 py-3 whitespace-nowrap">
+                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap border ${
+                            u.approved ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"
+                          }`}>
+                            {u.approved ? "Approved" : "Pending"}
+                          </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600">
+                        <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
                           {enrollments.length === 0
                             ? "—"
                             : `${enrollments.length} course${enrollments.length !== 1 ? "s" : ""}`}
                         </td>
-                        <td className="px-4 py-3 text-right">
-                          <div className="flex items-center justify-end gap-2">
+                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                          <div className="flex items-center justify-end gap-2 whitespace-nowrap">
                             {!u.approved && (
                               <button
                                 type="button"

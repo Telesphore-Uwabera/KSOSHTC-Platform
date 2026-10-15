@@ -225,42 +225,46 @@ export default function AdminInstructors() {
           <div className="overflow-x-auto">
             <table className="min-w-full text-sm">
               <thead>
-                <tr className="text-left text-gray-500">
-                  <th className="py-2 pr-4">Name</th>
-                  <th className="py-2 pr-4">Email</th>
-                  <th className="py-2 pr-4">Status</th>
-                  <th className="py-2 pr-4">Courses</th>
-                  <th className="py-2 pr-0 text-right">Actions</th>
+                <tr className="text-left text-gray-500 border-b border-gray-100">
+                  <th className="py-3 pr-4 whitespace-nowrap">Name</th>
+                  <th className="py-3 pr-4 whitespace-nowrap">Email</th>
+                  <th className="py-3 pr-4 whitespace-nowrap text-center">Status</th>
+                  <th className="py-3 pr-4 min-w-[200px]">Courses</th>
+                  <th className="py-3 pr-0 text-right whitespace-nowrap">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
                 {instructors.map((i) => (
-                  <tr key={i.id} className="text-gray-800">
-                    <td className="py-3 pr-4 font-semibold">{i.name}</td>
-                    <td className="py-3 pr-4">{i.email}</td>
-                    <td className="py-3 pr-4">
-                      <span className={i.active ? "text-green-700 font-semibold" : "text-gray-500 font-semibold"}>{i.active ? "Active" : "Disabled"}</span>
+                  <tr key={i.id} className="text-gray-800 hover:bg-gray-50/50 transition-colors">
+                    <td className="py-3.5 pr-4 font-semibold whitespace-nowrap">{i.name}</td>
+                    <td className="py-3.5 pr-4 whitespace-nowrap text-gray-600 font-mono text-xs">{i.email}</td>
+                    <td className="py-3.5 pr-4 whitespace-nowrap text-center">
+                      <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap border ${
+                        i.active ? "bg-green-50 text-green-700 border-green-200" : "bg-gray-50 text-gray-600 border-gray-200"
+                      }`}>
+                        {i.active ? "Active" : "Disabled"}
+                      </span>
                     </td>
-                    <td className="py-3 pr-4">
-                      <span className="text-gray-600">
+                    <td className="py-3.5 pr-4">
+                      <span className="text-gray-600 text-xs sm:text-sm">
                         {(i.allowedCourseIds ?? []).map((cid) => coursesById[cid]?.title ?? cid).join(", ") || "—"}
                       </span>
                     </td>
-                    <td className="py-3 pr-0">
-                      <div className="flex justify-end gap-2">
+                    <td className="py-3.5 pr-0 whitespace-nowrap text-right">
+                      <div className="flex items-center justify-end gap-2 whitespace-nowrap">
                         <button
                           type="button"
                           onClick={() => openEdit(i)}
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50"
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-gray-200 bg-white px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-gray-50 whitespace-nowrap shrink-0 shadow-sm"
                         >
-                          <Pencil className="w-3.5 h-3.5" /> Edit
+                          <Pencil className="w-3.5 h-3.5 shrink-0" /> Edit
                         </button>
                         <button
                           type="button"
                           onClick={() => setDeleteId(i.id)}
-                          className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-xs font-semibold text-red-700 hover:bg-red-100"
+                          className="inline-flex items-center gap-1.5 rounded-xl border border-red-200 bg-red-50 px-3 py-1.5 text-xs font-semibold text-red-700 hover:bg-red-100 whitespace-nowrap shrink-0 shadow-sm"
                         >
-                          <Trash2 className="w-3.5 h-3.5" /> Delete
+                          <Trash2 className="w-3.5 h-3.5 shrink-0" /> Delete
                         </button>
                       </div>
                     </td>
