@@ -1,12 +1,31 @@
 import { Link } from "react-router-dom";
-import { BookOpen, ArrowRight, HardHat, Building, Pickaxe, Shield, Percent } from "lucide-react";
+import {
+  BookOpen,
+  ArrowRight,
+  HardHat,
+  Building,
+  Pickaxe,
+  Shield,
+  Percent,
+  Utensils,
+  Anchor,
+  Flame,
+  Leaf,
+  HeartPulse,
+  ShieldCheck,
+} from "lucide-react";
 import { useDashboardData } from "./dashboardData";
 
 const iconBySlug: Record<string, typeof HardHat> = {
   construction: HardHat,
   "industrial-safety": Building,
   mining: Pickaxe,
-  "safety-management": Shield,
+  "food-safety": Utensils,
+  "safety-management": ShieldCheck,
+  "safe-lifting-operations": Anchor,
+  "fire-safety-and-egress": Flame,
+  esg: Leaf,
+  "first-aid": HeartPulse,
   "safety-for-all": Shield,
 };
 

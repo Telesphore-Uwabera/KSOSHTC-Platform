@@ -22,9 +22,15 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const COURSES_OFFERED = [
+  "OSH IN CONSTRUCTION",
   "OSH IN INDUSTRIES",
-  "OSH IN CONSTRUCTION", // fixed typo from user prompt
   "OSH IN MINING",
+  "FOOD SAFETY",
+  "SAFETY MANAGEMENT",
+  "SAFE LIFTING OPERATIONS",
+  "FIRE SAFETY AND EGRESS",
+  "ENVIRONMENTAL SOCIAL AND GOVERNANCE (ESG)",
+  "FIRST AID",
   "REFRESHER TRAINING",
   "SAFETY AWARENESS",
 ];

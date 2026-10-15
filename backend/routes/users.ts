@@ -42,7 +42,17 @@ async function verifyPassword(plain: string, stored: string): Promise<boolean> {
   return plain === stored;
 }
 
-const VALID_SECTORS: LearnerSector[] = ["construction", "industrial-safety", "mining"];
+const VALID_SECTORS: LearnerSector[] = [
+  "construction",
+  "industrial-safety",
+  "mining",
+  "food-safety",
+  "safety-management",
+  "safe-lifting-operations",
+  "fire-safety-and-egress",
+  "esg",
+  "first-aid",
+];
 
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
@@ -69,6 +79,34 @@ function generateId(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+/**
+ * Generates the next sequential student ID card number in YYYY-NNNN format.
+ * E.g. 2026-0001, 2026-0002 …
+ */
+export async function generateIdCardNo(): Promise<string> {
+  const year = new Date().getFullYear();
+  const prefix = `${year}-`;
+  try {
+    const col = usersCol();
+    // Find the highest existing number for this year
+    const latestDocs = await col
+      .find({ idCardNo: { $regex: `^${prefix}` } })
+      .sort({ idCardNo: -1 })
+      .limit(1)
+      .toArray();
+
+    let seq = 1;
+    if (latestDocs.length > 0 && latestDocs[0].idCardNo) {
+      const num = parseInt(latestDocs[0].idCardNo.split("-")[1] || "0", 10);
+      if (!isNaN(num)) seq = num + 1;
+    }
+    return `${prefix}${String(seq).padStart(4, "0")}`;
+  } catch {
+    // Fallback: use timestamp-based unique number
+    return `${prefix}${String(Date.now()).slice(-4).padStart(4, "0")}`;
+  }
+}
+
 export async function postRegister(req: Request, res: Response): Promise<void> {
   try {
     const body = req.body as UserCreate;
@@ -91,8 +129,10 @@ export async function postRegister(req: Request, res: Response): Promise<void> {
       return;
     }
     const passwordHash = await hashPassword(password);
+    const idCardNo = await generateIdCardNo();
     const user: User = {
       id: generateId(),
+      idCardNo,
       email: emailNorm,
       password: passwordHash,
       name: name.trim(),
@@ -206,10 +246,27 @@ export async function postLogin(req: Request, res: Response): Promise<void> {
 
 export async function getUsers(_req: Request, res: Response): Promise<void> {
   try {
-    const list = await usersCol()
+    const col = usersCol();
+    const list = await col
       .find({})
-      .sort({ createdAt: -1 })
+      .sort({ createdAt: 1 })
       .toArray();
+
+    // Auto-backfill idCardNo for any existing student lacking one (format: YYYY-0001, YYYY-0002...)
+    for (const u of list) {
+      if (u.id !== "admin" && (!u.idCardNo || !u.idCardNo.trim())) {
+        u.idCardNo = await generateIdCardNo();
+        await col.updateOne({ id: u.id }, { $set: { idCardNo: u.idCardNo } }).catch(() => {});
+      }
+    }
+
+    // Sort newest first for display
+    list.sort((a, b) => {
+      const tA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const tB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return tB - tA;
+    });
+
     res.json({ users: list.map((u) => toPublic(u)) });
   } catch (e) {
     console.error("Get users error:", e);
@@ -313,8 +370,10 @@ export async function postUser(req: Request, res: Response): Promise<void> {
       return;
     }
     const passwordHash = await hashPassword(password);
+    const idCardNo = await generateIdCardNo();
     const user: User = {
       id: generateId(),
+      idCardNo,
       email: emailNorm,
       password: passwordHash,
       name: name.trim(),
@@ -369,6 +428,7 @@ export async function putUser(req: Request, res: Response): Promise<void> {
       organization?: string;
       sector?: LearnerSector | "";
       approved?: boolean;
+      idCardNo?: string;
     };
     const email =
       body.email !== undefined ? normalizeEmail(body.email) : current.email;
@@ -388,12 +448,20 @@ export async function putUser(req: Request, res: Response): Promise<void> {
           ? body.sector
           : undefined
         : current.sector;
+
+    // If user doesn't have an idCardNo yet, generate one automatically
+    const idCardNo =
+      body.idCardNo !== undefined
+        ? body.idCardNo.trim() || current.idCardNo
+        : current.idCardNo ?? (await generateIdCardNo());
+
     const updates: Partial<User> = {
       name: body.name !== undefined ? body.name.trim() : current.name,
       email,
       organization: body.organization !== undefined ? body.organization.trim() : current.organization,
       sector: sectorVal,
       approved: body.approved !== undefined ? body.approved : current.approved,
+      idCardNo,
     };
     if (body.password !== undefined && body.password !== "") {
       updates.password = await hashPassword(body.password);

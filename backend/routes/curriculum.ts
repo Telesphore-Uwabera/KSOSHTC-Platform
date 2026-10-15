@@ -57,6 +57,11 @@ export async function getCertificateCurriculum(req: Request, res: Response): Pro
       if (title.includes("construction")) courseId = "construction";
       else if (title.includes("industrial")) courseId = "industrial-safety";
       else if (title.includes("mining")) courseId = "mining";
+      else if (title.includes("food")) courseId = "food-safety";
+      else if (title.includes("lifting")) courseId = "safe-lifting-operations";
+      else if (title.includes("fire")) courseId = "fire-safety-and-egress";
+      else if (title.includes("esg") || title.includes("environmental")) courseId = "esg";
+      else if (title.includes("first aid")) courseId = "first-aid";
       else if (title.includes("management") || title.includes("general")) courseId = "safety-management";
       else courseId = "safety-for-all";
     }

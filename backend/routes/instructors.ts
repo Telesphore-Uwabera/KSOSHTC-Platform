@@ -6,7 +6,17 @@ import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import { notifyInstructorCreated, notifyPasswordReset } from "../lib/notify";
 
 const BCRYPT_ROUNDS = 10;
-const VALID_SECTORS: LearnerSector[] = ["construction", "industrial-safety", "mining"];
+const VALID_SECTORS: LearnerSector[] = [
+  "construction",
+  "industrial-safety",
+  "mining",
+  "food-safety",
+  "safety-management",
+  "safe-lifting-operations",
+  "fire-safety-and-egress",
+  "esg",
+  "first-aid",
+];
 
 function instructorsCol() {
   return mongoCollection<Instructor>(MONGO_COLLECTIONS.instructors);

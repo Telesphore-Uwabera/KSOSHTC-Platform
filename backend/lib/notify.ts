@@ -47,12 +47,27 @@ async function sendViaBrevo(
   to: string,
   subject: string,
   textContent: string,
-  htmlContent: string
+  htmlContent: string,
+  attachments?: { name: string; content: string }[]
 ): Promise<void> {
   const apiKey = getBrevoApiKey();
   if (!apiKey) throw new Error("BREVO_API_KEY missing");
 
   const sender = brevoSender();
+  const payload: Record<string, unknown> = {
+    sender: { name: sender.name, email: sender.email },
+    to: [{ email: to }],
+    subject,
+    textContent,
+    htmlContent,
+  };
+  if (attachments && attachments.length > 0) {
+    payload.attachment = attachments.map((a) => ({
+      name: a.name,
+      content: a.content.replace(/^data:[^;]+;base64,/, ""),
+    }));
+  }
+
   const res = await fetch(BREVO_API_URL, {
     method: "POST",
     headers: {
@@ -60,13 +75,7 @@ async function sendViaBrevo(
       "content-type": "application/json",
       "api-key": apiKey,
     },
-    body: JSON.stringify({
-      sender: { name: sender.name, email: sender.email },
-      to: [{ email: to }],
-      subject,
-      textContent,
-      htmlContent,
-    }),
+    body: JSON.stringify(payload),
   });
 
   if (!res.ok) {
@@ -177,10 +186,17 @@ function getTransporter(): nodemailer.Transporter | null {
 const fromAddress = (): string =>
   process.env.SMTP_FROM ?? process.env.SMTP_USER ?? ADMIN_EMAIL;
 
+export type EmailAttachment = {
+  filename: string;
+  content: string; // base64 string
+  contentType?: string;
+};
+
 export type SendEmailOptions = {
   appendSupportFooter?: boolean;
   /** Admin notifications use a neutral footer; learners get sign-off + website / WhatsApp. */
   audience?: "learner" | "admin";
+  attachments?: EmailAttachment[];
 };
 
 /** Send email to a single recipient. Uses Brevo when BREVO_API_KEY is set; otherwise SMTP. */
@@ -205,7 +221,11 @@ export async function sendEmail(
 
   if (getBrevoApiKey()) {
     try {
-      await sendViaBrevo(to, subject, textBody, htmlBody);
+      const brevoAtts = options?.attachments?.map((a) => ({
+        name: a.filename,
+        content: a.content,
+      }));
+      await sendViaBrevo(to, subject, textBody, htmlBody, brevoAtts);
       console.log("[NOTIFY] Email sent via Brevo:", subject, "to", to);
     } catch (e) {
       console.error("[NOTIFY] Brevo failed:", e instanceof Error ? e.message : e);
@@ -220,13 +240,21 @@ export async function sendEmail(
     return;
   }
   try {
-    const info = await transport.sendMail({
+    const mailOptions: any = {
       from: fromAddress(),
       to,
       subject,
       text: textBody,
       html: htmlBody,
-    });
+    };
+    if (options?.attachments && options.attachments.length > 0) {
+      mailOptions.attachments = options.attachments.map((a) => ({
+        filename: a.filename,
+        content: Buffer.from(a.content.replace(/^data:[^;]+;base64,/, ""), "base64"),
+        contentType: a.contentType || "application/pdf",
+      }));
+    }
+    const info = await transport.sendMail(mailOptions);
     console.log("[NOTIFY] Email sent via SMTP:", subject, "to", to, "Response:", info.response);
   } catch (e) {
     console.error("[NOTIFY] SMTP failed:", e instanceof Error ? e.message : e);
@@ -1092,4 +1120,75 @@ export async function notifyLearnerCertificateIssued(data: {
 </div>`;
 
   await sendEmail(data.email, subject, text, html);
+}
+
+export async function sendReceiptEmail(data: {
+  to: string;
+  payerName: string;
+  receiptNo: string;
+  amount: string | number;
+  currency: string;
+  receiptDate?: string;
+  packageName?: string;
+  pdfBase64?: string;
+}): Promise<void> {
+  const subject = `Payment Receipt #${data.receiptNo} — Kigali Safety OSH Training Center`;
+  const web = webBase();
+  const formattedAmount = `${data.currency} ${Number(data.amount).toLocaleString()}`;
+
+  const text = [
+    `Dear ${data.payerName},`,
+    "",
+    "Thank you for your payment to Kigali Safety & OSH Training Centre (KSOSHTC).",
+    "",
+    "PAYMENT RECEIPT DETAILS",
+    `Receipt Number:  ${data.receiptNo}`,
+    `Date:            ${data.receiptDate || new Date().toLocaleDateString("en-GB")}`,
+    `Amount Received: ${formattedAmount}`,
+    data.packageName ? `Package / Item:  ${data.packageName}` : "",
+    "",
+    "Please find your official payment receipt PDF attached to this email.",
+    "Keep this receipt for your records and for presentation when collecting your course materials or certificate.",
+    "",
+    "If you have any questions regarding your payment or training schedule, please contact our administrative desk.",
+    "",
+    "Best regards,",
+    "Finance & Administration",
+    "Kigali Safety & OSH Training Centre (KSOS HTC)",
+  ].filter(Boolean).join("\n");
+
+  const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:16px;line-height:1.6;color:#1e272e;max-width:640px;border:1px solid #e9ecef;border-radius:12px;padding:30px;background-color:#ffffff;">
+<div style="text-align:center;margin-bottom:25px;">
+  <img src="${web}/logo_transparent.webp" alt="KSOSHTC" style="height:70px;width:auto;" />
+</div>
+<h2 style="color:#004d40;text-align:center;margin-bottom:20px;font-size:24px;">Official Payment Receipt</h2>
+<p style="margin:0 0 1.25em;">Dear <strong>${escapeHtml(data.payerName)}</strong>,</p>
+<p style="margin:0 0 1.25em;">Thank you for your payment. Please find your official payment receipt attached to this email as a PDF.</p>
+<div style="background-color:#f8f9fa;border-radius:8px;padding:20px;margin-bottom:25px;border-left:4px solid #16a34a;">
+  <p style="margin:0 0 0.5em;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;color:#666;">Receipt #</p>
+  <p style="margin:0 0 1em;font-family:monospace;font-weight:bold;font-size:18px;color:#004d40;">${escapeHtml(data.receiptNo)}</p>
+  <p style="margin:0 0 0.5em;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;color:#666;">Amount Paid</p>
+  <p style="margin:0 0 1em;font-weight:bold;font-size:22px;color:#16a34a;">${escapeHtml(formattedAmount)}</p>
+  ${data.packageName ? `<p style="margin:0 0 0.5em;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;color:#666;">Description</p><p style="margin:0;font-weight:600;font-size:15px;color:#333;">${escapeHtml(data.packageName)}</p>` : ""}
+</div>
+<p style="margin:0 0 1.5em;color:#475569;font-size:14px;">The detailed breakdown of your installment plan and terms is attached in the PDF document.</p>
+<hr style="border:0;border-top:1px solid #eee;margin:25px 0;" />
+<p style="margin:0;font-weight:bold;color:#004d40;">Finance &amp; Administration</p>
+<p style="margin:0.25em 0 0;font-size:13px;color:#64748b;">Kigali Safety &amp; OSH Training Centre</p>
+</div>`;
+
+  const attachments: EmailAttachment[] = [];
+  if (data.pdfBase64) {
+    const cleanNo = data.receiptNo.replace(/[^a-zA-Z0-9_-]/g, "_");
+    attachments.push({
+      filename: `Receipt_${cleanNo}.pdf`,
+      content: data.pdfBase64,
+      contentType: "application/pdf",
+    });
+  }
+
+  await sendEmail(data.to, subject, text, html, {
+    audience: "learner",
+    attachments: attachments.length > 0 ? attachments : undefined,
+  });
 }

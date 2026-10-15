@@ -11,6 +11,12 @@ const SECTOR_OPTIONS: { value: LearnerSector | ""; label: string }[] = [
   { value: "construction", label: "Construction" },
   { value: "industrial-safety", label: "Industrial Safety" },
   { value: "mining", label: "Mining" },
+  { value: "food-safety", label: "Food Safety" },
+  { value: "safety-management", label: "Safety Management" },
+  { value: "safe-lifting-operations", label: "Safe Lifting Operations" },
+  { value: "fire-safety-and-egress", label: "Fire Safety & Egress" },
+  { value: "esg", label: "ESG Principles" },
+  { value: "first-aid", label: "First Aid & CPR" },
 ];
 
 async function fetchInstructors(): Promise<Instructor[]> {

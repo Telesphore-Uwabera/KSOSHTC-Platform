@@ -1,9 +1,10 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Shield, HardHat, Building, Pickaxe, Crown, Star, Award, Sparkles, Building2, UserCheck, AlertTriangle, Users, Globe, Target } from "lucide-react";
+import { CheckCircle2, Shield, HardHat, Building, Pickaxe, Crown, Star, Award, Sparkles, Building2, UserCheck, AlertTriangle, Users, Globe, Target, Utensils, ShieldCheck, Anchor, Flame, Leaf, HeartPulse } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { SiteImage } from "../components/SiteImage";
+import TeamSlider from "../components/TeamSlider";
 
 export default function About() {
   useEffect(() => {
@@ -82,20 +83,26 @@ export default function About() {
             ))}
           </div>
 
-          {/* Row 2: Three sector cards */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 w-full">
+          {/* Row 2: Sector cards for all 9 courses */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 w-full">
             {[
               { icon: HardHat, label: "OSH in Construction", sub: "Construction & infrastructure", slug: "construction" },
               { icon: Building, label: "OSH in Industrial", sub: "Manufacturing & industrial", slug: "industrial-safety" },
               { icon: Pickaxe, label: "OSH in Mining", sub: "Mining & extraction", slug: "mining" },
+              { icon: Utensils, label: "Food Safety", sub: "Hygiene & food handling", slug: "food-safety" },
+              { icon: ShieldCheck, label: "Safety Management", sub: "HSE leadership & compliance", slug: "safety-management" },
+              { icon: Anchor, label: "Safe Lifting Operations", sub: "Rigging & crane safety", slug: "safe-lifting-operations" },
+              { icon: Flame, label: "Fire Safety and Egress", sub: "Prevention & evacuation", slug: "fire-safety-and-egress" },
+              { icon: Leaf, label: "ESG Principles", sub: "Governance & sustainability", slug: "esg" },
+              { icon: HeartPulse, label: "First Aid & CPR", sub: "Emergency casualty care", slug: "first-aid" },
             ].map((item, idx) => (
               <Link 
                 to={`/courses/${item.slug}`}
                 key={idx} 
-                className={`bg-white/10 backdrop-blur-sm rounded-[30px] h-48 flex flex-col items-center justify-center shadow-lg border-2 border-white/20 hover:border-accent hover:bg-white/15 transition-all scroll-reveal cursor-pointer group/card ${idx === 0 ? "reveal-flip" : "reveal-rotate-in"}`} 
-                style={{ animationDelay: `${2 + idx * 0.25}s` }}
+                className="bg-white/10 backdrop-blur-sm rounded-[30px] p-6 min-h-[140px] flex flex-col items-center justify-center text-center shadow-lg border-2 border-white/20 hover:border-accent hover:bg-white/15 transition-all scroll-reveal cursor-pointer group/card reveal-flip" 
+                style={{ animationDelay: `${0.2 + (idx % 3) * 0.15}s` }}
               >
-                <item.icon className="w-12 h-12 text-accent mb-3 group-hover/card:scale-110 transition-transform" />
+                <item.icon className="w-10 h-10 text-accent mb-3 group-hover/card:scale-110 transition-transform" />
                 <p className="font-bold text-white group-hover/card:text-accent transition-colors">{item.label}</p>
                 <p className="text-sm text-white/80">{item.sub}</p>
               </Link>
@@ -219,6 +226,9 @@ export default function About() {
           </div>
         </div>
       </section>
+
+      {/* Leadership & Faculty Team — Continuous Sliding Track */}
+      <TeamSlider />
 
       <Footer />
     </div>

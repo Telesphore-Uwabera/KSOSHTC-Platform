@@ -101,7 +101,16 @@ const MINING_FILES = [
   "Scafolding safety.pdf",
 ];
 
-export type CourseId = "construction" | "industrial-safety" | "mining";
+export type CourseId =
+  | "construction"
+  | "industrial-safety"
+  | "mining"
+  | "food-safety"
+  | "safety-management"
+  | "safe-lifting-operations"
+  | "fire-safety-and-egress"
+  | "esg"
+  | "first-aid";
 
 export interface CourseDef {
   id: CourseId;
@@ -136,6 +145,54 @@ export const COURSES: CourseDef[] = [
     desc: "Mining safety handbook, first aid for miners, ILO standards, and sector-specific hazards. Includes the core Safety Management module.",
     duration: "3 months",
     sectorModuleFiles: MINING_FILES,
+  },
+  {
+    id: "food-safety",
+    title: "Food Safety",
+    sector: "Food & Beverage",
+    desc: "HACCP principles, food hygiene, contamination control, safe food handling, storage, sanitation, and regulatory compliance standards.",
+    duration: "3 months",
+    sectorModuleFiles: [],
+  },
+  {
+    id: "safety-management",
+    title: "Safety Management",
+    sector: "General Management",
+    desc: "Core OSH management systems, ISO 45001 framework, workplace hazard identification, risk assessment, incident investigation, and safety policy planning.",
+    duration: "3 months",
+    sectorModuleFiles: SAFETY_MANAGEMENT_FILES,
+  },
+  {
+    id: "safe-lifting-operations",
+    title: "Safe Lifting Operations",
+    sector: "Logistics & Heavy Operations",
+    desc: "Crane operations, rigging, slinging, load assessment, hoist maintenance, signaling, lifting plans, and prevention of dropped objects.",
+    duration: "3 months",
+    sectorModuleFiles: [],
+  },
+  {
+    id: "fire-safety-and-egress",
+    title: "Fire Safety and Egress",
+    sector: "Emergency Response",
+    desc: "Fire risk assessments, fire prevention, emergency egress routing, extinguisher operation, evacuation drills, and building safety compliance.",
+    duration: "3 months",
+    sectorModuleFiles: [],
+  },
+  {
+    id: "esg",
+    title: "Environmental Social and Governance (ESG)",
+    sector: "Corporate Governance",
+    desc: "Sustainability reporting, environmental risk mitigation, social responsibility, workplace ethics, carbon accounting, and regulatory compliance.",
+    duration: "3 months",
+    sectorModuleFiles: [],
+  },
+  {
+    id: "first-aid",
+    title: "First Aid",
+    sector: "Emergency Care",
+    desc: "Cardiopulmonary resuscitation (CPR), basic life support, wound care, triage, emergency response protocol, and workplace medical first aid.",
+    duration: "3 months",
+    sectorModuleFiles: [],
   },
 ];
 

@@ -252,11 +252,16 @@ export default function AdminCertificate() {
     
     try {
       // Find course slug
-      const title = formData.courses.toLowerCase();
+      const title = (formData.courses || "").toLowerCase();
       let slug = "";
       if (title.includes("construction")) slug = "construction";
       else if (title.includes("industrial")) slug = "industrial-safety";
       else if (title.includes("mining")) slug = "mining";
+      else if (title.includes("food")) slug = "food-safety";
+      else if (title.includes("lifting")) slug = "safe-lifting-operations";
+      else if (title.includes("fire")) slug = "fire-safety-and-egress";
+      else if (title.includes("esg") || title.includes("environmental")) slug = "esg";
+      else if (title.includes("first aid")) slug = "first-aid";
       else slug = "safety-management";
 
       const res = await fetch(`${getApiBase()}/api/course-content/courses/${slug}/modules`);
@@ -411,12 +416,21 @@ export default function AdminCertificate() {
                 </Button>
                 <Button 
                   type="button"
-                  variant={formData.type === "first-aid" ? "default" : "ghost"}
+                  variant={formData.type === "food-safety" ? "default" : "ghost"}
                   size="sm"
-                  onClick={() => setFormData(prev => ({ ...prev, type: "first-aid", courses: "FIRST AID" }))}
+                  onClick={() => setFormData(prev => ({ ...prev, type: "food-safety", courses: "FOOD SAFETY" }))}
                   className="rounded-md h-8 text-xs px-3"
                 >
-                  First Aid
+                  Food Safety
+                </Button>
+                <Button 
+                  type="button"
+                  variant={formData.type === "safety-management" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setFormData(prev => ({ ...prev, type: "safety-management", courses: "SAFETY MANAGEMENT" }))}
+                  className="rounded-md h-8 text-xs px-3"
+                >
+                  Safety Management
                 </Button>
                 <Button 
                   type="button"
@@ -429,21 +443,39 @@ export default function AdminCertificate() {
                 </Button>
                 <Button 
                   type="button"
-                  variant={formData.type === "height-safety" ? "default" : "ghost"}
-                  size="sm"
-                  onClick={() => setFormData(prev => ({ ...prev, type: "height-safety", courses: "WORKING AT HEIGHT SAFETY" }))}
-                  className="rounded-md h-8 text-xs px-3"
-                >
-                  Height Safety
-                </Button>
-                <Button 
-                  type="button"
                   variant={formData.type === "fire-safety-egress" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setFormData(prev => ({ ...prev, type: "fire-safety-egress", courses: "FIRE SAFETY AND EGRESS" }))}
                   className="rounded-md h-8 text-xs px-3"
                 >
                   Fire Safety & Egress
+                </Button>
+                <Button 
+                  type="button"
+                  variant={formData.type === "esg" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setFormData(prev => ({ ...prev, type: "esg", courses: "ENVIRONMENTAL SOCIAL AND GOVERNANCE (ESG)" }))}
+                  className="rounded-md h-8 text-xs px-3"
+                >
+                  ESG
+                </Button>
+                <Button 
+                  type="button"
+                  variant={formData.type === "first-aid" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setFormData(prev => ({ ...prev, type: "first-aid", courses: "FIRST AID" }))}
+                  className="rounded-md h-8 text-xs px-3"
+                >
+                  First Aid
+                </Button>
+                <Button 
+                  type="button"
+                  variant={formData.type === "height-safety" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setFormData(prev => ({ ...prev, type: "height-safety", courses: "WORKING AT HEIGHT SAFETY" }))}
+                  className="rounded-md h-8 text-xs px-3"
+                >
+                  Height Safety
                 </Button>
               </div>
             </div>
@@ -485,7 +517,7 @@ export default function AdminCertificate() {
                 <Label htmlFor="courses">Courses Completed</Label>
                 {formData.type !== "general" ? (
                   <Input 
-                    value={getCertificateTypeLabel(formData.type)}
+                    value={getCertificateTypeLabel(formData.type, formData.courses)}
                     disabled 
                     className="bg-muted opacity-70"
                   />
@@ -498,9 +530,16 @@ export default function AdminCertificate() {
                       <SelectValue placeholder="Select a course types" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="MINING Workplaces">OSH in Mining</SelectItem>
                       <SelectItem value="CONSTRUCTION Workplaces">OSH in Construction</SelectItem>
                       <SelectItem value="INDUSTRIAL Safety">OSH in Industrial Safety</SelectItem>
+                      <SelectItem value="MINING Workplaces">OSH in Mining</SelectItem>
+                      <SelectItem value="FOOD SAFETY">Food Safety</SelectItem>
+                      <SelectItem value="SAFETY MANAGEMENT">Safety Management</SelectItem>
+                      <SelectItem value="SAFE LIFTING OPERATIONS">Safe Lifting Operations</SelectItem>
+                      <SelectItem value="FIRE SAFETY AND EGRESS">Fire Safety and Egress</SelectItem>
+                      <SelectItem value="ENVIRONMENTAL SOCIAL AND GOVERNANCE (ESG)">Environmental Social and Governance (ESG)</SelectItem>
+                      <SelectItem value="FIRST AID">First Aid & CPR</SelectItem>
+                      <SelectItem value="WORKING AT HEIGHT SAFETY">Working at Height Safety</SelectItem>
                     </SelectContent>
                   </Select>
                 )}

@@ -10,6 +10,12 @@ const SECTOR_OPTIONS: { value: LearnerSector | ""; label: string }[] = [
   { value: "construction", label: "Construction" },
   { value: "industrial-safety", label: "Industrial Safety" },
   { value: "mining", label: "Mining" },
+  { value: "food-safety", label: "Food Safety" },
+  { value: "safety-management", label: "Safety Management" },
+  { value: "safe-lifting-operations", label: "Safe Lifting Operations" },
+  { value: "fire-safety-and-egress", label: "Fire Safety & Egress" },
+  { value: "esg", label: "ESG Principles" },
+  { value: "first-aid", label: "First Aid & CPR" },
 ];
 
 type EnrollmentWithPerformance = EnrollmentDoc & { 
@@ -123,6 +129,7 @@ export default function AdminLearners() {
   const [formSector, setFormSector] = useState<LearnerSector | "">("");
   const [formApproved, setFormApproved] = useState(false);
   const [formError, setFormError] = useState("");
+  const [formIdCardNo, setFormIdCardNo] = useState("");
   const [courseToAddByUserId, setCourseToAddByUserId] = useState<Record<string, string>>({});
 
   const { data, isLoading } = useQuery({
@@ -188,6 +195,7 @@ export default function AdminLearners() {
     setFormOrg("");
     setFormSector("");
     setFormApproved(false);
+    setFormIdCardNo("");
     setFormError("");
   }
 
@@ -199,6 +207,7 @@ export default function AdminLearners() {
     setFormOrg(u.organization ?? "");
     setFormSector(u.sector ?? "");
     setFormApproved(u.approved ?? false);
+    setFormIdCardNo(u.idCardNo ?? "");
     setFormError("");
   }
 
@@ -243,6 +252,7 @@ export default function AdminLearners() {
             <table className="w-full min-w-[640px] text-left">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50/80">
+                  <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">ID Card No.</th>
                   <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
                   <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
                   <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Organization</th>
@@ -259,6 +269,9 @@ export default function AdminLearners() {
                   return (
                     <Fragment key={u.id}>
                       <tr className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
+                        <td className="px-4 py-3 font-mono font-bold text-xs text-primary whitespace-nowrap">
+                          {u.idCardNo || "—"}
+                        </td>
                         <td className="px-4 py-3">
                           <button
                             type="button"
@@ -540,6 +553,14 @@ export default function AdminLearners() {
               <h2 className="text-xl font-bold text-primary">Edit learner</h2>
               {formError && <p className="text-sm text-red-600">{formError}</p>}
               <div className="space-y-3">
+                <label className="block text-sm font-medium text-gray-700">Student ID Card No.</label>
+                <input
+                  type="text"
+                  value={formIdCardNo}
+                  onChange={(e) => setFormIdCardNo(e.target.value)}
+                  placeholder="e.g. 2026-0001"
+                  className="w-full px-3 py-2 rounded-lg border border-gray-200 font-mono text-sm"
+                />
                 <label className="block text-sm font-medium text-gray-700">Name *</label>
                 <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} required className="w-full px-3 py-2 rounded-lg border border-gray-200" />
                 <label className="block text-sm font-medium text-gray-700">Email *</label>
@@ -577,6 +598,7 @@ export default function AdminLearners() {
                         organization: formOrg.trim() || undefined,
                         sector: formSector || undefined,
                         approved: formApproved,
+                        idCardNo: formIdCardNo.trim() || undefined,
                       },
                     });
                   }}

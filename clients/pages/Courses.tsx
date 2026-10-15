@@ -1,7 +1,22 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { HardHat, Building, Pickaxe, Shield, ArrowRight, Clock, LogOut, BookOpen } from "lucide-react";
+import {
+  HardHat,
+  Building,
+  Pickaxe,
+  Shield,
+  ArrowRight,
+  Clock,
+  LogOut,
+  BookOpen,
+  Utensils,
+  Anchor,
+  Flame,
+  Leaf,
+  HeartPulse,
+  ShieldCheck,
+} from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { SiteImage } from "../components/SiteImage";
@@ -13,7 +28,12 @@ const iconBySlug: Record<string, typeof HardHat> = {
   construction: HardHat,
   "industrial-safety": Building,
   mining: Pickaxe,
-  "safety-management": Shield,
+  "food-safety": Utensils,
+  "safety-management": ShieldCheck,
+  "safe-lifting-operations": Anchor,
+  "fire-safety-and-egress": Flame,
+  esg: Leaf,
+  "first-aid": HeartPulse,
   "safety-for-all": Shield,
 };
 
@@ -36,7 +56,7 @@ function filterCoursesBySector(courses: CourseDoc[], sector: string | undefined)
   return courses.filter((c) => c.id === "safety-management" || c.id === sector);
 }
 
-const INITIAL_COURSE_CARDS = 6;
+const INITIAL_COURSE_CARDS = 9;
 const COURSE_CARDS_STEP = 6;
 
 /** Display title as "1. Name of course", "2. Name of course". */

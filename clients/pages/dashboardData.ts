@@ -54,7 +54,12 @@ export const SECTOR_LABELS: Record<string, string> = {
   construction: "Construction",
   "industrial-safety": "Industrial Safety",
   mining: "Mining",
-  "safety-management": "General",
+  "food-safety": "Food Safety",
+  "safety-management": "Safety Management",
+  "safe-lifting-operations": "Safe Lifting Operations",
+  "fire-safety-and-egress": "Fire Safety and Egress",
+  esg: "ESG Principles",
+  "first-aid": "First Aid & CPR",
   "safety-for-all": "Safety for All",
 };
 

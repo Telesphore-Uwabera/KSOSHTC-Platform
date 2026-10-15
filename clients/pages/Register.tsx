@@ -6,13 +6,20 @@ import { User, Building2, Lock, ShieldCheck, Loader2, Eye, EyeOff } from "lucide
 import { setStoredUser } from "../lib/auth";
 import { clearAdminSessionPolicy, setAdminSessionToken } from "@/lib/adminApi";
 import { getApiBase } from "@/lib/apiBase";
+import type { LearnerSector } from "@shared/api";
 
 /** Value sent to API: determines which courses the learner will see (sector course + safety-management). */
-const SECTOR_OPTIONS: { value: "" | "construction" | "industrial-safety" | "mining"; label: string }[] = [
+const SECTOR_OPTIONS: { value: "" | LearnerSector; label: string }[] = [
   { value: "", label: "Select your sector (or Other to see all courses)" },
   { value: "construction", label: "Construction" },
   { value: "industrial-safety", label: "Industrial Safety" },
   { value: "mining", label: "Mining" },
+  { value: "food-safety", label: "Food Safety" },
+  { value: "safety-management", label: "Safety Management" },
+  { value: "safe-lifting-operations", label: "Safe Lifting Operations" },
+  { value: "fire-safety-and-egress", label: "Fire Safety & Egress" },
+  { value: "esg", label: "ESG Principles" },
+  { value: "first-aid", label: "First Aid & CPR" },
 ];
 const COUNTRIES = ["Rwanda", "Uganda", "Kenya", "Tanzania", "Burundi", "Other"];
 
@@ -27,7 +34,7 @@ export default function Register() {
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
   const [organization, setOrganization] = useState("");
-  const [sector, setSector] = useState<"" | "construction" | "industrial-safety" | "mining">("");
+  const [sector, setSector] = useState<"" | LearnerSector>("");
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
   const [error, setError] = useState("");
@@ -214,7 +221,7 @@ export default function Register() {
                       <select
                         id="sector"
                         value={sector}
-                        onChange={(e) => setSector(e.target.value as "" | "construction" | "industrial-safety" | "mining")}
+                        onChange={(e) => setSector(e.target.value as "" | LearnerSector)}
                         className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 text-gray-900 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-white"
                       >
                         {SECTOR_OPTIONS.map((opt) => (

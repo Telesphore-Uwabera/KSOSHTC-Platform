@@ -40,9 +40,12 @@ const AdminSettings = lazy(() => import("./pages/admin/AdminSettings"));
 const AdminAssignmentSubmissions = lazy(() => import("./pages/admin/AdminAssignmentSubmissions"));
 const AdminDistributedAssignments = lazy(() => import("./pages/admin/AdminDistributedAssignments"));
 const AdminCertificate = lazy(() => import("./pages/admin/AdminCertificate"));
+const AdminReceipts = lazy(() => import("./pages/admin/AdminReceipts"));
 const AdminQuotations = lazy(() => import("./pages/admin/AdminQuotations"));
+const AdminTeam = lazy(() => import("./pages/admin/AdminTeam"));
 const AdminRegistrations = lazy(() => import("./pages/admin/AdminRegistrations"));
 const CertificateVerification = lazy(() => import("./pages/CertificateVerification"));
+const ReceiptView = lazy(() => import("./pages/ReceiptView"));
 const TakeQuiz = lazy(() => import("./pages/TakeQuiz"));
 const TakeModuleQuiz = lazy(() => import("./pages/TakeModuleQuiz"));
 const StudentLayout = lazy(() => import("./pages/StudentLayout"));
@@ -261,6 +264,8 @@ const App = () => {
                 <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/verify-certificate/:id" element={<CertificateVerification />} />
+                <Route path="/receipt/:id" element={<ReceiptView />} />
+                <Route path="/verify-receipt/:id" element={<ReceiptView />} />
                 <Route path="/admin/login" element={<AdminLogin />} />
                 <Route path="/admin" element={<AdminLayout />}>
                   <Route index element={<AdminDashboard />} />
@@ -275,8 +280,10 @@ const App = () => {
                   <Route path="assignment-submissions" element={<AdminAssignmentSubmissions />} />
                   <Route path="distribute-pdf" element={<AdminDistributedAssignments />} />
                   <Route path="certificate" element={<AdminCertificate />} />
+                  <Route path="receipts" element={<AdminReceipts />} />
                   <Route path="quotations" element={<AdminQuotations />} />
                   <Route path="testimonials" element={<AdminTestimonials />} />
+                  <Route path="team" element={<AdminTeam />} />
                   <Route path="communications" element={<AdminCommunications />} />
                   <Route path="settings" element={<AdminSettings />} />
                 </Route>

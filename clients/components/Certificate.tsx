@@ -19,10 +19,13 @@ interface CertificateProps {
 
 export const Certificate: React.FC<CertificateProps> = ({ data }) => {
   const verificationUrl = `https://www.kigalisafetytraining.com/verify-certificate/${data.certificateId}`;
-  const isFirstAid = data.type === 'first-aid';
-  const isLifting = data.type === 'lifting-safety';
-  const isHeight = data.type === 'height-safety';
-  const isFireSafetyEgress = data.type === 'fire-safety-egress';
+  const courseUpper = (data.courses || "").toUpperCase();
+  const isFirstAid = data.type === 'first-aid' || courseUpper.includes('FIRST AID');
+  const isLifting = data.type === 'lifting-safety' || courseUpper.includes('LIFTING');
+  const isHeight = data.type === 'height-safety' || courseUpper.includes('HEIGHT');
+  const isFireSafetyEgress = data.type === 'fire-safety-egress' || courseUpper.includes('FIRE SAFETY');
+  const isFoodSafety = data.type === 'food-safety' || courseUpper.includes('FOOD SAFETY');
+  const isESG = data.type === 'esg' || courseUpper.includes('ESG') || courseUpper.includes('ENVIRONMENTAL');
 
   return (
     <div 
@@ -73,6 +76,10 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
               <>has successfully completed First Aid Training conducted by Kigali Safety OSH Training Center (KSOSHTC) and has been assessed and found competent in accordance with the applicable standards for:</>
             ) : isFireSafetyEgress ? (
               <>has successfully completed training in Fire Safety and Egress in accordance with relevant NFPA and ISO principles and requirements.</>
+            ) : isFoodSafety ? (
+              <>has successfully completed professional training in Food Safety and Hygiene Standards in accordance with applicable HACCP and regulatory requirements for:</>
+            ) : isESG ? (
+              <>has successfully completed comprehensive training in Environmental, Social, and Governance (ESG) principles, frameworks, and sustainability standards for:</>
             ) : (isLifting || isHeight) ? (
               <>has successfully completed professional training in</>
             ) : (
@@ -81,7 +88,7 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
           </p>
           <div className="flex flex-col items-center justify-center w-full overflow-visible">
             <h3 className="text-[#004d40] text-4xl font-black uppercase tracking-widest whitespace-nowrap mb-4">
-              {getCertificateTypeLabel(data.type || "general")}
+              {data.courses ? data.courses.toUpperCase() : getCertificateTypeLabel(data.type || "general")}
             </h3>
             {(isLifting || isHeight) && (
               <div className="text-gray-700 text-sm font-medium leading-tight text-center">

@@ -72,6 +72,21 @@ import { createCertificate, getCertificate, getAllCertificates, updateCertificat
 import { getCertificateCurriculum } from "./routes/curriculum";
 import { listInstructors, createInstructor, updateInstructor, deleteInstructor } from "./routes/instructors";
 import { getQuotations, getQuotationById, createQuotation, updateQuotation, deleteQuotation } from "./routes/quotations";
+import {
+  getReceipts,
+  getReceiptById,
+  createReceipt,
+  updateReceipt,
+  deleteReceipt,
+  sendReceiptEmailEndpoint,
+} from "./routes/receipts";
+import {
+  getPublicTeamMembers,
+  getAllTeamMembers,
+  createTeamMember,
+  updateTeamMember,
+  deleteTeamMember,
+} from "./routes/team";
 import { getMongoDb, mongoCollection, MONGO_COLLECTIONS } from "./lib/mongo";
 import { getAdminSessionSecret, requireAdminSession, requireStaffSession } from "./lib/adminSession";
 import { rateLimitLogin, rateLimitRegister } from "./lib/rateLimit";
@@ -240,6 +255,21 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.post("/api/quotations", requireAdminSession, createQuotation);
   app.put("/api/quotations/:id", requireAdminSession, updateQuotation);
   app.delete("/api/quotations/:id", requireAdminSession, deleteQuotation);
+
+  // Fee Receipts (admin-only management, public verification by ID)
+  app.get("/api/receipts", requireAdminSession, getReceipts);
+  app.get("/api/receipts/:id", getReceiptById); // Public for QR / barcode scans & verification
+  app.post("/api/receipts", requireAdminSession, createReceipt);
+  app.put("/api/receipts/:id", requireAdminSession, updateReceipt);
+  app.delete("/api/receipts/:id", requireAdminSession, deleteReceipt);
+  app.post("/api/receipts/:id/send-email", requireAdminSession, sendReceiptEmailEndpoint);
+
+  // Team (public slider + admin management)
+  app.get("/api/team", getPublicTeamMembers);
+  app.get("/api/admin/team", requireAdminSession, getAllTeamMembers);
+  app.post("/api/admin/team", requireAdminSession, createTeamMember);
+  app.put("/api/admin/team/:id", requireAdminSession, updateTeamMember);
+  app.delete("/api/admin/team/:id", requireAdminSession, deleteTeamMember);
 
   // Courses (list) and per-course quiz (get, create/update, delete)
   app.get("/api/courses", getCourses);

@@ -35,13 +35,24 @@ export type TestimonialCreate = Omit<Testimonial, "id" | "createdAt" | "updatedA
 export type TestimonialUpdate = Partial<TestimonialCreate>;
 
 /** Sector chosen at registration: determines which main course (+ safety-management) the learner sees */
-export type LearnerSector = "construction" | "industrial-safety" | "mining";
+export type LearnerSector =
+  | "construction"
+  | "industrial-safety"
+  | "mining"
+  | "food-safety"
+  | "safety-management"
+  | "safe-lifting-operations"
+  | "fire-safety-and-egress"
+  | "esg"
+  | "first-aid";
 
 export type UserRole = "learner" | "admin" | "instructor";
 
 /** User (registrant); access to courses only after admin approval */
 export interface User {
   id: string;
+  /** System-assigned student ID card number, format YYYY-NNNN (e.g. 2026-0001). Used as a unique human-readable identifier on receipts and certificates. */
+  idCardNo?: string;
   email: string;
   password: string; // stored as bcrypt hash; plain-text fallback for legacy users
   name: string;
@@ -83,6 +94,11 @@ export type CourseId =
   | "industrial-safety"
   | "mining"
   | "safety-management"
+  | "food-safety"
+  | "safe-lifting-operations"
+  | "fire-safety-and-egress"
+  | "esg"
+  | "first-aid"
   | "safety-for-all";
 
 /** Course document (MongoDB) */
@@ -341,4 +357,108 @@ export const FIXED_PAYMENT_INFO = {
 };
 
 export const FIXED_MOTTO = "Safety today, prosperity tomorrow.";
+
+/** Fee Receipt Types */
+export interface ReceiptInvoiceItem {
+  id: string;
+  invoiceNo: string;
+  packageDetails: string;
+  feesDetails: string;
+  invoiceDate: string;
+  dueFee: number;
+  receivedFee: number;
+}
+
+export interface ReceiptInstallmentItem {
+  id: string;
+  dueDate: string;
+  invoiceNo: string;
+  dueFee: number;
+  receivedFee: number;
+  balanceFee: number;
+  paymentDetails: string;
+}
+
+export interface FeeReceipt {
+  id: string; // Internal UUID or matches invoiceId
+  invoiceId: string; // Primary Key: Invoice ID (e.g. INV-7395 or 7395)
+  receiptNo: string;
+  receiptDate: string;
+  receivedIn: string;
+  chequeTranNo?: string;
+  receivedFee: number;
+  currency: string; // Default "RWF"
+
+  // Student / Payer Details
+  receivedFrom: string;
+  idCardNo: string;
+  payerEmail?: string;
+  payerPhone?: string;
+
+  // Company / Institution Header Info
+  companyName: string;
+  companyTagline?: string;
+  companyAddress?: string;
+  panNumber?: string;
+  gstinNumber?: string;
+  logoUrl?: string;
+
+  // Signature and Official Stamp
+  signatoryName?: string;
+  signatoryTitle?: string;
+  showStamp?: boolean;
+  showSignature?: boolean;
+  stampUrl?: string;
+
+  // Invoice & Installment Tables
+  invoiceDetails: ReceiptInvoiceItem[];
+  installments: ReceiptInstallmentItem[];
+
+  // Terms & Conditions
+  termsAndConditions: string[];
+  policyUrl?: string;
+
+  // Status & Timestamps
+  sentAt?: string;
+  sentTo?: string;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type FeeReceiptCreate = Omit<FeeReceipt, "id" | "createdAt" | "updatedAt">;
+export type FeeReceiptUpdate = Partial<FeeReceiptCreate>;
+
+export const DEFAULT_RECEIPT_TERMS = [
+  "Fees can be paid in installments. Course materials and platform access are provided upon payment of the 1st installment at registration. Registration fees are non-refundable.",
+  "Payments must be deposited to official Kigali Safety OSH Training Center accounts (Equity Bank Rwanda or official MTN/Airtel MoMo). Banking and platform transfer fees are borne by the student.",
+  "The student should strictly adhere to the training batch and schedule timings specified by Kigali Safety OSH Training Center.",
+  "The student is required to produce this official payment receipt at the time of collecting the Certificate of Competence.",
+  "For refund and administrative policies, kindly review our official terms at our center link below.",
+];
+
+/** Team Member Types */
+export interface TeamMember {
+  id: string;
+  name: string;
+  role: string;
+  bio?: string;
+  avatarUrl?: string;
+  email?: string;
+  phone?: string;
+  linkedinUrl?: string;
+  order: number;
+  active: boolean;
+  createdAt: string;
+  updatedAt?: string;
+}
+
+export type TeamMemberCreate = Omit<TeamMember, "id" | "createdAt" | "updatedAt"> & {
+  avatarFile?: {
+    filename: string;
+    contentBase64: string;
+  };
+};
+
+export type TeamMemberUpdate = Partial<TeamMemberCreate>;
+
 

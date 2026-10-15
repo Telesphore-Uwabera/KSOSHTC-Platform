@@ -1,15 +1,44 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { SiteImage } from "@/components/SiteImage";
-import { Menu, X, Home, Info, BookOpen, Building2, GraduationCap, Mail, HardHat, Building, Pickaxe, ChevronDown, LayoutDashboard, Shield, UserCog, ClipboardSignature } from "lucide-react";
+import {
+  Menu,
+  X,
+  Home,
+  Info,
+  BookOpen,
+  Building2,
+  GraduationCap,
+  Mail,
+  HardHat,
+  Building,
+  Pickaxe,
+  ChevronDown,
+  LayoutDashboard,
+  Shield,
+  UserCog,
+  ClipboardSignature,
+  Utensils,
+  Anchor,
+  Flame,
+  Leaf,
+  HeartPulse,
+  ShieldCheck,
+} from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getApiBase } from "@/lib/apiBase";
 
 const courseDropdownItems = [
-  { label: "Construction", path: "/courses/construction", icon: HardHat },
-  { label: "Industrial Safety", path: "/courses/industrial-safety", icon: Building },
-  { label: "Mining", path: "/courses/mining", icon: Pickaxe },
-] as const;
+  { label: "OSH in Construction", path: "/courses/construction", icon: HardHat },
+  { label: "OSH in Industrial Safety", path: "/courses/industrial-safety", icon: Building },
+  { label: "OSH in Mining", path: "/courses/mining", icon: Pickaxe },
+  { label: "Food Safety", path: "/courses/food-safety", icon: Utensils },
+  { label: "Safety Management", path: "/courses/safety-management", icon: ShieldCheck },
+  { label: "Safe Lifting Operations", path: "/courses/safe-lifting-operations", icon: Anchor },
+  { label: "Fire Safety & Egress", path: "/courses/fire-safety-and-egress", icon: Flame },
+  { label: "ESG", path: "/courses/esg", icon: Leaf },
+  { label: "First Aid", path: "/courses/first-aid", icon: HeartPulse },
+];
 
 const navLinks = [
   { label: "Home", path: "/", icon: Home },

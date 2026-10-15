@@ -11,7 +11,12 @@ const COURSES: CoursePublic[] = [
   { id: "construction", title: "OSH in Construction", sector: "Construction", duration: "3 months" },
   { id: "industrial-safety", title: "OSH in Industrial Safety", sector: "Industrial", duration: "3 months" },
   { id: "mining", title: "OSH in Mining", sector: "Mining", duration: "3 months" },
-  { id: "safety-management", title: "Safety Management (General)", sector: "General", duration: "3 months" },
+  { id: "food-safety", title: "Food Safety", sector: "Hospitality & Food Processing", duration: "3 months" },
+  { id: "safety-management", title: "Safety Management", sector: "General Management", duration: "3 months" },
+  { id: "safe-lifting-operations", title: "Safe Lifting Operations", sector: "Logistics & Heavy Operations", duration: "3 months" },
+  { id: "fire-safety-and-egress", title: "Fire Safety and Egress", sector: "Emergency Response & Facilities", duration: "3 months" },
+  { id: "esg", title: "Environmental Social and Governance (ESG)", sector: "Corporate Governance & Sustainability", duration: "3 months" },
+  { id: "first-aid", title: "First Aid", sector: "Emergency Care & Health", duration: "3 months" },
 ];
 
 const COURSES_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes

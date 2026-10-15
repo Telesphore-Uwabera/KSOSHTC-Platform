@@ -1,7 +1,40 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, MapPin, Phone, Mail, Shield, BookOpen, HardHat, Building, Pickaxe, GraduationCap, Lightbulb, Rocket, Crown, Star, Award, Target, Sparkles, Building2, UserCheck, AlertTriangle, Users, Globe, Quote, Loader2, CheckCircle, X } from "lucide-react";
+import {
+  CheckCircle2,
+  MapPin,
+  Phone,
+  Mail,
+  Shield,
+  BookOpen,
+  HardHat,
+  Building,
+  Pickaxe,
+  GraduationCap,
+  Lightbulb,
+  Rocket,
+  Crown,
+  Star,
+  Award,
+  Target,
+  Sparkles,
+  Building2,
+  UserCheck,
+  AlertTriangle,
+  Users,
+  Globe,
+  Quote,
+  Loader2,
+  CheckCircle,
+  X,
+  Utensils,
+  Anchor,
+  Flame,
+  Leaf,
+  HeartPulse,
+  ShieldCheck,
+} from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { SiteImage } from "../components/SiteImage";
@@ -233,29 +266,35 @@ export default function Index() {
             ))}
           </div>
 
-          {/* Icon cards (Construction, Industrial, Mining) — clickable to course pages */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
-            <Link to="/courses/construction" className="block bg-white/10 backdrop-blur-sm rounded-[30px] min-h-[12rem] flex items-center justify-center shadow-lg hover:shadow-xl hover:bg-white/15 transition-all duration-300 group cursor-pointer border-2 border-white/20 hover:border-white/40 scroll-reveal reveal-rotate-in delay-2200">
-              <div className="text-center p-4">
-                <HardHat className="w-12 h-12 sm:w-14 sm:h-14 text-accent mb-3 group-hover:scale-110 transition-transform duration-300 mx-auto" />
-                <p className="font-bold text-white text-base sm:text-lg">OSH in Construction</p>
-                <p className="text-sm text-white/80">Construction & infrastructure</p>
-              </div>
-            </Link>
-            <Link to="/courses/industrial-safety" className="block bg-white/10 backdrop-blur-sm rounded-[30px] min-h-[12rem] flex items-center justify-center shadow-lg hover:shadow-xl hover:bg-white/15 transition-all duration-300 group cursor-pointer border-2 border-white/20 hover:border-white/40 scroll-reveal reveal-rotate-in delay-2500">
-              <div className="text-center p-4">
-                <Building className="w-12 h-12 sm:w-14 sm:h-14 text-accent mb-3 group-hover:scale-110 transition-transform duration-300 mx-auto" />
-                <p className="font-bold text-white text-base sm:text-lg">OSH in Industrial</p>
-                <p className="text-sm text-white/80">Manufacturing & industrial</p>
-              </div>
-            </Link>
-            <Link to="/courses/mining" className="block bg-white/10 backdrop-blur-sm rounded-[30px] min-h-[12rem] flex items-center justify-center shadow-lg hover:shadow-xl hover:bg-white/15 transition-all duration-300 group cursor-pointer border-2 border-white/20 hover:border-white/40 scroll-reveal reveal-rotate-in delay-2800">
-              <div className="text-center p-4">
-                <Pickaxe className="w-12 h-12 sm:w-14 sm:h-14 text-accent mb-3 group-hover:scale-110 transition-transform duration-300 mx-auto" />
-                <p className="font-bold text-white text-base sm:text-lg">OSH in Mining</p>
-                <p className="text-sm text-white/80">Mining & extraction</p>
-              </div>
-            </Link>
+          {/* Icon cards — clickable to all courses */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
+            {[
+              { icon: HardHat, label: "OSH in Construction", sub: "Construction & infrastructure", slug: "construction" },
+              { icon: Building, label: "OSH in Industrial", sub: "Manufacturing & industrial", slug: "industrial-safety" },
+              { icon: Pickaxe, label: "OSH in Mining", sub: "Mining & extraction", slug: "mining" },
+              { icon: Utensils, label: "Food Safety", sub: "Hygiene & HACCP standards", slug: "food-safety" },
+              { icon: ShieldCheck, label: "Safety Management", sub: "General Safety & ISO 45001", slug: "safety-management" },
+              { icon: Anchor, label: "Safe Lifting Operations", sub: "Rigging, cranes & hoisting", slug: "safe-lifting-operations" },
+              { icon: Flame, label: "Fire Safety and Egress", sub: "Evacuation & fire prevention", slug: "fire-safety-and-egress" },
+              { icon: Leaf, label: "ESG & Sustainability", sub: "Governance & compliance", slug: "esg" },
+              { icon: HeartPulse, label: "First Aid", sub: "Emergency care & CPR drills", slug: "first-aid" },
+            ].map((course, idx) => {
+              const Icon = course.icon;
+              return (
+                <Link
+                  key={course.slug}
+                  to={`/courses/${course.slug}`}
+                  className="block bg-white/10 backdrop-blur-sm rounded-[26px] min-h-[10.5rem] flex items-center justify-center shadow-lg hover:shadow-xl hover:bg-white/15 transition-all duration-300 group cursor-pointer border-2 border-white/20 hover:border-white/40 scroll-reveal reveal-rotate-in"
+                  style={{ animationDelay: `${1.8 + idx * 0.12}s` }}
+                >
+                  <div className="text-center p-3.5">
+                    <Icon className="w-10 h-10 sm:w-12 sm:h-12 text-accent mb-2 group-hover:scale-110 transition-transform duration-300 mx-auto" />
+                    <p className="font-bold text-white text-base sm:text-lg leading-tight">{course.label}</p>
+                    <p className="text-xs sm:text-sm text-white/80 mt-1">{course.sub}</p>
+                  </div>
+                </Link>
+              );
+            })}
           </div>
         </div>
       </section>
@@ -306,23 +345,29 @@ export default function Index() {
             <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto px-2 scroll-reveal text-reveal-fade" style={{ animationDelay: "0.15s" }}>Specialized training for Rwanda's key sectors</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
             {[
               { icon: HardHat, name: "OSH in Construction", desc: "Height, scaffolding, PPE. Officer, Supervisor, Inspector.", courseId: "construction" as const },
               { icon: Building, name: "OSH in Industrial", desc: "LOTO, chemical, fire. Officer, HSE Assistant.", courseId: "industrial-safety" as const },
               { icon: Pickaxe, name: "OSH in Mining", desc: "Blasting, ventilation. Mining Officer, Supervisor.", courseId: "mining" as const },
+              { icon: Utensils, name: "Food Safety", desc: "HACCP, hygiene standards, food contamination prevention.", courseId: "food-safety" as const },
+              { icon: ShieldCheck, name: "Safety Management", desc: "HSE leadership, risk assessment, ISO 45001 compliance.", courseId: "safety-management" as const },
+              { icon: Anchor, name: "Safe Lifting Operations", desc: "Rigging, slinging, crane operation safety protocols.", courseId: "safe-lifting-operations" as const },
+              { icon: Flame, name: "Fire Safety and Egress", desc: "Emergency evacuation, fire prevention, suppression systems.", courseId: "fire-safety-and-egress" as const },
+              { icon: Leaf, name: "ESG Principles", desc: "Sustainability, corporate governance, social responsibility.", courseId: "esg" as const },
+              { icon: HeartPulse, name: "First Aid & CPR", desc: "Life saving techniques, casualty management, rapid response.", courseId: "first-aid" as const },
             ].map((industry, idx) => {
               const Icon = industry.icon;
               return (
                 <Link
                   key={industry.courseId}
                   to={`/courses/${industry.courseId}`}
-                  className={`block bg-gray-50 rounded-[30px] text-center border-2 border-primary/10 hover:border-primary/30 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.99] group cursor-pointer scroll-reveal ${idx === 0 ? "reveal-flip" : idx === 1 ? "reveal-bounce" : "reveal-spring"}`}
-                  style={{ animationDelay: `${1.3 + idx * 0.35}s` }}
+                  className="block bg-gray-50 rounded-[30px] text-center border-2 border-primary/10 hover:border-primary/30 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.99] group cursor-pointer scroll-reveal reveal-flip"
+                  style={{ animationDelay: `${0.1 + (idx % 3) * 0.15}s` }}
                 >
                   <div className="p-8">
                     <Icon className="w-16 h-16 text-primary mb-4 inline-block group-hover:scale-125 transition-transform duration-300" />
-                    <h3 className="text-lg sm:text-xl md:text-2xl font-bold text-primary mb-2 sm:mb-3 group-hover:text-accent transition-colors">{industry.name}</h3>
+                    <h3 className="text-lg sm:text-xl font-bold text-primary mb-2 sm:mb-3 group-hover:text-accent transition-colors">{industry.name}</h3>
                     <p className="text-gray-600 text-sm sm:text-base group-hover:text-gray-800 transition-colors leading-snug">{industry.desc}</p>
                   </div>
                 </Link>
