@@ -13,6 +13,8 @@ import {
   Leaf,
   HeartPulse,
   ShieldCheck,
+  FileCheck,
+  Globe,
 } from "lucide-react";
 import { useDashboardData } from "./dashboardData";
 
@@ -26,6 +28,8 @@ const iconBySlug: Record<string, typeof HardHat> = {
   "fire-safety-and-egress": Flame,
   esg: Leaf,
   "first-aid": HeartPulse,
+  "iso-45001": FileCheck,
+  "iso-14011": Globe,
   "safety-for-all": Shield,
 };
 

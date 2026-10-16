@@ -26,6 +26,8 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
   const isFireSafetyEgress = data.type === 'fire-safety-egress' || courseUpper.includes('FIRE SAFETY');
   const isFoodSafety = data.type === 'food-safety' || courseUpper.includes('FOOD SAFETY');
   const isESG = data.type === 'esg' || courseUpper.includes('ESG') || courseUpper.includes('ENVIRONMENTAL');
+  const isISO45001 = data.type === 'iso-45001' || courseUpper.includes('45001') || courseUpper.includes('OH&SMS');
+  const isISO14011 = data.type === 'iso-14011' || courseUpper.includes('14011') || courseUpper.includes('14001') || (courseUpper.includes('ENVIRONMENTAL') && courseUpper.includes('MANAGEMENT'));
 
   return (
     <div 
@@ -78,6 +80,10 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
               <>has successfully completed training in Fire Safety and Egress in accordance with relevant NFPA and ISO principles and requirements.</>
             ) : isFoodSafety ? (
               <>has successfully completed professional training in Food Safety and Hygiene Standards in accordance with applicable HACCP and regulatory requirements for:</>
+            ) : isISO45001 ? (
+              <>has successfully completed advanced professional training and assessment in Occupational Health and Safety Management Systems in accordance with ISO 45001:2018 requirements for:</>
+            ) : isISO14011 ? (
+              <>has successfully completed advanced professional training and audit competence assessment in Environmental Management Systems in accordance with ISO standard requirements for:</>
             ) : isESG ? (
               <>has successfully completed comprehensive training in Environmental, Social, and Governance (ESG) principles, frameworks, and sustainability standards for:</>
             ) : (isLifting || isHeight) ? (

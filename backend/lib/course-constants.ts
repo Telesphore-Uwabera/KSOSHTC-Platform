@@ -10,6 +10,8 @@ export const VALID_COURSE_SLUGS: CourseId[] = [
   "fire-safety-and-egress",
   "esg",
   "first-aid",
+  "iso-45001",
+  "iso-14011",
   "safety-for-all",
 ];
 

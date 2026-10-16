@@ -126,6 +126,8 @@ export default function AdminCourseQuiz() {
     "fire-safety-and-egress",
     "esg",
     "first-aid",
+    "iso-45001",
+    "iso-14011",
     "safety-for-all",
   ];
   const courseLabel = validCourseIds.includes(courseId as CourseId)

@@ -54,7 +54,9 @@ export async function getCertificateCurriculum(req: Request, res: Response): Pro
     } else {
       // 2. Keyword fallback
       const title = cert.courses.toLowerCase();
-      if (title.includes("construction")) courseId = "construction";
+      if (title.includes("45001") || title.includes("oh&sms")) courseId = "iso-45001";
+      else if (title.includes("14011") || title.includes("14001") || (title.includes("environmental") && title.includes("management"))) courseId = "iso-14011";
+      else if (title.includes("construction")) courseId = "construction";
       else if (title.includes("industrial")) courseId = "industrial-safety";
       else if (title.includes("mining")) courseId = "mining";
       else if (title.includes("food")) courseId = "food-safety";

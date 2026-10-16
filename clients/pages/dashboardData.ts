@@ -60,6 +60,8 @@ export const SECTOR_LABELS: Record<string, string> = {
   "fire-safety-and-egress": "Fire Safety and Egress",
   esg: "ESG Principles",
   "first-aid": "First Aid & CPR",
+  "iso-45001": "ISO 45001: OH&SMS",
+  "iso-14011": "ISO 14011: EMS",
   "safety-for-all": "Safety for All",
 };
 

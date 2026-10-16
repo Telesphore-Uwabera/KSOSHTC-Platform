@@ -285,7 +285,11 @@ export default function AdminReceipts() {
                       ? "Environmental Social and Governance (ESG)"
                       : learner.sector === "first-aid"
                         ? "First Aid & CPR"
-                        : "Occupational Safety and Health Course";
+                        : learner.sector === "iso-45001"
+                          ? "ISO 45001: OH&SMS"
+                          : learner.sector === "iso-14011"
+                            ? "ISO 14011: EMS"
+                            : "Occupational Safety and Health Course";
 
     setInvoiceDetails([
       {

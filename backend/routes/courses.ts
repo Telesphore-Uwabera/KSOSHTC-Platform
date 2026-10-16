@@ -17,6 +17,8 @@ const COURSES: CoursePublic[] = [
   { id: "fire-safety-and-egress", title: "Fire Safety and Egress", sector: "Emergency Response & Facilities", duration: "3 months" },
   { id: "esg", title: "Environmental Social and Governance (ESG)", sector: "Corporate Governance & Sustainability", duration: "3 months" },
   { id: "first-aid", title: "First Aid", sector: "Emergency Care & Health", duration: "3 months" },
+  { id: "iso-45001", title: "ISO 45001: Occupational Health and Safety Management System (OH&SMS)", sector: "Quality & Safety Management", duration: "3 months" },
+  { id: "iso-14011", title: "ISO 14011: Environmental Management System (EMS)", sector: "Environmental & Sustainability", duration: "3 months" },
 ];
 
 const COURSES_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes

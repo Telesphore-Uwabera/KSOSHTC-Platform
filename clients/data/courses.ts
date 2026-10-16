@@ -110,7 +110,9 @@ export type CourseId =
   | "safe-lifting-operations"
   | "fire-safety-and-egress"
   | "esg"
-  | "first-aid";
+  | "first-aid"
+  | "iso-45001"
+  | "iso-14011";
 
 export interface CourseDef {
   id: CourseId;
@@ -191,6 +193,22 @@ export const COURSES: CourseDef[] = [
     title: "First Aid",
     sector: "Emergency Care",
     desc: "Cardiopulmonary resuscitation (CPR), basic life support, wound care, triage, emergency response protocol, and workplace medical first aid.",
+    duration: "3 months",
+    sectorModuleFiles: [],
+  },
+  {
+    id: "iso-45001",
+    title: "ISO 45001: Occupational Health and Safety Management System (OH&SMS)",
+    sector: "Quality & Safety Management",
+    desc: "International OH&SMS standards, hazard identification, risk assessment, leadership commitment, legal compliance, and internal auditing to ISO 45001:2018.",
+    duration: "3 months",
+    sectorModuleFiles: [],
+  },
+  {
+    id: "iso-14011",
+    title: "ISO 14011: Environmental Management System (EMS)",
+    sector: "Environmental & Sustainability",
+    desc: "Environmental management standards, aspects & impacts evaluation, environmental auditing procedures, waste management, and regulatory compliance.",
     duration: "3 months",
     sectorModuleFiles: [],
   },

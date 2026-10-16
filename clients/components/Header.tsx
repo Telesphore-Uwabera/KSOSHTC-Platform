@@ -24,6 +24,8 @@ import {
   Leaf,
   HeartPulse,
   ShieldCheck,
+  FileCheck,
+  Globe,
 } from "lucide-react";
 import { useQuery } from "@tanstack/react-query";
 import { getApiBase } from "@/lib/apiBase";
@@ -38,6 +40,8 @@ const courseDropdownItems = [
   { label: "Fire Safety & Egress", path: "/courses/fire-safety-and-egress", icon: Flame },
   { label: "ESG", path: "/courses/esg", icon: Leaf },
   { label: "First Aid", path: "/courses/first-aid", icon: HeartPulse },
+  { label: "ISO 45001 (OH&SMS)", path: "/courses/iso-45001", icon: FileCheck },
+  { label: "ISO 14011 (EMS)", path: "/courses/iso-14011", icon: Globe },
 ];
 
 const navLinks = [

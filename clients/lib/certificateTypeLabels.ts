@@ -9,7 +9,9 @@ export type CertificateType =
   | "esg"
   | "construction"
   | "industrial-safety"
-  | "mining";
+  | "mining"
+  | "iso-45001"
+  | "iso-14011";
 
 export const getCertificateTypeLabel = (type: CertificateType | string | undefined, courseTitle?: string): string => {
   if (courseTitle && courseTitle.trim()) {
@@ -36,6 +38,10 @@ export const getCertificateTypeLabel = (type: CertificateType | string | undefin
       return "INDUSTRIAL SAFETY";
     case "mining":
       return "MINING WORKPLACES";
+    case "iso-45001":
+      return "ISO 45001: OCCUPATIONAL HEALTH AND SAFETY MANAGEMENT SYSTEM (OH&SMS)";
+    case "iso-14011":
+      return "ISO 14011: ENVIRONMENTAL MANAGEMENT SYSTEM (EMS)";
     default:
       return "CONSTRUCTION WORKPLACES";
   }

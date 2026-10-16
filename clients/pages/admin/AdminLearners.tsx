@@ -16,6 +16,8 @@ const SECTOR_OPTIONS: { value: LearnerSector | ""; label: string }[] = [
   { value: "fire-safety-and-egress", label: "Fire Safety & Egress" },
   { value: "esg", label: "ESG Principles" },
   { value: "first-aid", label: "First Aid & CPR" },
+  { value: "iso-45001", label: "ISO 45001: OH&SMS" },
+  { value: "iso-14011", label: "ISO 14011: EMS" },
 ];
 
 type EnrollmentWithPerformance = EnrollmentDoc & { 

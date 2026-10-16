@@ -254,7 +254,9 @@ export default function AdminCertificate() {
       // Find course slug
       const title = (formData.courses || "").toLowerCase();
       let slug = "";
-      if (title.includes("construction")) slug = "construction";
+      if (title.includes("45001") || title.includes("oh&sms")) slug = "iso-45001";
+      else if (title.includes("14011") || title.includes("14001") || (title.includes("environmental") && title.includes("management"))) slug = "iso-14011";
+      else if (title.includes("construction")) slug = "construction";
       else if (title.includes("industrial")) slug = "industrial-safety";
       else if (title.includes("mining")) slug = "mining";
       else if (title.includes("food")) slug = "food-safety";
@@ -470,6 +472,24 @@ export default function AdminCertificate() {
                 </Button>
                 <Button 
                   type="button"
+                  variant={formData.type === "iso-45001" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setFormData(prev => ({ ...prev, type: "iso-45001", courses: "ISO 45001: OCCUPATIONAL HEALTH AND SAFETY MANAGEMENT SYSTEM (OH&SMS)" }))}
+                  className="rounded-md h-8 text-xs px-3"
+                >
+                  ISO 45001 (OH&SMS)
+                </Button>
+                <Button 
+                  type="button"
+                  variant={formData.type === "iso-14011" ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => setFormData(prev => ({ ...prev, type: "iso-14011", courses: "ISO 14011: ENVIRONMENTAL MANAGEMENT SYSTEM (EMS)" }))}
+                  className="rounded-md h-8 text-xs px-3"
+                >
+                  ISO 14011 (EMS)
+                </Button>
+                <Button 
+                  type="button"
                   variant={formData.type === "height-safety" ? "default" : "ghost"}
                   size="sm"
                   onClick={() => setFormData(prev => ({ ...prev, type: "height-safety", courses: "WORKING AT HEIGHT SAFETY" }))}
@@ -539,6 +559,8 @@ export default function AdminCertificate() {
                       <SelectItem value="FIRE SAFETY AND EGRESS">Fire Safety and Egress</SelectItem>
                       <SelectItem value="ENVIRONMENTAL SOCIAL AND GOVERNANCE (ESG)">Environmental Social and Governance (ESG)</SelectItem>
                       <SelectItem value="FIRST AID">First Aid & CPR</SelectItem>
+                      <SelectItem value="ISO 45001: OCCUPATIONAL HEALTH AND SAFETY MANAGEMENT SYSTEM (OH&SMS)">ISO 45001: OH&SMS</SelectItem>
+                      <SelectItem value="ISO 14011: ENVIRONMENTAL MANAGEMENT SYSTEM (EMS)">ISO 14011: EMS</SelectItem>
                       <SelectItem value="WORKING AT HEIGHT SAFETY">Working at Height Safety</SelectItem>
                     </SelectContent>
                   </Select>

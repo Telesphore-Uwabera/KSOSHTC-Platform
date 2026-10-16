@@ -52,6 +52,8 @@ const VALID_SECTORS: LearnerSector[] = [
   "fire-safety-and-egress",
   "esg",
   "first-aid",
+  "iso-45001",
+  "iso-14011",
 ];
 
 function normalizeEmail(email: string): string {

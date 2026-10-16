@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Link } from "react-router-dom";
-import { CheckCircle2, Shield, HardHat, Building, Pickaxe, Crown, Star, Award, Sparkles, Building2, UserCheck, AlertTriangle, Users, Globe, Target, Utensils, ShieldCheck, Anchor, Flame, Leaf, HeartPulse } from "lucide-react";
+import { CheckCircle2, Shield, HardHat, Building, Pickaxe, Crown, Star, Award, Sparkles, Building2, UserCheck, AlertTriangle, Users, Globe, Target, Utensils, ShieldCheck, Anchor, Flame, Leaf, HeartPulse, FileCheck } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { SiteImage } from "../components/SiteImage";
@@ -95,6 +95,8 @@ export default function About() {
               { icon: Flame, label: "Fire Safety and Egress", sub: "Prevention & evacuation", slug: "fire-safety-and-egress" },
               { icon: Leaf, label: "ESG Principles", sub: "Governance & sustainability", slug: "esg" },
               { icon: HeartPulse, label: "First Aid & CPR", sub: "Emergency casualty care", slug: "first-aid" },
+              { icon: FileCheck, label: "ISO 45001 (OH&SMS)", sub: "Occupational Health & Safety", slug: "iso-45001" },
+              { icon: Globe, label: "ISO 14011 (EMS)", sub: "Environmental Management", slug: "iso-14011" },
             ].map((item, idx) => (
               <Link 
                 to={`/courses/${item.slug}`}

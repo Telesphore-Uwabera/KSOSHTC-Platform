@@ -16,6 +16,8 @@ import {
   Leaf,
   HeartPulse,
   ShieldCheck,
+  FileCheck,
+  Globe,
 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -34,6 +36,8 @@ const iconBySlug: Record<string, typeof HardHat> = {
   "fire-safety-and-egress": Flame,
   esg: Leaf,
   "first-aid": HeartPulse,
+  "iso-45001": FileCheck,
+  "iso-14011": Globe,
   "safety-for-all": Shield,
 };
 
@@ -56,7 +60,7 @@ function filterCoursesBySector(courses: CourseDoc[], sector: string | undefined)
   return courses.filter((c) => c.id === "safety-management" || c.id === sector);
 }
 
-const INITIAL_COURSE_CARDS = 9;
+const INITIAL_COURSE_CARDS = 12;
 const COURSE_CARDS_STEP = 6;
 
 /** Display title as "1. Name of course", "2. Name of course". */

@@ -34,6 +34,7 @@ import {
   Leaf,
   HeartPulse,
   ShieldCheck,
+  FileCheck,
 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -278,6 +279,8 @@ export default function Index() {
               { icon: Flame, label: "Fire Safety and Egress", sub: "Evacuation & fire prevention", slug: "fire-safety-and-egress" },
               { icon: Leaf, label: "ESG & Sustainability", sub: "Governance & compliance", slug: "esg" },
               { icon: HeartPulse, label: "First Aid", sub: "Emergency care & CPR drills", slug: "first-aid" },
+              { icon: FileCheck, label: "ISO 45001: OH&SMS", sub: "Occupational Health & Safety", slug: "iso-45001" },
+              { icon: Globe, label: "ISO 14011: EMS", sub: "Environmental Management", slug: "iso-14011" },
             ].map((course, idx) => {
               const Icon = course.icon;
               return (
@@ -356,6 +359,8 @@ export default function Index() {
               { icon: Flame, name: "Fire Safety and Egress", desc: "Emergency evacuation, fire prevention, suppression systems.", courseId: "fire-safety-and-egress" as const },
               { icon: Leaf, name: "ESG Principles", desc: "Sustainability, corporate governance, social responsibility.", courseId: "esg" as const },
               { icon: HeartPulse, name: "First Aid & CPR", desc: "Life saving techniques, casualty management, rapid response.", courseId: "first-aid" as const },
+              { icon: FileCheck, name: "ISO 45001 (OH&SMS)", desc: "Occupational health and safety management systems & auditing.", courseId: "iso-45001" as const },
+              { icon: Globe, name: "ISO 14011 (EMS)", desc: "Environmental management systems, auditing & compliance.", courseId: "iso-14011" as const },
             ].map((industry, idx) => {
               const Icon = industry.icon;
               return (

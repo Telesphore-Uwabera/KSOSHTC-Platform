@@ -44,7 +44,9 @@ export type LearnerSector =
   | "safe-lifting-operations"
   | "fire-safety-and-egress"
   | "esg"
-  | "first-aid";
+  | "first-aid"
+  | "iso-45001"
+  | "iso-14011";
 
 export type UserRole = "learner" | "admin" | "instructor";
 
@@ -99,6 +101,8 @@ export type CourseId =
   | "fire-safety-and-egress"
   | "esg"
   | "first-aid"
+  | "iso-45001"
+  | "iso-14011"
   | "safety-for-all";
 
 /** Course document (MongoDB) */
