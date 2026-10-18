@@ -214,6 +214,10 @@ export default function CertificateVerification() {
                 <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Enrollment Date</span>
                 <span className="font-bold text-gray-900">{format(new Date(cert.createdAt || cert.dateIssued), "MM/dd/yyyy")}</span>
               </div>
+              <div className="flex justify-between items-center border-b border-gray-50 pb-2">
+                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Location of Issue</span>
+                <span className="font-bold text-gray-900">{cert.issueLocation || "KICUKIRO-KIGALI"}</span>
+              </div>
               {cert.startDate && (
                 <div className="flex justify-between items-center border-b border-gray-50 pb-2">
                   <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Program Start</span>

@@ -24,6 +24,7 @@ export default function AdminCertificate() {
     learnerName: "",
     courses: "",
     dateIssued: format(new Date(), "yyyy-MM-dd"),
+    issueLocation: "KICUKIRO-KIGALI",
     startDate: format(new Date(), "yyyy-MM-dd"),
     completionDate: format(new Date(), "yyyy-MM-dd"),
     duration: "3 months",
@@ -180,6 +181,7 @@ export default function AdminCertificate() {
       learnerName: "",
       courses: "",
       dateIssued: format(new Date(), "yyyy-MM-dd"),
+      issueLocation: "KICUKIRO-KIGALI",
       startDate: format(new Date(), "yyyy-MM-dd"),
       completionDate: format(new Date(), "yyyy-MM-dd"),
       duration: "3 months",
@@ -586,14 +588,25 @@ export default function AdminCertificate() {
                   </div>
                 )}
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="duration">Duration</Label>
-                <Input 
-                  id="duration" 
-                  placeholder="e.g. 3 months"
-                  value={formData.duration}
-                  onChange={(e) => setFormData({...formData, duration: e.target.value})}
-                />
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="issueLocation">Location of Issue</Label>
+                  <Input 
+                    id="issueLocation" 
+                    placeholder="e.g. KICUKIRO-KIGALI"
+                    value={formData.issueLocation}
+                    onChange={(e) => setFormData({...formData, issueLocation: e.target.value})}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="duration">Duration</Label>
+                  <Input 
+                    id="duration" 
+                    placeholder="e.g. 3 months"
+                    value={formData.duration}
+                    onChange={(e) => setFormData({...formData, duration: e.target.value})}
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Student Email</Label>
@@ -779,6 +792,7 @@ export default function AdminCertificate() {
                       <TableHead>Cert ID</TableHead>
                       <TableHead>Learner</TableHead>
                       <TableHead>Course</TableHead>
+                      <TableHead>Location</TableHead>
                       <TableHead>Date</TableHead>
                       <TableHead className="text-right">Action</TableHead>
                     </TableRow>
@@ -789,6 +803,7 @@ export default function AdminCertificate() {
                         <TableCell className="font-mono text-xs">{cert.certificateId}</TableCell>
                         <TableCell className="font-medium">{cert.title} {cert.learnerName}</TableCell>
                         <TableCell className="text-xs">{cert.courses}</TableCell>
+                        <TableCell className="text-xs font-semibold text-gray-700">{cert.issueLocation || "KICUKIRO-KIGALI"}</TableCell>
                         <TableCell>{format(new Date(cert.dateIssued), "MMM dd, yyyy")}</TableCell>
                         <TableCell className="text-right">
                           <div className="flex justify-end gap-1">
@@ -816,6 +831,7 @@ export default function AdminCertificate() {
                                   learnerName: cert.learnerName,
                                   courses: cert.courses,
                                   dateIssued: format(new Date(cert.dateIssued), "yyyy-MM-dd"),
+                                  issueLocation: cert.issueLocation || "KICUKIRO-KIGALI",
                                   startDate: cert.startDate ? format(new Date(cert.startDate), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
                                   completionDate: cert.completionDate ? format(new Date(cert.completionDate), "yyyy-MM-dd") : format(new Date(), "yyyy-MM-dd"),
                                   duration: cert.duration,

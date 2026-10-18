@@ -18,6 +18,7 @@ export interface Certificate {
   learnerName: string;
   courses: string;
   dateIssued: string;
+  issueLocation?: string;
   duration: string;
   certificateId: string;
   email: string;
@@ -60,7 +61,7 @@ async function getNextCertificateId(year: number): Promise<string> {
 
 export async function createCertificate(req: Request, res: Response): Promise<void> {
   try {
-    const { type, title, learnerName, courses, dateIssued, duration, email, totalHours, averageScore, gpa, transcript, startDate, completionDate } = req.body;
+    const { type, title, learnerName, courses, dateIssued, duration, email, totalHours, averageScore, gpa, transcript, startDate, completionDate, issueLocation } = req.body;
     
     if (!learnerName || !courses || !dateIssued) {
       res.status(400).json({ error: "Missing required fields" });
@@ -78,6 +79,7 @@ export async function createCertificate(req: Request, res: Response): Promise<vo
       learnerName,
       courses,
       dateIssued,
+      issueLocation: (issueLocation && String(issueLocation).trim()) || "KICUKIRO-KIGALI",
       duration: duration || "3 months",
       email: email || "ksoshtc@gmail.com",
       certificateId,
@@ -111,7 +113,10 @@ export async function getCertificate(req: Request, res: Response): Promise<void>
     }
 
     res.setHeader("Cache-Control", "private, max-age=300"); // Cache individual certs for 5 mins
-    res.json(cert);
+    res.json({
+      ...cert,
+      issueLocation: cert.issueLocation || "KICUKIRO-KIGALI"
+    });
   } catch (e) {
     console.error("Get certificate error:", e);
     res.status(500).json({ error: "Failed to fetch certificate" });
@@ -128,10 +133,14 @@ export async function getAllCertificates(req: Request, res: Response): Promise<v
 
     const col = mongoCollection<Certificate>(MONGO_COLLECTIONS.certificates);
     const certs = await col.find({}).sort({ createdAt: -1 }).toArray();
+    const mappedCerts = certs.map(c => ({
+      ...c,
+      issueLocation: c.issueLocation || "KICUKIRO-KIGALI"
+    }));
     
-    certificatesCache = { fetchedAt: Date.now(), data: certs };
+    certificatesCache = { fetchedAt: Date.now(), data: mappedCerts };
     res.setHeader("Cache-Control", "public, max-age=60, s-maxage=300, stale-while-revalidate=300");
-    res.json(certs);
+    res.json(mappedCerts);
   } catch (e) {
     console.error("Get all certificates error:", e);
     res.status(500).json({ error: "Failed to fetch certificates" });
@@ -204,6 +213,7 @@ export async function sendEmailCertificate(req: Request, res: Response): Promise
       email: cert.email,
       courseTitle: cert.courses,
       certificateId: cert.certificateId,
+      issueLocation: cert.issueLocation || "KICUKIRO-KIGALI",
     });
 
     res.json({ message: `Congratulatory email sent to ${cert.email}` });

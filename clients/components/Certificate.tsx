@@ -10,6 +10,7 @@ interface CertificateProps {
     learnerName: string;
     courses: string;
     dateIssued: string;
+    issueLocation?: string;
     startDate?: string;
     completionDate?: string;
     duration: string;
@@ -110,9 +111,11 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
         </div>
 
         {/* ID Section */}
-        <div className="w-full max-w-3xl flex justify-center gap-14 border-t border-b border-[#c4ac6a]/50 py-3 mb-4">
+        <div className="w-full max-w-4xl flex justify-center items-center gap-8 border-t border-b border-[#c4ac6a]/50 py-2.5 mb-4">
           <p className="text-sm font-bold"><span className="text-[#004d40] uppercase mr-2 opacity-60">Duration:</span> {data.duration}</p>
-          <div className="w-px h-full bg-[#c4ac6a]"></div>
+          <div className="w-px h-4 bg-[#c4ac6a]"></div>
+          <p className="text-sm font-bold"><span className="text-[#004d40] uppercase mr-2 opacity-60">Location of Issue:</span> {data.issueLocation || "KICUKIRO-KIGALI"}</p>
+          <div className="w-px h-4 bg-[#c4ac6a]"></div>
           <p className="text-sm font-bold"><span className="text-[#004d40] uppercase mr-2 opacity-60">Certificate ID:</span> {data.certificateId}</p>
         </div>
 
@@ -174,6 +177,10 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
                        <span className="text-gray-400 uppercase mr-1 text-[8px] tracking-widest">Date:</span> 
                        <span className="whitespace-nowrap">{data.dateIssued ? new Date(data.dateIssued).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "April 10, 2026"}</span>
                      </p>
+                     <p className="text-gray-800 font-bold text-[9px] mt-0.5">
+                       <span className="text-gray-400 uppercase mr-1 text-[7px] tracking-widest">Location:</span> 
+                       <span className="whitespace-nowrap font-bold text-[#004d40]">{data.issueLocation || "KICUKIRO-KIGALI"}</span>
+                     </p>
                   </div>
                </div>
             </div>
@@ -212,6 +219,10 @@ export const Certificate: React.FC<CertificateProps> = ({ data }) => {
                  <p className="text-gray-800 font-bold text-[10px]">
                    <span className="text-gray-400 uppercase mr-1 text-[7px] tracking-widest">Date:</span> 
                    <span className="whitespace-nowrap">{data.dateIssued ? new Date(data.dateIssued).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' }) : "May 08, 2026"}</span>
+                 </p>
+                 <p className="text-gray-800 font-bold text-[9px] mt-0.5">
+                   <span className="text-gray-400 uppercase mr-1 text-[7px] tracking-widest">Location:</span> 
+                   <span className="whitespace-nowrap font-bold text-[#004d40]">{data.issueLocation || "KICUKIRO-KIGALI"}</span>
                  </p>
               </div>
 

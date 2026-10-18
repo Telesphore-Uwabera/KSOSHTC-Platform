@@ -1071,10 +1071,12 @@ export async function notifyLearnerCertificateIssued(data: {
   email: string;
   courseTitle: string;
   certificateId: string;
+  issueLocation?: string;
 }): Promise<void> {
   const subject = `[KSOSHTC] Congratulations — Your Certificate is Ready! — ${data.courseTitle}`;
   const web = webBase();
   const verifyUrl = `${web}/verify-certificate/${data.certificateId}`;
+  const location = data.issueLocation || "KICUKIRO-KIGALI";
 
   const text = [
     `Dear ${data.name},`,
@@ -1082,8 +1084,9 @@ export async function notifyLearnerCertificateIssued(data: {
     "Congratulations! We are pleased to inform you that you have successfully completed your training and your Certificate of Competence is now ready.",
     "",
     "CERTIFICATE DETAILS",
-    `Course:          ${data.courseTitle}`,
-    `Certificate ID:  ${data.certificateId}`,
+    `Course:             ${data.courseTitle}`,
+    `Certificate ID:     ${data.certificateId}`,
+    `Location of Issue:  ${location}`,
     "",
     "You can view, verify, and download your digital certificate as a PDF using the official link below:",
     verifyUrl,
@@ -1107,7 +1110,9 @@ export async function notifyLearnerCertificateIssued(data: {
   <p style="margin:0 0 0.5em;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;color:#666;">Programme</p>
   <p style="margin:0 0 1em;font-weight:bold;font-size:18px;color:#004d40;">${escapeHtml(data.courseTitle)}</p>
   <p style="margin:0 0 0.5em;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;color:#666;">Certificate ID</p>
-  <p style="margin:0;font-family:monospace;font-weight:bold;font-size:16px;">${escapeHtml(data.certificateId)}</p>
+  <p style="margin:0 0 1em;font-family:monospace;font-weight:bold;font-size:16px;">${escapeHtml(data.certificateId)}</p>
+  <p style="margin:0 0 0.5em;font-size:13px;text-transform:uppercase;letter-spacing:0.05em;color:#666;">Location of Issue</p>
+  <p style="margin:0;font-weight:bold;font-size:16px;color:#004d40;">${escapeHtml(location)}</p>
 </div>
 <p style="margin:0 0 1.5em;text-align:center;">Click the button below to view, verify, and <strong>download</strong> your digital certificate as a PDF:</p>
 <p style="text-align:center;margin:0 0 1.5em;">
