@@ -1,0 +1,25 @@
+name: Backend 24/7 Keep-Alive
+
+on:
+  schedule:
+    # Runs every 10 minutes 24/7/365 to prevent Render free-tier idle spin-down
+    - cron: "*/10 * * * *"
+  workflow_dispatch: # Allows manual trigger from GitHub Actions UI
+
+jobs:
+  keep-alive:
+    name: Ping Render Backend
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - name: Ping Health Endpoint
+        run: |
+          echo "Pinging Render backend health at $(date -u)"
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" --max-time 60 "https://ksoshtc-platform.onrender.com/health" || true)
+          echo "Render /health HTTP Status: $STATUS"
+          if [ "$STATUS" -ge 200 ] && [ "$STATUS" -lt 400 ]; then
+            echo "✅ Backend is awake and healthy!"
+          else
+            echo "⚠️ First ping returned $STATUS. Sending secondary wake-up ping to /api/ping..."
+            curl -s -o /dev/null -w "%{http_code}" --max-time 60 "https://ksoshtc-platform.onrender.com/api/ping" || true
+          fi

@@ -1,43 +1,41 @@
-# Render Free Tier Anti-Sleep Guide (Zero-Downtime Keep-Alive)
+# Render Anti-Sleep & 24/7 Always-Active System
 
-## Problem Overview
-Render's Free Web Service tier automatically spins down (enters sleep mode) after **15 minutes of inactivity** (no incoming HTTP requests).
-When a visitor opens the website after the backend has slept, the initial cold start can take **50 seconds or more** to wake up.
+## Overview
+Render's free web services automatically spin down (sleep) after **15 minutes** of no incoming HTTP traffic. Once asleep, a cold start takes 50–60 seconds, which can make initial requests seem unresponsive.
 
----
-
-## Solution 1: Automated Built-In Self-Pinger (Already Active)
-The backend now includes a self-pinging background worker in `backend/lib/keepAlive.ts`:
-- Automatically triggers when running in production or when `RENDER=true` / `NODE_ENV=production`.
-- Sends an HTTP/HTTPS GET request to `https://ksoshtc-platform.onrender.com/api/ping` every **12 minutes** (safely before the 15-minute timeout).
-- Keeps the application active and warm automatically.
-
-### Environment Variables (Optional Customization in Render Dashboard):
-- `RENDER_EXTERNAL_URL`: Set to your Render service URL (e.g. `https://ksoshtc-platform.onrender.com`). Render usually sets this automatically.
-- `KEEP_ALIVE_INTERVAL_MINUTES`: Default is `12`.
-- `KEEP_ALIVE`: Set to `true` to force-enable even in staging/development.
+To guarantee that the backend **never sleeps and stays active 24/7**, a multi-tiered keep-alive architecture is implemented:
 
 ---
 
-## Solution 2: Free External Pinger (100% Guaranteed Fail-Safe)
-If the Node server ever crashes or is restarted during an update, an external monitor guarantees that Render immediately wakes up and stays awake 24/7 without fail.
+## Layer 1: Built-In Internal Anti-Sleep Engine (`backend/lib/keepAlive.ts`)
+- Automatically boots on startup with `npm start`.
+- Sends an immediate warm-up request after **15 seconds** of boot.
+- Pings the public endpoint (`https://ksoshtc-platform.onrender.com/api/ping` and `/health`) every **5 minutes** (safely beating Render's 15-minute idle limit).
+- If any ping times out or encounters a network glitch, it automatically schedules an immediate retry within **30 seconds**.
 
-You can set this up for free in 1 minute using **cron-job.org** or **UptimeRobot**:
+---
 
-### Option A: Using cron-job.org (Recommended - Free)
-1. Go to [https://cron-job.org](https://cron-job.org) and create a free account.
-2. Click **Create Cronjob**.
-3. **Title**: `KSOSHTC Render Keep-Alive`
-4. **URL**: `https://ksoshtc-platform.onrender.com/health` (or `https://ksoshtc-platform.onrender.com/api/ping`)
-5. **Execution Schedule**: Choose **Every 10 minutes** (or `*/10 * * * *`).
-6. Click **Create**.
-7. Done! Your Render backend will now be continuously kept awake.
+## Layer 2: Client-Side Active Visitor Heartbeat (`clients/App.tsx`)
+- When any visitor, student, or administrator visits `https://kigalisafetytraining.com`:
+  - An immediate background request is dispatched to `/api/ping` and `/health`.
+  - While the tab remains open, a continuous heartbeat ping fires every **3.5 minutes**.
+  - Keeps the backend warm and active throughout user sessions.
 
-### Option B: Using UptimeRobot (Free)
-1. Go to [https://uptimerobot.com](https://uptimerobot.com) and sign up for free.
-2. Click **Add New Monitor**.
-3. **Monitor Type**: `HTTP(s)`
-4. **Friendly Name**: `KSOSHTC API`
-5. **URL**: `https://ksoshtc-platform.onrender.com/health`
-6. **Monitoring Interval**: `5 minutes` (or `10 minutes`).
-7. Click **Create Monitor**.
+---
+
+## Layer 3: GitHub Actions 24/7 Cloud Watchdog (`.github/workflows/backend-keep-alive.yml`)
+- Runs independently on GitHub's cloud infrastructure every **10 minutes** (`*/10 * * * *`).
+- Sends an external HTTPS GET request to `https://ksoshtc-platform.onrender.com/health`.
+- Operates 24 hours a day, 7 days a week, 365 days a year without needing any local computer or browser to be running.
+- If Render is ever asleep or restarting after a deployment, this external request immediately wakes it up and keeps it alive.
+
+---
+
+## Layer 4 (Optional Extra): Free External Web Monitors
+You can also attach free uptime monitors for external status notifications:
+1. **Cron-job.org** (100% Free):
+   - URL: `https://ksoshtc-platform.onrender.com/health`
+   - Schedule: Every 5 or 10 minutes.
+2. **UptimeRobot** (100% Free):
+   - URL: `https://ksoshtc-platform.onrender.com/health`
+   - Interval: Every 5 minutes.

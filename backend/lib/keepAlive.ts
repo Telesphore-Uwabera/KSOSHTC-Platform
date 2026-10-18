@@ -2,6 +2,7 @@ import https from "node:https";
 import http from "node:http";
 
 let keepAliveInterval: NodeJS.Timeout | null = null;
+let retryTimeout: NodeJS.Timeout | null = null;
 
 /**
  * Pings the external public URL of the backend at regular intervals
@@ -11,81 +12,100 @@ export function startKeepAlive(options?: {
   url?: string;
   intervalMinutes?: number;
 }): void {
-  // Only run in production or when explicitly enabled
-  const isProduction = process.env.NODE_ENV === "production" || process.env.RENDER === "true";
-  const forceEnable = process.env.KEEP_ALIVE === "true";
-
-  if (!isProduction && !forceEnable) {
-    console.log("[KEEP-ALIVE] Development environment detected; skipping self-ping.");
+  // Allow disabling only if explicitly set to false
+  if (process.env.KEEP_ALIVE === "false") {
+    console.log("[KEEP-ALIVE] Explicitly disabled via KEEP_ALIVE=false");
     return;
   }
 
-  // Prevent multiple timers
+  // Prevent duplicate timers
   if (keepAliveInterval) {
     clearInterval(keepAliveInterval);
     keepAliveInterval = null;
   }
+  if (retryTimeout) {
+    clearTimeout(retryTimeout);
+    retryTimeout = null;
+  }
 
-  // Determine target ping URL
-  const rawTargetUrl =
+  // Determine target ping URLs
+  const baseUrl = (
     options?.url ||
     process.env.RENDER_EXTERNAL_URL ||
     process.env.PUBLIC_API_URL ||
     process.env.API_URL ||
-    "https://ksoshtc-platform.onrender.com";
+    "https://ksoshtc-platform.onrender.com"
+  ).replace(/\/+$/, "");
 
-  // Normalize target URL to ping the /api/ping endpoint
-  const targetUrl = rawTargetUrl.endsWith("/api/ping")
-    ? rawTargetUrl
-    : `${rawTargetUrl.replace(/\/+$/, "")}/api/ping`;
+  const pingUrl = `${baseUrl}/api/ping`;
+  const healthUrl = `${baseUrl}/health`;
 
-  // Ping interval: 12 minutes (Render idle timeout is 15 minutes)
-  const intervalMinutes = options?.intervalMinutes || Number(process.env.KEEP_ALIVE_INTERVAL_MINUTES) || 12;
-  const intervalMs = intervalMinutes * 60 * 1000;
+  // Render idle timeout is 15 minutes. Ping every 5 minutes for guaranteed uptime.
+  const intervalMinutes = options?.intervalMinutes || Number(process.env.KEEP_ALIVE_INTERVAL_MINUTES) || 5;
+  const intervalMs = Math.max(1, intervalMinutes) * 60 * 1000;
 
-  console.log(`[KEEP-ALIVE] Initializing Render anti-sleep pinger for: ${targetUrl} (every ${intervalMinutes} min)`);
+  console.log(`[KEEP-ALIVE] Initializing 24/7 Anti-Sleep engine for: ${baseUrl} (every ${intervalMinutes} min)`);
 
-  const ping = () => {
+  const executePing = (targetUrl: string, isRetry = false) => {
     try {
       const client = targetUrl.startsWith("https://") ? https : http;
-      const req = client.get(targetUrl, { timeout: 10000 }, (res) => {
+      const req = client.get(targetUrl, { timeout: 15000 }, (res) => {
         if (res.statusCode && res.statusCode >= 200 && res.statusCode < 400) {
-          console.log(`[KEEP-ALIVE] Ping successful (${res.statusCode}) to ${targetUrl} at ${new Date().toISOString()}`);
+          console.log(
+            `[KEEP-ALIVE] Keep-alive ping successful (${res.statusCode}) to ${targetUrl} [${new Date().toISOString()}]`
+          );
         } else {
           console.warn(`[KEEP-ALIVE] Ping returned status ${res.statusCode} from ${targetUrl}`);
+          if (!isRetry) scheduleRetry();
         }
-        res.resume(); // consume response data to free memory
+        res.resume(); // free memory
       });
 
       req.on("error", (err) => {
-        console.warn(`[KEEP-ALIVE] Ping warning: ${err.message}`);
+        console.warn(`[KEEP-ALIVE] Ping warning to ${targetUrl}: ${err.message}`);
+        if (!isRetry) scheduleRetry();
       });
 
       req.on("timeout", () => {
         req.destroy();
-        console.warn("[KEEP-ALIVE] Ping timed out after 10s");
+        console.warn(`[KEEP-ALIVE] Ping timed out after 15s for ${targetUrl}`);
+        if (!isRetry) scheduleRetry();
       });
     } catch (err) {
-      console.warn("[KEEP-ALIVE] Ping error:", err);
+      console.warn("[KEEP-ALIVE] Ping exception:", err);
+      if (!isRetry) scheduleRetry();
     }
   };
 
-  // Run initial ping after 2 minutes so the server has fully finished booting
-  const initialTimeout = setTimeout(ping, 2 * 60 * 1000);
-  if (typeof initialTimeout.unref === "function") {
-    initialTimeout.unref();
-  }
+  const scheduleRetry = () => {
+    if (retryTimeout) return;
+    console.log("[KEEP-ALIVE] Scheduling quick retry in 30s...");
+    retryTimeout = setTimeout(() => {
+      retryTimeout = null;
+      executePing(healthUrl, true);
+    }, 30 * 1000);
+  };
 
-  keepAliveInterval = setInterval(ping, intervalMs);
-  if (typeof keepAliveInterval.unref === "function") {
-    keepAliveInterval.unref();
-  }
+  const pingCycle = () => {
+    executePing(pingUrl);
+  };
+
+  // Run initial ping quickly after 15 seconds so server wakes and establishes connection immediately
+  const initialTimeout = setTimeout(() => {
+    pingCycle();
+  }, 15 * 1000);
+
+  keepAliveInterval = setInterval(pingCycle, intervalMs);
 }
 
 export function stopKeepAlive(): void {
   if (keepAliveInterval) {
     clearInterval(keepAliveInterval);
     keepAliveInterval = null;
-    console.log("[KEEP-ALIVE] Anti-sleep pinger stopped.");
   }
+  if (retryTimeout) {
+    clearTimeout(retryTimeout);
+    retryTimeout = null;
+  }
+  console.log("[KEEP-ALIVE] Anti-sleep engine stopped.");
 }
