@@ -1,4 +1,4 @@
-import { Fragment, useState, useMemo } from "react";
+import { Fragment, useState, useMemo, useEffect } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import {
   Users,
@@ -604,6 +604,61 @@ export default function AdminLearners() {
     }
   }
 
+  // Pagination State (Default: 10 per page)
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+
+  const totalPages = Math.max(1, Math.ceil(sortedUsers.length / pageSize));
+
+  // Reset to page 1 if current page is out of bounds
+  useEffect(() => {
+    if (currentPage > totalPages) {
+      setCurrentPage(1);
+    }
+  }, [totalPages, currentPage]);
+
+  // Reset to page 1 whenever any filter or search or pageSize changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [
+    searchTerm,
+    filterSector,
+    filterStatus,
+    filterAcademicYear,
+    filterBatch,
+    filterTakenBy,
+    filterPaymentStatus,
+    filterDateFrom,
+    filterDateTo,
+    pageSize,
+  ]);
+
+  const paginatedUsers = useMemo(() => {
+    const start = (currentPage - 1) * pageSize;
+    return sortedUsers.slice(start, start + pageSize);
+  }, [sortedUsers, currentPage, pageSize]);
+
+  function getPageNumbers(current: number, total: number): (number | "...")[] {
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+    const pages: (number | "...")[] = [];
+    pages.push(1);
+    if (current > 3) {
+      pages.push("...");
+    }
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+    for (let i = start; i <= end; i++) {
+      pages.push(i);
+    }
+    if (current < total - 2) {
+      pages.push("...");
+    }
+    pages.push(total);
+    return pages;
+  }
+
   // Totals calculated from filtered/sorted users
   const { totalFeesSum, paymentSum, balanceSum } = useMemo(() => {
     let tf = 0;
@@ -621,14 +676,22 @@ export default function AdminLearners() {
     return { totalFeesSum: tf, paymentSum: pm, balanceSum: bf };
   }, [sortedUsers]);
 
-  // Selection handlers
-  const allSelected = sortedUsers.length > 0 && sortedUsers.every((u) => selectedIds.has(u.id));
+  // Selection handlers (selects items on the current active page)
+  const allSelected = paginatedUsers.length > 0 && paginatedUsers.every((u) => selectedIds.has(u.id));
 
   function toggleSelectAll() {
     if (allSelected) {
-      setSelectedIds(new Set());
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        paginatedUsers.forEach((u) => next.delete(u.id));
+        return next;
+      });
     } else {
-      setSelectedIds(new Set(sortedUsers.map((u) => u.id)));
+      setSelectedIds((prev) => {
+        const next = new Set(prev);
+        paginatedUsers.forEach((u) => next.add(u.id));
+        return next;
+      });
     }
   }
 
@@ -1019,7 +1082,8 @@ export default function AdminLearners() {
             )}
           </div>
         ) : (
-          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="space-y-4">
+            <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
             <table className="w-full min-w-[1700px] text-left border-collapse text-xs sm:text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50/90 text-gray-700 select-none">
@@ -1211,7 +1275,7 @@ export default function AdminLearners() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {sortedUsers.map((u) => {
+                {paginatedUsers.map((u) => {
                   const enrollments = enrollmentsByUserId[u.id] ?? [];
                   const isExpanded = expandedId === u.id;
                   const courseDisplay = getLearnerCourseDisplay(u, enrollments);
@@ -1565,6 +1629,94 @@ export default function AdminLearners() {
               </tfoot>
             </table>
           </div>
+
+          {/* Pagination Controls (< 1, 2, 3, 4, 5 next >) */}
+          {sortedUsers.length > 0 && (
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-5 border-t border-gray-100">
+              <div className="flex flex-wrap items-center gap-3 text-xs sm:text-sm text-gray-600">
+                <span>
+                  Showing{" "}
+                  <span className="font-bold text-gray-900">
+                    {Math.min((currentPage - 1) * pageSize + 1, sortedUsers.length)}
+                  </span>{" "}
+                  to{" "}
+                  <span className="font-bold text-gray-900">
+                    {Math.min(currentPage * pageSize, sortedUsers.length)}
+                  </span>{" "}
+                  of <span className="font-bold text-gray-900">{sortedUsers.length}</span> learners
+                </span>
+                <div className="flex items-center gap-1.5 ml-2">
+                  <span className="text-gray-300">|</span>
+                  <span className="text-xs text-gray-500">Per page:</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => {
+                      setPageSize(Number(e.target.value));
+                      setCurrentPage(1);
+                    }}
+                    className="px-2.5 py-1 border border-gray-200 rounded-lg bg-white text-xs font-semibold text-gray-700 outline-none focus:border-primary shadow-sm"
+                  >
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                    <option value={100}>100</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Pages Navigation: < 1 2 3 4 5 ... next > */}
+              <div className="flex items-center gap-1.5 select-none">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={currentPage <= 1}
+                  className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all"
+                  title="Previous Page"
+                >
+                  &lt; Previous
+                </button>
+
+                <div className="flex items-center gap-1">
+                  {getPageNumbers(currentPage, totalPages).map((p, idx) => {
+                    if (p === "...") {
+                      return (
+                        <span key={`dots-${idx}`} className="px-2 py-1 text-xs text-gray-400 font-bold select-none">
+                          …
+                        </span>
+                      );
+                    }
+                    const pageNum = Number(p);
+                    const isActive = pageNum === currentPage;
+                    return (
+                      <button
+                        key={pageNum}
+                        type="button"
+                        onClick={() => setCurrentPage(pageNum)}
+                        className={`min-w-[32px] h-8 px-2 rounded-lg text-xs font-bold transition-all shadow-sm ${
+                          isActive
+                            ? "bg-primary text-white hover:bg-primary/95"
+                            : "border border-gray-200 text-gray-700 hover:bg-gray-100 bg-white"
+                        }`}
+                      >
+                        {pageNum}
+                      </button>
+                    );
+                  })}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={currentPage >= totalPages}
+                  className="px-3 py-1.5 rounded-lg border border-gray-200 text-xs font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-40 disabled:cursor-not-allowed shadow-sm transition-all"
+                  title="Next Page"
+                >
+                  Next &gt;
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
         )}
 
         {/* Create Learner Modal */}
