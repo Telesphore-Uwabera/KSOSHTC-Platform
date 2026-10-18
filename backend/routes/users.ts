@@ -81,31 +81,55 @@ function generateId(): string {
   return Math.random().toString(36).slice(2) + Date.now().toString(36);
 }
 
+export const SECTOR_ID_CODES: Record<string, string> = {
+  "construction": "CONS",
+  "mining": "MIN",
+  "industrial-safety": "IND",
+  "food-safety": "FOOD",
+  "safety-management": "SM",
+  "safe-lifting-operations": "LIFT",
+  "fire-safety-and-egress": "FIRE",
+  "esg": "ESG",
+  "first-aid": "FA",
+  "iso-45001": "ISO45",
+  "iso-14011": "ISO14",
+};
+
+export function getSectorCode(sector?: string): string {
+  if (!sector) return "GEN";
+  const s = sector.toLowerCase().trim();
+  return SECTOR_ID_CODES[s] || s.slice(0, 4).toUpperCase();
+}
+
 /**
- * Generates the next sequential student ID card number in YYYY-NNNN format.
- * E.g. 2026-0001, 2026-0002 …
+ * Generates the next sequential student ID card number in YYYY-SECTOR-NNN format.
+ * E.g. 2026-CONS-001, 2026-MIN-003 …
  */
-export async function generateIdCardNo(): Promise<string> {
-  const year = new Date().getFullYear();
-  const prefix = `${year}-`;
+export async function generateIdCardNo(sector?: string, customYear?: number): Promise<string> {
+  const year = customYear || new Date().getFullYear();
+  const secCode = getSectorCode(sector);
+  const prefix = `${year}-${secCode}-`;
   try {
     const col = usersCol();
-    // Find the highest existing number for this year
-    const latestDocs = await col
-      .find({ idCardNo: { $regex: `^${prefix}` } })
-      .sort({ idCardNo: -1 })
-      .limit(1)
+    const docs = await col
+      .find({ idCardNo: { $regex: `^${year}-${secCode}-\\d+` } })
+      .project({ idCardNo: 1 })
       .toArray();
 
-    let seq = 1;
-    if (latestDocs.length > 0 && latestDocs[0].idCardNo) {
-      const num = parseInt(latestDocs[0].idCardNo.split("-")[1] || "0", 10);
-      if (!isNaN(num)) seq = num + 1;
+    let maxSeq = 0;
+    for (const d of docs) {
+      if (typeof d.idCardNo === "string") {
+        const parts = d.idCardNo.split("-");
+        const num = parseInt(parts[parts.length - 1], 10);
+        if (!isNaN(num) && num > maxSeq) {
+          maxSeq = num;
+        }
+      }
     }
-    return `${prefix}${String(seq).padStart(4, "0")}`;
+    const nextSeq = maxSeq + 1;
+    return `${prefix}${String(nextSeq).padStart(3, "0")}`;
   } catch {
-    // Fallback: use timestamp-based unique number
-    return `${prefix}${String(Date.now()).slice(-4).padStart(4, "0")}`;
+    return `${prefix}${String(Date.now()).slice(-3).padStart(3, "0")}`;
   }
 }
 
@@ -131,7 +155,7 @@ export async function postRegister(req: Request, res: Response): Promise<void> {
       return;
     }
     const passwordHash = await hashPassword(password);
-    const idCardNo = await generateIdCardNo();
+    const idCardNo = await generateIdCardNo(sectorVal);
     const user: User = {
       id: generateId(),
       idCardNo,
@@ -142,6 +166,7 @@ export async function postRegister(req: Request, res: Response): Promise<void> {
       organization: organization?.trim(),
       sector: sectorVal,
       approved: false,
+      academicYear: `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
       createdAt: new Date().toISOString(),
     };
     const doc = Object.fromEntries(Object.entries(user).filter(([, v]) => v !== undefined)) as User;
@@ -254,10 +279,10 @@ export async function getUsers(_req: Request, res: Response): Promise<void> {
       .sort({ createdAt: 1 })
       .toArray();
 
-    // Auto-backfill idCardNo for any existing student lacking one (format: YYYY-0001, YYYY-0002...)
+    // Auto-backfill idCardNo for any existing student lacking one (format: YYYY-SECTOR-001)
     for (const u of list) {
       if (u.id !== "admin" && (!u.idCardNo || !u.idCardNo.trim())) {
-        u.idCardNo = await generateIdCardNo();
+        u.idCardNo = await generateIdCardNo(u.sector, u.createdAt ? new Date(u.createdAt).getFullYear() : undefined);
         await col.updateOne({ id: u.id }, { $set: { idCardNo: u.idCardNo } }).catch(() => {});
       }
     }
@@ -358,7 +383,25 @@ export async function getUser(req: Request, res: Response): Promise<void> {
 export async function postUser(req: Request, res: Response): Promise<void> {
   try {
     const body = req.body as UserCreate & { approved?: boolean };
-    const { email, password, name, organization, sector, approved } = body;
+    const {
+      email,
+      password,
+      name,
+      phone,
+      organization,
+      sector,
+      approved,
+      idCardNo: providedIdCardNo,
+      invoiceNo,
+      registrationNo,
+      coursePackage,
+      admissionBatch,
+      academicYear,
+      admissionTakenBy,
+      totalFees,
+      paymentAmount,
+      balanceFee,
+    } = body;
     if (!email || !password || !name) {
       res.status(400).json({ error: "Email, password, and name are required." });
       return;
@@ -372,15 +415,29 @@ export async function postUser(req: Request, res: Response): Promise<void> {
       return;
     }
     const passwordHash = await hashPassword(password);
-    const idCardNo = await generateIdCardNo();
+    const idCardNo = providedIdCardNo?.trim() || (await generateIdCardNo(sectorVal));
+    const finalTotalFees = totalFees !== undefined ? Number(totalFees) : 150000;
+    const finalPayment = paymentAmount !== undefined ? Number(paymentAmount) : (approved ? 150000 : 0);
+    const finalBalance = balanceFee !== undefined ? Number(balanceFee) : Math.max(0, finalTotalFees - finalPayment);
+
     const user: User = {
       id: generateId(),
       idCardNo,
+      invoiceNo: invoiceNo?.trim() || String(Math.floor(5000 + Math.random() * 4000)),
+      registrationNo: registrationNo?.trim() || String(Math.floor(5000 + Math.random() * 4000)),
       email: emailNorm,
       password: passwordHash,
       name: name.trim(),
+      phone: phone?.trim(),
       organization: organization?.trim(),
       sector: sectorVal,
+      coursePackage: coursePackage?.trim(),
+      admissionBatch: admissionBatch?.trim() || "Mr Sooraj Jacob",
+      academicYear: academicYear?.trim() || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
+      admissionTakenBy: admissionTakenBy?.trim() || "Dipali Kumari Agarwal",
+      totalFees: finalTotalFees,
+      paymentAmount: finalPayment,
+      balanceFee: finalBalance,
       approved: approved === true,
       createdAt: new Date().toISOString(),
     };
@@ -427,10 +484,20 @@ export async function putUser(req: Request, res: Response): Promise<void> {
       name?: string;
       email?: string;
       password?: string;
+      phone?: string;
       organization?: string;
       sector?: LearnerSector | "";
       approved?: boolean;
       idCardNo?: string;
+      invoiceNo?: string;
+      registrationNo?: string;
+      coursePackage?: string;
+      admissionBatch?: string;
+      academicYear?: string;
+      admissionTakenBy?: string;
+      totalFees?: number;
+      paymentAmount?: number;
+      balanceFee?: number;
     };
     const email =
       body.email !== undefined ? normalizeEmail(body.email) : current.email;
@@ -455,15 +522,34 @@ export async function putUser(req: Request, res: Response): Promise<void> {
     const idCardNo =
       body.idCardNo !== undefined
         ? body.idCardNo.trim() || current.idCardNo
-        : current.idCardNo ?? (await generateIdCardNo());
+        : current.idCardNo ?? (await generateIdCardNo(sectorVal));
+
+    const totalFees = body.totalFees !== undefined ? Number(body.totalFees) : current.totalFees;
+    const paymentAmount = body.paymentAmount !== undefined ? Number(body.paymentAmount) : current.paymentAmount;
+    let balanceFee = body.balanceFee !== undefined ? Number(body.balanceFee) : current.balanceFee;
+    if (body.totalFees !== undefined || body.paymentAmount !== undefined) {
+      if (body.balanceFee === undefined && totalFees !== undefined && paymentAmount !== undefined) {
+        balanceFee = Math.max(0, totalFees - paymentAmount);
+      }
+    }
 
     const updates: Partial<User> = {
       name: body.name !== undefined ? body.name.trim() : current.name,
       email,
+      phone: body.phone !== undefined ? body.phone.trim() : current.phone,
       organization: body.organization !== undefined ? body.organization.trim() : current.organization,
       sector: sectorVal,
       approved: body.approved !== undefined ? body.approved : current.approved,
       idCardNo,
+      invoiceNo: body.invoiceNo !== undefined ? body.invoiceNo.trim() : current.invoiceNo,
+      registrationNo: body.registrationNo !== undefined ? body.registrationNo.trim() : current.registrationNo,
+      coursePackage: body.coursePackage !== undefined ? body.coursePackage.trim() : current.coursePackage,
+      admissionBatch: body.admissionBatch !== undefined ? body.admissionBatch.trim() : current.admissionBatch,
+      academicYear: body.academicYear !== undefined ? body.academicYear.trim() : current.academicYear,
+      admissionTakenBy: body.admissionTakenBy !== undefined ? body.admissionTakenBy.trim() : current.admissionTakenBy,
+      totalFees,
+      paymentAmount,
+      balanceFee,
     };
     if (body.password !== undefined && body.password !== "") {
       updates.password = await hashPassword(body.password);
@@ -481,6 +567,78 @@ export async function putUser(req: Request, res: Response): Promise<void> {
   } catch (e) {
     console.error("Update user error:", e);
     res.status(500).json({ error: "Failed to update learner." });
+  }
+}
+
+export async function postSyncLearners(_req: Request, res: Response): Promise<void> {
+  try {
+    const col = usersCol();
+    const receiptsCol = mongoCollection(MONGO_COLLECTIONS.receipts || "receipts");
+    const users = await col.find({}).sort({ createdAt: 1 }).toArray();
+    const receipts = await receiptsCol.find({}).toArray();
+
+    const receiptByEmail = new Map();
+    const receiptByIdCard = new Map();
+    const receiptByName = new Map();
+    receipts.forEach((r: any) => {
+      if (r.payerEmail) receiptByEmail.set(r.payerEmail.toLowerCase().trim(), r);
+      if (r.idCardNo) receiptByIdCard.set(r.idCardNo.trim(), r);
+      if (r.receivedFrom) receiptByName.set(r.receivedFrom.toLowerCase().trim(), r);
+    });
+
+    const sectorCounters: Record<string, number> = {};
+    let updatedCount = 0;
+
+    for (const u of users) {
+      if (u.id === "admin") continue;
+
+      const year = u.createdAt ? new Date(u.createdAt).getFullYear() : 2026;
+      const secCode = getSectorCode(u.sector);
+      const counterKey = `${year}-${secCode}`;
+      sectorCounters[counterKey] = (sectorCounters[counterKey] || 0) + 1;
+      const seq = sectorCounters[counterKey];
+      const newStudentId = `${year}-${secCode}-${String(seq).padStart(3, "0")}`;
+
+      const r = (u.email && receiptByEmail.get(u.email.toLowerCase().trim())) ||
+                (u.idCardNo && receiptByIdCard.get(u.idCardNo.trim())) ||
+                (u.name && receiptByName.get(u.name.toLowerCase().trim()));
+
+      const invNo = u.invoiceNo || (r ? r.invoiceId : `${5000 + seq}`);
+      const regNo = u.registrationNo || (r ? r.invoiceId : `${5000 + seq}`);
+      const totalFees = u.totalFees !== undefined ? u.totalFees : (r ? (r.dueFee || r.receivedFee || 150000) : 150000);
+      const payment = u.paymentAmount !== undefined ? u.paymentAmount : (r ? r.receivedFee : (u.approved ? 150000 : 0));
+      const balance = u.balanceFee !== undefined ? u.balanceFee : Math.max(0, totalFees - payment);
+      const academicYear = u.academicYear || `${year}-${year + 1}`;
+      const admissionBatch = u.admissionBatch || (u.sector === "mining" ? "Mr Rahul Aren" : "Mr Sooraj Jacob");
+      const admissionTakenBy = u.admissionTakenBy || (seq % 2 === 0 ? "SUBHASH KUMAR" : "Dipali Kumari Agarwal");
+
+      const updateFields: any = {
+        idCardNo: newStudentId,
+        invoiceNo: invNo,
+        registrationNo: regNo,
+        totalFees,
+        paymentAmount: payment,
+        balanceFee: balance,
+        academicYear,
+        admissionBatch,
+        admissionTakenBy,
+      };
+
+      if (!u.phone && r?.payerPhone) {
+        updateFields.phone = r.payerPhone;
+      }
+
+      await col.updateOne({ id: u.id }, { $set: updateFields });
+      if (u.idCardNo && u.idCardNo !== newStudentId) {
+        await receiptsCol.updateMany({ idCardNo: u.idCardNo }, { $set: { idCardNo: newStudentId } });
+      }
+      updatedCount++;
+    }
+
+    res.json({ success: true, count: updatedCount });
+  } catch (e) {
+    console.error("Sync learners error:", e);
+    res.status(500).json({ error: "Failed to sync learners." });
   }
 }
 

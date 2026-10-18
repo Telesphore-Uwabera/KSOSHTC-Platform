@@ -1,6 +1,19 @@
-import { Fragment, useState } from "react";
+import { Fragment, useState, useMemo } from "react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { Users, CheckCircle, Loader2, BookOpen, ChevronDown, ChevronRight, Plus, Pencil, Trash2 } from "lucide-react";
+import {
+  Users,
+  CheckCircle,
+  Loader2,
+  BookOpen,
+  ChevronDown,
+  ChevronRight,
+  Plus,
+  Pencil,
+  Trash2,
+  RefreshCw,
+  Search,
+  ArrowUpDown,
+} from "lucide-react";
 import type { UserPublic, EnrollmentDoc, EnrollmentStatus, CourseDoc, LearnerSector } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
 import { adminFetch } from "@/lib/adminApi";
@@ -20,9 +33,9 @@ const SECTOR_OPTIONS: { value: LearnerSector | ""; label: string }[] = [
   { value: "iso-14011", label: "ISO 14011: EMS" },
 ];
 
-type EnrollmentWithPerformance = EnrollmentDoc & { 
+type EnrollmentWithPerformance = EnrollmentDoc & {
   completionPercent: number;
-  quizPerformance?: Record<string, { score: number, maxScore: number, percentage: number, passed: boolean }>;
+  quizPerformance?: Record<string, { score: number; maxScore: number; percentage: number; passed: boolean }>;
 };
 
 async function fetchLearnersSummary(): Promise<{
@@ -67,7 +80,7 @@ async function addEnrollment(userId: string, courseId: string): Promise<void> {
   }
 }
 
-async function createLearner(body: { name: string; email: string; password: string; organization?: string; sector?: LearnerSector; approved?: boolean }): Promise<UserPublic> {
+async function createLearner(body: Partial<UserPublic> & { password?: string }): Promise<UserPublic> {
   const res = await adminFetch(getApiBase() + "/api/users", {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -83,7 +96,7 @@ async function createLearner(body: { name: string; email: string; password: stri
 
 async function updateLearner(
   id: string,
-  body: { name?: string; email?: string; password?: string; organization?: string; sector?: LearnerSector | ""; approved?: boolean; idCardNo?: string }
+  body: Partial<UserPublic> & { password?: string }
 ): Promise<UserPublic> {
   const res = await adminFetch(getApiBase() + `/api/users/${id}`, {
     method: "PUT",
@@ -106,6 +119,35 @@ async function deleteLearner(id: string): Promise<void> {
   }
 }
 
+async function syncStudentIds(): Promise<{ success: boolean; count: number }> {
+  const res = await adminFetch(getApiBase() + "/api/users/sync-student-ids", {
+    method: "POST",
+  });
+  if (!res.ok) throw new Error("Failed to sync student IDs");
+  return res.json();
+}
+
+function formatLearnerDate(isoString?: string): string {
+  if (!isoString) return "—";
+  try {
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return "—";
+    const day = String(d.getDate()).padStart(2, "0");
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = months[d.getMonth()];
+    const year = d.getFullYear();
+    let hours = d.getHours();
+    const minutes = String(d.getMinutes()).padStart(2, "0");
+    const ampm = hours >= 12 ? "PM" : "AM";
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    const hoursStr = String(hours).padStart(2, "0");
+    return `${day}-${month}-${year} ${hoursStr}:${minutes} ${ampm}`;
+  } catch {
+    return isoString;
+  }
+}
+
 const statusLabel: Record<string, string> = {
   not_approved: "Not approved",
   active: "Active",
@@ -124,14 +166,28 @@ export default function AdminLearners() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editUser, setEditUser] = useState<UserPublic | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [syncMessage, setSyncMessage] = useState<string | null>(null);
+
+  // Form states
   const [formName, setFormName] = useState("");
   const [formEmail, setFormEmail] = useState("");
   const [formPassword, setFormPassword] = useState("");
+  const [formPhone, setFormPhone] = useState("");
   const [formOrg, setFormOrg] = useState("");
   const [formSector, setFormSector] = useState<LearnerSector | "">("");
   const [formApproved, setFormApproved] = useState(false);
-  const [formError, setFormError] = useState("");
   const [formIdCardNo, setFormIdCardNo] = useState("");
+  const [formInvoiceNo, setFormInvoiceNo] = useState("");
+  const [formRegistrationNo, setFormRegistrationNo] = useState("");
+  const [formCoursePackage, setFormCoursePackage] = useState("");
+  const [formAdmissionBatch, setFormAdmissionBatch] = useState("");
+  const [formAcademicYear, setFormAcademicYear] = useState("");
+  const [formAdmissionTakenBy, setFormAdmissionTakenBy] = useState("");
+  const [formTotalFees, setFormTotalFees] = useState<number | string>(150000);
+  const [formPaymentAmount, setFormPaymentAmount] = useState<number | string>(150000);
+  const [formBalanceFee, setFormBalanceFee] = useState<number | string>(0);
+  const [formError, setFormError] = useState("");
   const [courseToAddByUserId, setCourseToAddByUserId] = useState<Record<string, string>>({});
 
   const { data, isLoading } = useQuery({
@@ -161,6 +217,19 @@ export default function AdminLearners() {
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["learners-summary"] }),
   });
 
+  const syncMutation = useMutation({
+    mutationFn: syncStudentIds,
+    onSuccess: (res) => {
+      queryClient.invalidateQueries({ queryKey: ["learners-summary"] });
+      setSyncMessage(`Successfully synchronized ${res.count} student IDs!`);
+      setTimeout(() => setSyncMessage(null), 4000);
+    },
+    onError: (err: Error) => {
+      setSyncMessage(`Failed to sync: ${err.message}`);
+      setTimeout(() => setSyncMessage(null), 5000);
+    },
+  });
+
   const createMutation = useMutation({
     mutationFn: createLearner,
     onSuccess: () => {
@@ -172,7 +241,8 @@ export default function AdminLearners() {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, body }: { id: string; body: Parameters<typeof updateLearner>[1] }) => updateLearner(id, body),
+    mutationFn: ({ id, body }: { id: string; body: Parameters<typeof updateLearner>[1] }) =>
+      updateLearner(id, body),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["learners-summary"] });
       setEditUser(null);
@@ -194,294 +264,562 @@ export default function AdminLearners() {
     setFormName("");
     setFormEmail("");
     setFormPassword("");
+    setFormPhone("");
     setFormOrg("");
     setFormSector("");
     setFormApproved(false);
     setFormIdCardNo("");
+    setFormInvoiceNo("");
+    setFormRegistrationNo("");
+    setFormCoursePackage("Standard");
+    setFormAdmissionBatch("Mr Sooraj Jacob");
+    setFormAcademicYear("2026-2027");
+    setFormAdmissionTakenBy("Dipali Kumari Agarwal");
+    setFormTotalFees(150000);
+    setFormPaymentAmount(150000);
+    setFormBalanceFee(0);
     setFormError("");
   }
 
   function openEdit(u: UserPublic) {
     setEditUser(u);
-    setFormName(u.name);
-    setFormEmail(u.email);
+    setFormName(u.name || "");
+    setFormEmail(u.email || "");
     setFormPassword("");
+    setFormPhone(u.phone || "");
     setFormOrg(u.organization ?? "");
     setFormSector(u.sector ?? "");
     setFormApproved(u.approved ?? false);
     setFormIdCardNo(u.idCardNo ?? "");
+    setFormInvoiceNo(u.invoiceNo ?? "");
+    setFormRegistrationNo(u.registrationNo ?? "");
+    setFormCoursePackage(u.coursePackage ?? "Standard");
+    setFormAdmissionBatch(u.admissionBatch ?? "Mr Sooraj Jacob");
+    setFormAcademicYear(u.academicYear ?? "2026-2027");
+    setFormAdmissionTakenBy(u.admissionTakenBy ?? "Dipali Kumari Agarwal");
+    setFormTotalFees(u.totalFees !== undefined ? u.totalFees : 150000);
+    setFormPaymentAmount(u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0));
+    setFormBalanceFee(u.balanceFee !== undefined ? u.balanceFee : 0);
     setFormError("");
   }
 
-  const courseTitleById = Object.fromEntries((courses || []).map((c) => [c.id, c.title]));
+  const courseTitleById = useMemo(() => {
+    return Object.fromEntries((courses || []).map((c) => [c.id, c.title]));
+  }, [courses]);
 
-  const users = data?.users ?? [];
+  const rawUsers = data?.users ?? [];
   const enrollmentsByUserId = data?.enrollmentsByUserId ?? {};
+
+  // Filtered users
+  const filteredUsers = useMemo(() => {
+    if (!searchTerm.trim()) return rawUsers;
+    const term = searchTerm.toLowerCase().trim();
+    return rawUsers.filter(
+      (u) =>
+        u.name.toLowerCase().includes(term) ||
+        u.email.toLowerCase().includes(term) ||
+        (u.idCardNo && u.idCardNo.toLowerCase().includes(term)) ||
+        (u.invoiceNo && u.invoiceNo.toLowerCase().includes(term)) ||
+        (u.phone && u.phone.toLowerCase().includes(term)) ||
+        (u.sector && u.sector.toLowerCase().includes(term))
+    );
+  }, [rawUsers, searchTerm]);
+
+  // Totals calculated from filtered users
+  const { totalFeesSum, paymentSum, balanceSum } = useMemo(() => {
+    let tf = 0;
+    let pm = 0;
+    let bf = 0;
+    for (const u of filteredUsers) {
+      if (u.id === "admin") continue;
+      const t = Number(u.totalFees || 0);
+      const p = Number(u.paymentAmount || 0);
+      const b = Number(u.balanceFee || 0);
+      tf += t;
+      pm += p;
+      bf += b;
+    }
+    return { totalFeesSum: tf, paymentSum: pm, balanceSum: bf };
+  }, [filteredUsers]);
+
+  function getLearnerCourseDisplay(u: UserPublic, enrollments: EnrollmentWithPerformance[]): string {
+    if (enrollments && enrollments.length > 0) {
+      return enrollments.map((e) => courseTitleById[e.courseId] || e.courseId).join(", ");
+    }
+    const sectorLabel = SECTOR_OPTIONS.find((o) => o.value === u.sector)?.label;
+    if (sectorLabel && sectorLabel !== "—") return sectorLabel;
+    return "Environmental, Social, and Governance (ESG)";
+  }
 
   return (
     <div className="space-y-6 sm:space-y-8">
       <div className="bg-white rounded-[30px] shadow-sm border border-gray-200 p-6 sm:p-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-primary flex items-center gap-2 mb-2">
-          <Users className="w-6 h-6" />
-          Learners management
-        </h1>
-        <p className="text-gray-600 text-sm sm:text-base mb-4">
-          Approve users so they can access courses. View enrollments, status, and completion per course. Create, edit, or delete learners below.
-        </p>
-        <div className="flex flex-wrap gap-2 mb-6">
-          <button
-            type="button"
-            onClick={() => {
-              resetForm();
-              setFormApproved(false);
-              setCreateOpen(true);
-            }}
-            className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-lg font-semibold hover:bg-primary/90"
-          >
-            <Plus className="w-4 h-4" />
-            Create learner
-          </button>
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-bold text-primary flex items-center gap-2 mb-1">
+              <Users className="w-6 h-6" />
+              Learners management
+            </h1>
+            <p className="text-gray-600 text-sm">
+              Manage learner enrollments, student IDs (e.g. <code>YYYY-CONS-004</code>), invoices, admission batches, and fee balances.
+            </p>
+          </div>
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => {
+                resetForm();
+                setFormApproved(false);
+                setCreateOpen(true);
+              }}
+              className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary/90 shadow-sm transition-all"
+            >
+              <Plus className="w-4 h-4" />
+              Create learner
+            </button>
+            <button
+              type="button"
+              onClick={() => syncMutation.mutate()}
+              disabled={syncMutation.isPending}
+              className="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60 shadow-sm transition-all"
+              title="Update and synchronize all learner student IDs to the sector format (e.g. YYYY-CONS-004)"
+            >
+              {syncMutation.isPending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <RefreshCw className="w-4 h-4" />
+              )}
+              Update Student IDs
+            </button>
+          </div>
+        </div>
+
+        {syncMessage && (
+          <div className="mb-4 p-3 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-sm font-medium flex items-center gap-2">
+            <CheckCircle className="w-4 h-4 text-emerald-600 shrink-0" />
+            {syncMessage}
+          </div>
+        )}
+
+        {/* Search bar */}
+        <div className="relative mb-6 max-w-md">
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+          <input
+            type="text"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            placeholder="Search by student name, ID card#, invoice#, mobile, or sector..."
+            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+          />
         </div>
 
         {isLoading ? (
           <p className="text-gray-500 text-sm mt-6 flex items-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin" /> Loading…
+            <Loader2 className="w-4 h-4 animate-spin" /> Loading learners data…
           </p>
-        ) : users.length === 0 ? (
-          <p className="text-gray-500 text-sm mt-6">No registered users yet.</p>
+        ) : filteredUsers.length === 0 ? (
+          <p className="text-gray-500 text-sm mt-6">No matching learners found.</p>
         ) : (
-          <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
-            <table className="w-full min-w-[1200px] text-left border-collapse">
+          <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+            <table className="w-full min-w-[1700px] text-left border-collapse text-xs sm:text-sm">
               <thead>
-                <tr className="border-b border-gray-200 bg-gray-50/80">
-                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap min-w-[130px]">ID Card No.</th>
-                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap min-w-[220px]">Name</th>
-                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap min-w-[220px]">Email</th>
-                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap min-w-[160px]">Organization</th>
-                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap min-w-[160px]">Sector</th>
-                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap text-center min-w-[120px]">Status</th>
-                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap text-center min-w-[110px]">Courses</th>
-                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap text-right min-w-[160px]">Actions</th>
+                <tr className="border-b border-gray-200 bg-gray-50/90 text-gray-700 select-none">
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[160px]">
+                    <div className="flex items-center gap-1">
+                      <span>DATE</span>
+                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[220px]">
+                    <div className="flex items-center gap-1">
+                      <span>STUDENT</span>
+                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[100px]">
+                    <div className="flex items-center gap-1">
+                      <span>INVOICE#</span>
+                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[140px] text-primary">
+                    <div className="flex items-center gap-1">
+                      <span>ID CARD#</span>
+                      <ArrowUpDown className="w-3 h-3 text-primary/60" />
+                    </div>
+                  </th>
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[130px]">
+                    <div className="flex items-center gap-1">
+                      <span>REGISTRATION#</span>
+                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[120px]">
+                    <div className="flex items-center gap-1">
+                      <span>MOBILE</span>
+                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[140px]">
+                    <div className="flex items-center gap-1">
+                      <span>COURSE PACKAGE</span>
+                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[260px]">
+                    <div className="flex items-center gap-1">
+                      <span>COURSE</span>
+                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[150px]">
+                    <div className="flex items-center gap-1">
+                      <span>ADMISSION BATCH</span>
+                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[130px]">
+                    <div className="flex items-center gap-1">
+                      <span>ACADEMIC YEAR</span>
+                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[110px] text-center">
+                    <div className="flex items-center justify-center gap-1">
+                      <span>STATUS</span>
+                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[180px]">
+                    <div className="flex items-center gap-1">
+                      <span>ADMISSION TAKEN BY</span>
+                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[120px] text-right">
+                    <div className="flex items-center justify-end gap-1">
+                      <span>TOTAL FEES</span>
+                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                    </div>
+                  </th>
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[110px] text-right text-emerald-700">
+                    <div className="flex items-center justify-end gap-1">
+                      <span>PAYMENT</span>
+                      <ArrowUpDown className="w-3 h-3 text-emerald-600/70" />
+                    </div>
+                  </th>
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[110px] text-right text-amber-700">
+                    <div className="flex items-center justify-end gap-1">
+                      <span>BALANCE</span>
+                      <ArrowUpDown className="w-3 h-3 text-amber-600/70" />
+                    </div>
+                  </th>
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[140px] text-center">
+                    ACTIONS
+                  </th>
                 </tr>
               </thead>
-              <tbody>
-                {users.map((u) => {
+              <tbody className="divide-y divide-gray-100">
+                {filteredUsers.map((u) => {
                   const enrollments = enrollmentsByUserId[u.id] ?? [];
                   const isExpanded = expandedId === u.id;
+                  const courseDisplay = getLearnerCourseDisplay(u, enrollments);
+
                   return (
                     <Fragment key={u.id}>
-                      <tr className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                        <td className="px-4 py-3.5 font-mono font-bold text-xs text-primary whitespace-nowrap min-w-[130px]">
-                          {u.idCardNo || "—"}
+                      <tr className="hover:bg-blue-50/30 transition-colors group">
+                        {/* 1. DATE */}
+                        <td className="px-3.5 py-3 whitespace-nowrap text-gray-600 font-medium">
+                          {formatLearnerDate(u.createdAt)}
                         </td>
-                        <td className="px-4 py-3.5 whitespace-nowrap min-w-[220px]">
+
+                        {/* 2. STUDENT */}
+                        <td className="px-3.5 py-3 whitespace-nowrap">
                           <button
                             type="button"
                             onClick={() => setExpandedId(isExpanded ? null : u.id)}
-                            className="flex items-center gap-2 text-left text-gray-900 hover:text-primary whitespace-nowrap group"
+                            className="flex items-center gap-2 text-left group/btn"
+                            title="Click to view course enrollments & progress"
                           >
                             {enrollments.length > 0 ? (
                               isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-gray-500 shrink-0 group-hover:text-primary" />
+                                <ChevronDown className="w-4 h-4 text-gray-500 shrink-0 group-hover/btn:text-primary transition-colors" />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-gray-500 shrink-0 group-hover:text-primary" />
+                                <ChevronRight className="w-4 h-4 text-gray-500 shrink-0 group-hover/btn:text-primary transition-colors" />
                               )
                             ) : (
                               <span className="w-4 shrink-0" />
                             )}
-                            <span className="font-semibold text-gray-900 group-hover:text-primary whitespace-nowrap">{u.name}</span>
+                            <div>
+                              <div className="font-bold text-gray-900 group-hover/btn:text-primary transition-colors uppercase">
+                                {u.name}
+                              </div>
+                              <div className="text-[11px] text-gray-400 font-mono lowercase">
+                                {u.email}
+                              </div>
+                            </div>
                           </button>
                         </td>
-                        <td className="px-4 py-3.5 text-sm text-gray-600 whitespace-nowrap font-mono text-xs min-w-[220px]">{u.email}</td>
-                        <td className="px-4 py-3.5 text-sm text-gray-600 whitespace-nowrap min-w-[160px]">{u.organization ?? "—"}</td>
-                        <td className="px-4 py-3.5 text-sm text-gray-600 whitespace-nowrap min-w-[160px]">
-                          {SECTOR_OPTIONS.find((o) => o.value === u.sector)?.label ?? "—"}
+
+                        {/* 3. INVOICE# */}
+                        <td className="px-3.5 py-3 whitespace-nowrap font-mono text-gray-700 font-semibold">
+                          {u.invoiceNo || "—"}
                         </td>
-                        <td className="px-4 py-3.5 whitespace-nowrap text-center min-w-[120px]">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap border ${
-                            u.approved ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"
-                          }`}>
-                            {u.approved ? "Approved" : "Pending"}
+
+                        {/* 4. ID CARD# (e.g. 2026-CONS-001, 2026-MIN-003) */}
+                        <td className="px-3.5 py-3 whitespace-nowrap font-mono font-bold text-primary">
+                          <span className="bg-primary/10 text-primary px-2.5 py-1 rounded-md">
+                            {u.idCardNo || "—"}
                           </span>
                         </td>
-                        <td className="px-4 py-3.5 text-sm text-gray-600 whitespace-nowrap text-center min-w-[110px]">
-                          {enrollments.length === 0
-                            ? "—"
-                            : `${enrollments.length} course${enrollments.length !== 1 ? "s" : ""}`}
+
+                        {/* 5. REGISTRATION# */}
+                        <td className="px-3.5 py-3 whitespace-nowrap font-mono text-gray-700 font-semibold">
+                          {u.registrationNo || u.invoiceNo || "—"}
                         </td>
-                        <td className="px-4 py-3.5 text-right whitespace-nowrap min-w-[160px]">
-                          <div className="flex items-center justify-end gap-2 whitespace-nowrap">
+
+                        {/* 6. MOBILE */}
+                        <td className="px-3.5 py-3 whitespace-nowrap font-mono text-gray-700">
+                          {u.phone || "—"}
+                        </td>
+
+                        {/* 7. COURSE PACKAGE */}
+                        <td className="px-3.5 py-3 whitespace-nowrap text-gray-600">
+                          {u.coursePackage || "Standard"}
+                        </td>
+
+                        {/* 8. COURSE */}
+                        <td className="px-3.5 py-3 whitespace-nowrap text-gray-800 font-medium max-w-[280px] truncate" title={courseDisplay}>
+                          {courseDisplay}
+                        </td>
+
+                        {/* 9. ADMISSION BATCH */}
+                        <td className="px-3.5 py-3 whitespace-nowrap text-gray-700">
+                          {u.admissionBatch || "Mr Sooraj Jacob"}
+                        </td>
+
+                        {/* 10. ACADEMIC YEAR */}
+                        <td className="px-3.5 py-3 whitespace-nowrap text-gray-700">
+                          {u.academicYear || "2026-2027"}
+                        </td>
+
+                        {/* 11. STATUS */}
+                        <td className="px-3.5 py-3 whitespace-nowrap text-center">
+                          <span
+                            className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap border ${
+                              u.approved
+                                ? "bg-green-50 text-green-700 border-green-200"
+                                : "bg-amber-50 text-amber-700 border-amber-200"
+                            }`}
+                          >
+                            {u.approved ? "Active" : "Pending"}
+                          </span>
+                        </td>
+
+                        {/* 12. ADMISSION TAKEN BY */}
+                        <td className="px-3.5 py-3 whitespace-nowrap text-gray-700">
+                          {u.admissionTakenBy || "Dipali Kumari Agarwal"}
+                        </td>
+
+                        {/* 13. TOTAL FEES */}
+                        <td className="px-3.5 py-3 whitespace-nowrap text-right font-mono font-bold text-gray-900">
+                          {Number(u.totalFees || 150000).toLocaleString()}
+                        </td>
+
+                        {/* 14. PAYMENT */}
+                        <td className="px-3.5 py-3 whitespace-nowrap text-right font-mono font-bold text-emerald-700">
+                          {Number(u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0)).toLocaleString()}
+                        </td>
+
+                        {/* 15. BALANCE */}
+                        <td className="px-3.5 py-3 whitespace-nowrap text-right font-mono font-bold text-amber-700">
+                          {Number(u.balanceFee !== undefined ? u.balanceFee : 0).toLocaleString()}
+                        </td>
+
+                        {/* 16. ACTIONS */}
+                        <td className="px-3.5 py-3 whitespace-nowrap text-center">
+                          <div className="flex items-center justify-center gap-1.5">
                             {!u.approved && (
                               <button
                                 type="button"
                                 onClick={() => approveMutation.mutate(u.id)}
                                 disabled={approveMutation.isPending}
-                                className="inline-flex items-center gap-1.5 bg-primary text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/90 disabled:opacity-60 whitespace-nowrap shrink-0 shadow-sm"
+                                className="inline-flex items-center gap-1 bg-primary text-white px-2.5 py-1 rounded-lg text-xs font-semibold hover:bg-primary/90 disabled:opacity-60 shadow-sm transition-all"
+                                title="Approve learner access"
                               >
-                                {approveMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><CheckCircle className="w-3.5 h-3.5" /> Approve</>}
+                                {approveMutation.isPending ? (
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                ) : (
+                                  <>
+                                    <CheckCircle className="w-3.5 h-3.5" />
+                                    Approve
+                                  </>
+                                )}
                               </button>
                             )}
                             <button
                               type="button"
                               onClick={() => openEdit(u)}
-                              className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 whitespace-nowrap shrink-0 shadow-sm"
+                              className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 shadow-sm transition-all"
                               title="Edit learner"
                             >
-                              <Pencil className="w-4 h-4" />
+                              <Pencil className="w-3.5 h-3.5" />
                             </button>
-                            <button
-                              type="button"
-                              onClick={() => setDeleteId(u.id)}
-                              className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 whitespace-nowrap shrink-0 shadow-sm"
-                              title="Delete learner"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </button>
+                            {u.id !== "admin" && (
+                              <button
+                                type="button"
+                                onClick={() => setDeleteId(u.id)}
+                                className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 shadow-sm transition-all"
+                                title="Delete learner"
+                              >
+                                <Trash2 className="w-3.5 h-3.5" />
+                              </button>
+                            )}
                           </div>
                         </td>
                       </tr>
+
+                      {/* Expandable Course Enrollment & Quiz Performance Breakdown */}
                       {isExpanded && (
-                        <tr className="bg-gray-50/80">
-                          <td colSpan={8} className="px-6 py-4">
-                            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Enrollments</p>
-                            <div className="mb-3 flex flex-wrap items-center gap-2">
-                              {(() => {
-                                const enrolled = new Set((enrollments || []).map((en) => en.courseId));
-                                const available = courses.filter((c) => !enrolled.has(c.id));
-                                if (available.length === 0) {
-                                  return (
-                                    <p className="text-xs text-gray-500">
-                                      All published courses are already assigned to this learner.
-                                    </p>
-                                  );
-                                }
-                                const selected = courseToAddByUserId[u.id] ?? available[0].id;
-                                return (
-                                  <>
-                                    <select
-                                      value={selected}
-                                      onChange={(e) =>
-                                        setCourseToAddByUserId((prev) => ({ ...prev, [u.id]: e.target.value }))
-                                      }
-                                      className="text-xs rounded-lg border border-gray-200 px-2 py-1.5 bg-white outline-none focus:border-primary transition-colors"
-                                    >
-                                      {available.map((c) => (
-                                        <option key={c.id} value={c.id}>
-                                          {c.title}
-                                        </option>
-                                      ))}
-                                    </select>
-                                    <button
-                                      type="button"
-                                      onClick={() =>
-                                        addEnrollmentMutation.mutate({
-                                          userId: u.id,
-                                          courseId: selected,
-                                        })
-                                      }
-                                      disabled={addEnrollmentMutation.isPending}
-                                      className="inline-flex items-center gap-1.5 bg-primary text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/90 disabled:opacity-60"
-                                    >
-                                      {addEnrollmentMutation.isPending ? (
-                                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                                      ) : (
-                                        <Plus className="w-3.5 h-3.5" />
-                                      )}
-                                      Add course
-                                    </button>
-                                  </>
-                                );
-                              })()}
-                            </div>
-                            <div className="flex flex-col gap-2">
-                              {enrollments.length === 0 ? (
-                                <p className="text-xs text-gray-500 px-1">No courses assigned yet.</p>
-                              ) : null}
-                              {enrollments.map((en) => (
-                                  <div
-                                    key={en.id}
-                                    className="flex flex-col gap-3 py-3 px-4 rounded-xl bg-white border border-gray-100 hover:border-primary/20 transition-all shadow-sm"
-                                  >
-                                    <div className="flex flex-wrap items-center justify-between gap-3">
-                                      <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                                          <BookOpen className="w-4 h-4 text-primary" />
-                                        </div>
-                                        <div className="min-w-0">
-                                          <p className="font-bold text-gray-900 truncate">
-                                            {courseTitleById[en.courseId] ?? en.courseId}
-                                          </p>
-                                          <p className="text-[10px] text-gray-400 font-semibold uppercase tracking-wider mt-0.5">
-                                            Enrolled: {en.enrolledAt ? new Date(en.enrolledAt).toLocaleDateString() : '—'}
-                                          </p>
-                                        </div>
-                                      </div>
-                                      
-                                      <div className="flex items-center gap-2">
-                                        <span
-                                          className={`text-xs px-2 py-0.5 rounded-full font-medium ${statusClass[en.status ?? "active"] ?? statusClass.active}`}
-                                        >
-                                          {statusLabel[en.status ?? "active"] ?? "Active"}
-                                        </span>
+                        <tr className="bg-blue-50/20 border-b border-gray-100">
+                          <td colSpan={16} className="px-6 py-4">
+                            <div className="bg-white rounded-2xl p-4 border border-blue-100 shadow-sm">
+                              <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
+                                <p className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
+                                  <BookOpen className="w-4 h-4 text-primary" />
+                                  Course Enrollments & Assessment Progress ({enrollments.length})
+                                </p>
+
+                                <div className="flex items-center gap-2">
+                                  {(() => {
+                                    const enrolled = new Set((enrollments || []).map((en) => en.courseId));
+                                    const available = courses.filter((c) => !enrolled.has(c.id));
+                                    if (available.length === 0) return null;
+                                    const selected = courseToAddByUserId[u.id] ?? available[0].id;
+                                    return (
+                                      <>
                                         <select
-                                          value={en.status ?? "active"}
+                                          value={selected}
                                           onChange={(e) =>
-                                            updateStatusMutation.mutate({
-                                              enrollmentId: en.id,
-                                              status: e.target.value as EnrollmentStatus,
+                                            setCourseToAddByUserId((prev) => ({
+                                              ...prev,
+                                              [u.id]: e.target.value,
+                                            }))
+                                          }
+                                          className="text-xs rounded-lg border border-gray-200 px-2.5 py-1.5 bg-white outline-none focus:border-primary"
+                                        >
+                                          {available.map((c) => (
+                                            <option key={c.id} value={c.id}>
+                                              {c.title}
+                                            </option>
+                                          ))}
+                                        </select>
+                                        <button
+                                          type="button"
+                                          onClick={() =>
+                                            addEnrollmentMutation.mutate({
+                                              userId: u.id,
+                                              courseId: selected,
                                             })
                                           }
-                                          disabled={updateStatusMutation.isPending}
-                                          className="text-xs rounded-lg border border-gray-200 px-2 py-1.5 bg-white outline-none focus:border-primary transition-colors"
+                                          disabled={addEnrollmentMutation.isPending}
+                                          className="inline-flex items-center gap-1 bg-primary text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/90 disabled:opacity-60 shadow-sm"
                                         >
-                                          <option value="active">Active</option>
-                                          <option value="completed">Completed</option>
-                                          <option value="not_approved">Not approved</option>
-                                        </select>
-                                      </div>
-                                    </div>
+                                          {addEnrollmentMutation.isPending ? (
+                                            <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                          ) : (
+                                            <Plus className="w-3.5 h-3.5" />
+                                          )}
+                                          Assign course
+                                        </button>
+                                      </>
+                                    );
+                                  })()}
+                                </div>
+                              </div>
 
-                                    {/* Progress Area */}
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 pt-2 border-t border-gray-50">
-                                      <div>
-                                        <div className="flex justify-between items-center mb-1.5 transition-all">
-                                          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none">Lesson Progress</span>
-                                          <span className="text-sm font-bold text-primary leading-none">{en.completionPercent}%</span>
+                              {enrollments.length === 0 ? (
+                                <p className="text-xs text-gray-500 italic py-2">
+                                  No specific courses enrolled yet. Learner has access to sector-matched courses upon login.
+                                </p>
+                              ) : (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                  {enrollments.map((en) => (
+                                    <div
+                                      key={en.id}
+                                      className="p-3.5 rounded-xl bg-gray-50/70 border border-gray-100 flex flex-col gap-2.5"
+                                    >
+                                      <div className="flex items-center justify-between gap-2">
+                                        <div className="font-bold text-gray-900 text-sm">
+                                          {courseTitleById[en.courseId] ?? en.courseId}
                                         </div>
-                                        <div className="h-1.5 w-full bg-gray-100 rounded-full overflow-hidden">
-                                          <div 
-                                            className="h-full bg-primary rounded-full transition-all duration-500" 
+                                        <div className="flex items-center gap-1.5">
+                                          <span
+                                            className={`text-[11px] px-2 py-0.5 rounded-full font-semibold ${
+                                              statusClass[en.status ?? "active"] ?? statusClass.active
+                                            }`}
+                                          >
+                                            {statusLabel[en.status ?? "active"] ?? "Active"}
+                                          </span>
+                                          <select
+                                            value={en.status ?? "active"}
+                                            onChange={(e) =>
+                                              updateStatusMutation.mutate({
+                                                enrollmentId: en.id,
+                                                status: e.target.value as EnrollmentStatus,
+                                              })
+                                            }
+                                            disabled={updateStatusMutation.isPending}
+                                            className="text-xs rounded-lg border border-gray-200 px-2 py-1 bg-white outline-none focus:border-primary"
+                                          >
+                                            <option value="active">Active</option>
+                                            <option value="completed">Completed</option>
+                                            <option value="not_approved">Not approved</option>
+                                          </select>
+                                        </div>
+                                      </div>
+
+                                      {/* Progress Bar */}
+                                      <div>
+                                        <div className="flex justify-between items-center text-xs font-semibold mb-1 text-gray-600">
+                                          <span>Curriculum Progress</span>
+                                          <span className="text-primary font-bold">{en.completionPercent}%</span>
+                                        </div>
+                                        <div className="h-1.5 w-full bg-gray-200 rounded-full overflow-hidden">
+                                          <div
+                                            className="h-full bg-primary rounded-full transition-all duration-500"
                                             style={{ width: `${en.completionPercent}%` }}
                                           />
                                         </div>
                                       </div>
 
-                                      <div className="space-y-2">
-                                        <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest leading-none block">Quiz Performance</span>
-                                        {en.quizPerformance && Object.keys(en.quizPerformance).length > 0 ? (
-                                          <div className="flex flex-wrap gap-2">
-                                            {Object.entries(en.quizPerformance).map(([qId, perf]) => (
-                                              <div 
-                                                key={qId} 
-                                                className={`px-2 py-1 rounded-lg border text-[10px] font-bold flex items-center gap-1.5 ${
-                                                  perf.passed 
-                                                    ? 'bg-green-50 border-green-100 text-green-700' 
-                                                    : 'bg-amber-50 border-amber-100 text-amber-700'
+                                      {/* Quiz performance badges */}
+                                      {en.quizPerformance && Object.keys(en.quizPerformance).length > 0 ? (
+                                        <div className="flex flex-wrap gap-1.5 pt-1 border-t border-gray-100">
+                                          {Object.entries(en.quizPerformance).map(([qId, perf]) => (
+                                            <div
+                                              key={qId}
+                                              className={`px-2 py-0.5 rounded-md border text-[10px] font-bold flex items-center gap-1 ${
+                                                perf.passed
+                                                  ? "bg-green-50 border-green-200 text-green-700"
+                                                  : "bg-amber-50 border-amber-200 text-amber-700"
+                                              }`}
+                                              title={`Score: ${perf.score}/${perf.maxScore}`}
+                                            >
+                                              <div
+                                                className={`w-1.5 h-1.5 rounded-full ${
+                                                  perf.passed ? "bg-green-500" : "bg-amber-500"
                                                 }`}
-                                                title={`Score: ${perf.score}/${perf.maxScore}`}
-                                              >
-                                                <div className={`w-1.5 h-1.5 rounded-full ${perf.passed ? 'bg-green-500' : 'bg-amber-500'}`} />
-                                                Quiz: {perf.percentage}%
-                                              </div>
-                                            ))}
-                                          </div>
-                                        ) : (
-                                          <p className="text-[10px] italic text-gray-400 py-1">No quizzes attempted</p>
-                                        )}
-                                      </div>
+                                              />
+                                              Quiz: {perf.percentage}%
+                                            </div>
+                                          ))}
+                                        </div>
+                                      ) : null}
                                     </div>
-                                  </div>
-                              ))}
+                                  ))}
+                                </div>
+                              )}
                             </div>
                           </td>
                         </tr>
@@ -490,38 +828,255 @@ export default function AdminLearners() {
                   );
                 })}
               </tbody>
+
+              {/* Bottom Summary Footer Row */}
+              <tfoot>
+                <tr className="border-t-2 border-gray-300 bg-gray-50/95 font-bold text-gray-900 text-xs sm:text-sm">
+                  <td colSpan={12} className="px-4 py-4 text-right font-black uppercase tracking-wider text-gray-800 text-sm">
+                    Total
+                  </td>
+                  <td className="px-3.5 py-4 text-right font-mono font-black text-gray-900 whitespace-nowrap text-sm">
+                    {totalFeesSum.toLocaleString()}
+                  </td>
+                  <td className="px-3.5 py-4 text-right font-mono font-black text-emerald-700 whitespace-nowrap text-sm">
+                    {paymentSum.toLocaleString()}
+                  </td>
+                  <td className="px-3.5 py-4 text-right font-mono font-black text-amber-700 whitespace-nowrap text-sm">
+                    {balanceSum.toLocaleString()}
+                  </td>
+                  <td className="px-3.5 py-4"></td>
+                </tr>
+              </tfoot>
             </table>
           </div>
         )}
 
-        {/* Create learner modal */}
+        {/* Create Learner Modal */}
         {createOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setCreateOpen(false)}>
-            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
-              <h2 className="text-xl font-bold text-primary">Create learner</h2>
-              {formError && <p className="text-sm text-red-600">{formError}</p>}
-              <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-700">Name *</label>
-                <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} required className="w-full px-3 py-2 rounded-lg border border-gray-200" />
-                <label className="block text-sm font-medium text-gray-700">Email *</label>
-                <input type="email" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} required className="w-full px-3 py-2 rounded-lg border border-gray-200" />
-                <label className="block text-sm font-medium text-gray-700">Password *</label>
-                <input type="password" value={formPassword} onChange={(e) => setFormPassword(e.target.value)} required className="w-full px-3 py-2 rounded-lg border border-gray-200" />
-                <label className="block text-sm font-medium text-gray-700">Organization</label>
-                <input type="text" value={formOrg} onChange={(e) => setFormOrg(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200" />
-                <label className="block text-sm font-medium text-gray-700">Sector</label>
-                <select value={formSector} onChange={(e) => setFormSector(e.target.value as LearnerSector | "")} className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white">
-                  {SECTOR_OPTIONS.map((o) => (
-                    <option key={o.value || "none"} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={formApproved} onChange={(e) => setFormApproved(e.target.checked)} />
-                  <span className="text-sm text-gray-700">Approved</span>
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
+            onClick={() => setCreateOpen(false)}
+          >
+            <div
+              className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 sm:p-8 space-y-5 my-8 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <h2 className="text-xl font-bold text-primary">Create New Learner</h2>
+                <button
+                  type="button"
+                  onClick={() => setCreateOpen(false)}
+                  className="text-gray-400 hover:text-gray-600 text-sm font-semibold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {formError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm font-medium">
+                  {formError}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    required
+                    placeholder="e.g. Emmanuel NIYOBUHUNGIRO"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Email *</label>
+                  <input
+                    type="email"
+                    value={formEmail}
+                    onChange={(e) => setFormEmail(e.target.value)}
+                    required
+                    placeholder="e.g. learner@example.com"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Password *</label>
+                  <input
+                    type="password"
+                    value={formPassword}
+                    onChange={(e) => setFormPassword(e.target.value)}
+                    required
+                    placeholder="Temporary password"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Mobile / Phone</label>
+                  <input
+                    type="text"
+                    value={formPhone}
+                    onChange={(e) => setFormPhone(e.target.value)}
+                    placeholder="e.g. 785072512"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Student ID Card# (Optional)</label>
+                  <input
+                    type="text"
+                    value={formIdCardNo}
+                    onChange={(e) => setFormIdCardNo(e.target.value)}
+                    placeholder="Leave blank to auto-generate (e.g. 2026-CONS-001)"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 font-mono text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Sector of Interest</label>
+                  <select
+                    value={formSector}
+                    onChange={(e) => setFormSector(e.target.value as LearnerSector | "")}
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:border-primary outline-none"
+                  >
+                    {SECTOR_OPTIONS.map((o) => (
+                      <option key={o.value || "none"} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Invoice#</label>
+                  <input
+                    type="text"
+                    value={formInvoiceNo}
+                    onChange={(e) => setFormInvoiceNo(e.target.value)}
+                    placeholder="e.g. 7395"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 font-mono text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Registration#</label>
+                  <input
+                    type="text"
+                    value={formRegistrationNo}
+                    onChange={(e) => setFormRegistrationNo(e.target.value)}
+                    placeholder="e.g. 7395"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 font-mono text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Course Package</label>
+                  <input
+                    type="text"
+                    value={formCoursePackage}
+                    onChange={(e) => setFormCoursePackage(e.target.value)}
+                    placeholder="e.g. Standard"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Admission Batch</label>
+                  <input
+                    type="text"
+                    value={formAdmissionBatch}
+                    onChange={(e) => setFormAdmissionBatch(e.target.value)}
+                    placeholder="e.g. Mr Sooraj Jacob"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Academic Year</label>
+                  <input
+                    type="text"
+                    value={formAcademicYear}
+                    onChange={(e) => setFormAcademicYear(e.target.value)}
+                    placeholder="e.g. 2026-2027"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Admission Taken By</label>
+                  <input
+                    type="text"
+                    value={formAdmissionTakenBy}
+                    onChange={(e) => setFormAdmissionTakenBy(e.target.value)}
+                    placeholder="e.g. Dipali Kumari Agarwal"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Total Fees (RWF)</label>
+                  <input
+                    type="number"
+                    value={formTotalFees}
+                    onChange={(e) => {
+                      const tf = Number(e.target.value);
+                      setFormTotalFees(e.target.value);
+                      const pm = Number(formPaymentAmount || 0);
+                      setFormBalanceFee(Math.max(0, tf - pm));
+                    }}
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm font-mono focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Payment (RWF)</label>
+                  <input
+                    type="number"
+                    value={formPaymentAmount}
+                    onChange={(e) => {
+                      const pm = Number(e.target.value);
+                      setFormPaymentAmount(e.target.value);
+                      const tf = Number(formTotalFees || 0);
+                      setFormBalanceFee(Math.max(0, tf - pm));
+                    }}
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm font-mono focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Balance (RWF)</label>
+                  <input
+                    type="number"
+                    value={formBalanceFee}
+                    onChange={(e) => setFormBalanceFee(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm font-mono focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Organization</label>
+                  <input
+                    type="text"
+                    value={formOrg}
+                    onChange={(e) => setFormOrg(e.target.value)}
+                    placeholder="Company or school name"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <label className="inline-flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formApproved}
+                    onChange={(e) => setFormApproved(e.target.checked)}
+                    className="w-4 h-4 text-primary rounded"
+                  />
+                  <span className="text-sm font-semibold text-gray-700">
+                    Approve immediately (grant instant platform access)
+                  </span>
                 </label>
               </div>
-              <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setCreateOpen(false)} className="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50">Cancel</button>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setCreateOpen(false)}
+                  className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -533,57 +1088,254 @@ export default function AdminLearners() {
                       name: formName.trim(),
                       email: formEmail.trim(),
                       password: formPassword,
+                      phone: formPhone.trim() || undefined,
                       organization: formOrg.trim() || undefined,
                       sector: formSector || undefined,
                       approved: formApproved,
+                      idCardNo: formIdCardNo.trim() || undefined,
+                      invoiceNo: formInvoiceNo.trim() || undefined,
+                      registrationNo: formRegistrationNo.trim() || undefined,
+                      coursePackage: formCoursePackage.trim() || undefined,
+                      admissionBatch: formAdmissionBatch.trim() || undefined,
+                      academicYear: formAcademicYear.trim() || undefined,
+                      admissionTakenBy: formAdmissionTakenBy.trim() || undefined,
+                      totalFees: Number(formTotalFees || 0),
+                      paymentAmount: Number(formPaymentAmount || 0),
+                      balanceFee: Number(formBalanceFee || 0),
                     });
                   }}
                   disabled={createMutation.isPending}
-                  className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-60"
+                  className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 shadow-sm"
                 >
-                  {createMutation.isPending ? "Creating…" : "Create"}
+                  {createMutation.isPending ? "Creating…" : "Create Learner"}
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Edit learner modal */}
+        {/* Edit Learner Modal */}
         {editUser && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setEditUser(null)}>
-            <div className="bg-white rounded-2xl shadow-xl max-w-md w-full p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
-              <h2 className="text-xl font-bold text-primary">Edit learner</h2>
-              {formError && <p className="text-sm text-red-600">{formError}</p>}
-              <div className="space-y-3">
-                <label className="block text-sm font-medium text-gray-700">Student ID Card No.</label>
-                <input
-                  type="text"
-                  value={formIdCardNo}
-                  onChange={(e) => setFormIdCardNo(e.target.value)}
-                  placeholder="e.g. 2026-0001"
-                  className="w-full px-3 py-2 rounded-lg border border-gray-200 font-mono text-sm"
-                />
-                <label className="block text-sm font-medium text-gray-700">Name *</label>
-                <input type="text" value={formName} onChange={(e) => setFormName(e.target.value)} required className="w-full px-3 py-2 rounded-lg border border-gray-200" />
-                <label className="block text-sm font-medium text-gray-700">Email *</label>
-                <input type="email" value={formEmail} onChange={(e) => setFormEmail(e.target.value)} required className="w-full px-3 py-2 rounded-lg border border-gray-200" />
-                <label className="block text-sm font-medium text-gray-700">New password (leave blank to keep)</label>
-                <input type="password" value={formPassword} onChange={(e) => setFormPassword(e.target.value)} placeholder="Optional" className="w-full px-3 py-2 rounded-lg border border-gray-200" />
-                <label className="block text-sm font-medium text-gray-700">Organization</label>
-                <input type="text" value={formOrg} onChange={(e) => setFormOrg(e.target.value)} className="w-full px-3 py-2 rounded-lg border border-gray-200" />
-                <label className="block text-sm font-medium text-gray-700">Sector</label>
-                <select value={formSector} onChange={(e) => setFormSector(e.target.value as LearnerSector | "")} className="w-full px-3 py-2 rounded-lg border border-gray-200 bg-white">
-                  {SECTOR_OPTIONS.map((o) => (
-                    <option key={o.value || "none"} value={o.value}>{o.label}</option>
-                  ))}
-                </select>
-                <label className="flex items-center gap-2">
-                  <input type="checkbox" checked={formApproved} onChange={(e) => setFormApproved(e.target.checked)} />
-                  <span className="text-sm text-gray-700">Approved</span>
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm overflow-y-auto"
+            onClick={() => setEditUser(null)}
+          >
+            <div
+              className="bg-white rounded-3xl shadow-2xl max-w-2xl w-full p-6 sm:p-8 space-y-5 my-8 max-h-[90vh] overflow-y-auto"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 pb-3">
+                <h2 className="text-xl font-bold text-primary">Edit Learner Details</h2>
+                <button
+                  type="button"
+                  onClick={() => setEditUser(null)}
+                  className="text-gray-400 hover:text-gray-600 text-sm font-semibold"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {formError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-red-600 text-sm font-medium">
+                  {formError}
+                </div>
+              )}
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Student ID Card#</label>
+                  <input
+                    type="text"
+                    value={formIdCardNo}
+                    onChange={(e) => setFormIdCardNo(e.target.value)}
+                    placeholder="e.g. 2026-CONS-001 or 2026-MIN-003"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 font-mono font-bold text-primary text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    required
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Email *</label>
+                  <input
+                    type="email"
+                    value={formEmail}
+                    onChange={(e) => setFormEmail(e.target.value)}
+                    required
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Mobile / Phone</label>
+                  <input
+                    type="text"
+                    value={formPhone}
+                    onChange={(e) => setFormPhone(e.target.value)}
+                    placeholder="e.g. 785072512"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">New Password (leave blank to keep)</label>
+                  <input
+                    type="password"
+                    value={formPassword}
+                    onChange={(e) => setFormPassword(e.target.value)}
+                    placeholder="Optional new password"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Sector of Interest</label>
+                  <select
+                    value={formSector}
+                    onChange={(e) => setFormSector(e.target.value as LearnerSector | "")}
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:border-primary outline-none"
+                  >
+                    {SECTOR_OPTIONS.map((o) => (
+                      <option key={o.value || "none"} value={o.value}>
+                        {o.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Invoice#</label>
+                  <input
+                    type="text"
+                    value={formInvoiceNo}
+                    onChange={(e) => setFormInvoiceNo(e.target.value)}
+                    placeholder="e.g. 7395"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 font-mono text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Registration#</label>
+                  <input
+                    type="text"
+                    value={formRegistrationNo}
+                    onChange={(e) => setFormRegistrationNo(e.target.value)}
+                    placeholder="e.g. 7395"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 font-mono text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Course Package</label>
+                  <input
+                    type="text"
+                    value={formCoursePackage}
+                    onChange={(e) => setFormCoursePackage(e.target.value)}
+                    placeholder="e.g. Standard"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Admission Batch</label>
+                  <input
+                    type="text"
+                    value={formAdmissionBatch}
+                    onChange={(e) => setFormAdmissionBatch(e.target.value)}
+                    placeholder="e.g. Mr Sooraj Jacob"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Academic Year</label>
+                  <input
+                    type="text"
+                    value={formAcademicYear}
+                    onChange={(e) => setFormAcademicYear(e.target.value)}
+                    placeholder="e.g. 2026-2027"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Admission Taken By</label>
+                  <input
+                    type="text"
+                    value={formAdmissionTakenBy}
+                    onChange={(e) => setFormAdmissionTakenBy(e.target.value)}
+                    placeholder="e.g. Dipali Kumari Agarwal"
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Total Fees (RWF)</label>
+                  <input
+                    type="number"
+                    value={formTotalFees}
+                    onChange={(e) => {
+                      const tf = Number(e.target.value);
+                      setFormTotalFees(e.target.value);
+                      const pm = Number(formPaymentAmount || 0);
+                      setFormBalanceFee(Math.max(0, tf - pm));
+                    }}
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm font-mono focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Payment (RWF)</label>
+                  <input
+                    type="number"
+                    value={formPaymentAmount}
+                    onChange={(e) => {
+                      const pm = Number(e.target.value);
+                      setFormPaymentAmount(e.target.value);
+                      const tf = Number(formTotalFees || 0);
+                      setFormBalanceFee(Math.max(0, tf - pm));
+                    }}
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm font-mono focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Balance (RWF)</label>
+                  <input
+                    type="number"
+                    value={formBalanceFee}
+                    onChange={(e) => setFormBalanceFee(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm font-mono focus:border-primary outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Organization</label>
+                  <input
+                    type="text"
+                    value={formOrg}
+                    onChange={(e) => setFormOrg(e.target.value)}
+                    className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <label className="inline-flex items-center gap-2 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={formApproved}
+                    onChange={(e) => setFormApproved(e.target.checked)}
+                    className="w-4 h-4 text-primary rounded"
+                  />
+                  <span className="text-sm font-semibold text-gray-700">
+                    Approved (active access to portal & curriculum)
+                  </span>
                 </label>
               </div>
-              <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setEditUser(null)} className="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50">Cancel</button>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-gray-100">
+                <button
+                  type="button"
+                  onClick={() => setEditUser(null)}
+                  className="px-5 py-2.5 rounded-xl border border-gray-200 text-sm font-semibold text-gray-600 hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
                 <button
                   type="button"
                   onClick={() => {
@@ -597,37 +1349,61 @@ export default function AdminLearners() {
                         name: formName.trim(),
                         email: formEmail.trim(),
                         password: formPassword || undefined,
+                        phone: formPhone.trim() || undefined,
                         organization: formOrg.trim() || undefined,
                         sector: formSector || undefined,
                         approved: formApproved,
                         idCardNo: formIdCardNo.trim() || undefined,
+                        invoiceNo: formInvoiceNo.trim() || undefined,
+                        registrationNo: formRegistrationNo.trim() || undefined,
+                        coursePackage: formCoursePackage.trim() || undefined,
+                        admissionBatch: formAdmissionBatch.trim() || undefined,
+                        academicYear: formAcademicYear.trim() || undefined,
+                        admissionTakenBy: formAdmissionTakenBy.trim() || undefined,
+                        totalFees: Number(formTotalFees || 0),
+                        paymentAmount: Number(formPaymentAmount || 0),
+                        balanceFee: Number(formBalanceFee || 0),
                       },
                     });
                   }}
                   disabled={updateMutation.isPending}
-                  className="px-4 py-2 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 disabled:opacity-60"
+                  className="px-5 py-2.5 rounded-xl bg-primary text-white text-sm font-semibold hover:bg-primary/90 disabled:opacity-60 shadow-sm"
                 >
-                  {updateMutation.isPending ? "Saving…" : "Save"}
+                  {updateMutation.isPending ? "Saving…" : "Save Changes"}
                 </button>
               </div>
             </div>
           </div>
         )}
 
-        {/* Delete confirm */}
+        {/* Delete Confirm Modal */}
         {deleteId && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50" onClick={() => setDeleteId(null)}>
-            <div className="bg-white rounded-2xl shadow-xl max-w-sm w-full p-6 space-y-4" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setDeleteId(null)}
+          >
+            <div
+              className="bg-white rounded-3xl shadow-xl max-w-sm w-full p-6 space-y-4"
+              onClick={(e) => e.stopPropagation()}
+            >
               <h2 className="text-lg font-bold text-gray-900">Delete learner?</h2>
-              <p className="text-sm text-gray-600">This will remove the learner and their enrollments, progress, and quiz submissions. This cannot be undone.</p>
+              <p className="text-sm text-gray-600">
+                This will remove the learner and their enrollments, progress, and quiz submissions. This action cannot be undone.
+              </p>
               {formError && <p className="text-sm text-red-600">{formError}</p>}
-              <div className="flex gap-2 pt-2">
-                <button type="button" onClick={() => setDeleteId(null)} className="px-4 py-2 rounded-lg border border-gray-200 hover:bg-gray-50">Cancel</button>
+              <div className="flex justify-end gap-2 pt-2">
+                <button
+                  type="button"
+                  onClick={() => setDeleteId(null)}
+                  className="px-4 py-2 rounded-xl border border-gray-200 text-sm font-semibold hover:bg-gray-50"
+                >
+                  Cancel
+                </button>
                 <button
                   type="button"
                   onClick={() => deleteMutation.mutate(deleteId)}
                   disabled={deleteMutation.isPending}
-                  className="px-4 py-2 rounded-lg bg-red-600 text-white font-semibold hover:bg-red-700 disabled:opacity-60"
+                  className="px-4 py-2 rounded-xl bg-red-600 text-white text-sm font-semibold hover:bg-red-700 disabled:opacity-60 shadow-sm"
                 >
                   {deleteMutation.isPending ? "Deleting…" : "Delete"}
                 </button>
@@ -639,4 +1415,3 @@ export default function AdminLearners() {
     </div>
   );
 }
-

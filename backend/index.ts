@@ -18,6 +18,7 @@ import {
   postUser,
   putUser,
   deleteUser,
+  postSyncLearners,
   postForgotPassword,
   postResetPassword,
 } from "./routes/users";
@@ -235,6 +236,7 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.post("/api/login", rateLimitLogin, postLogin);
   app.get("/api/users", requireAdminSession, getUsers);
   app.get("/api/users/learners-summary", requireAdminSession, getLearnersSummary);
+  app.post("/api/users/sync-student-ids", requireAdminSession, postSyncLearners);
   app.get("/api/users/:id", getUser);
   app.patch("/api/users/:id/approve", requireAdminSession, patchUserApprove);
   app.post("/api/forgot-password", postForgotPassword);

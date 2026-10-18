@@ -53,8 +53,10 @@ export type UserRole = "learner" | "admin" | "instructor";
 /** User (registrant); access to courses only after admin approval */
 export interface User {
   id: string;
-  /** System-assigned student ID card number, format YYYY-NNNN (e.g. 2026-0001). Used as a unique human-readable identifier on receipts and certificates. */
+  /** System-assigned student ID card number, format YYYY-SECTOR-NNN (e.g. 2026-CONS-001, 2026-MIN-003). Used as a unique human-readable identifier on receipts and certificates. */
   idCardNo?: string;
+  invoiceNo?: string;
+  registrationNo?: string;
   email: string;
   password: string; // stored as bcrypt hash; plain-text fallback for legacy users
   name: string;
@@ -62,12 +64,30 @@ export interface User {
   organization?: string;
   /** Sector of interest: learner sees only this course + safety-management. Omit = see all. */
   sector?: LearnerSector;
+  coursePackage?: string;
+  admissionBatch?: string;
+  academicYear?: string;
+  admissionTakenBy?: string;
+  totalFees?: number;
+  paymentAmount?: number;
+  balanceFee?: number;
   approved: boolean;
   role?: UserRole;
   createdAt: string;
 }
 
-export type UserCreate = Pick<User, "email" | "password" | "name" | "phone" | "organization" | "sector">;
+export type UserCreate = Pick<User, "email" | "password" | "name" | "phone" | "organization" | "sector"> & {
+  invoiceNo?: string;
+  registrationNo?: string;
+  coursePackage?: string;
+  admissionBatch?: string;
+  academicYear?: string;
+  admissionTakenBy?: string;
+  totalFees?: number;
+  paymentAmount?: number;
+  balanceFee?: number;
+  idCardNo?: string;
+};
 export type UserPublic = Omit<User, "password">;
 
 /** Instructor profile (admin-managed); linked to a User with role=instructor */
