@@ -13,13 +13,21 @@ import {
   RefreshCw,
   Search,
   ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
+  Download,
+  Filter,
+  X,
+  CheckSquare,
+  Square,
+  Calendar,
 } from "lucide-react";
 import type { UserPublic, EnrollmentDoc, EnrollmentStatus, CourseDoc, LearnerSector } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
 import { adminFetch } from "@/lib/adminApi";
 
 const SECTOR_OPTIONS: { value: LearnerSector | ""; label: string }[] = [
-  { value: "", label: "—" },
+  { value: "", label: "All Courses / Sectors" },
   { value: "construction", label: "Construction" },
   { value: "industrial-safety", label: "Industrial Safety" },
   { value: "mining", label: "Mining" },
@@ -37,6 +45,25 @@ type EnrollmentWithPerformance = EnrollmentDoc & {
   completionPercent: number;
   quizPerformance?: Record<string, { score: number; maxScore: number; percentage: number; passed: boolean }>;
 };
+
+type SortField =
+  | "createdAt"
+  | "name"
+  | "invoiceNo"
+  | "idCardNo"
+  | "registrationNo"
+  | "phone"
+  | "coursePackage"
+  | "course"
+  | "admissionBatch"
+  | "academicYear"
+  | "approved"
+  | "admissionTakenBy"
+  | "totalFees"
+  | "paymentAmount"
+  | "balanceFee";
+
+type SortOrder = "asc" | "desc";
 
 async function fetchLearnersSummary(): Promise<{
   users: UserPublic[];
@@ -166,10 +193,28 @@ export default function AdminLearners() {
   const [createOpen, setCreateOpen] = useState(false);
   const [editUser, setEditUser] = useState<UserPublic | null>(null);
   const [deleteId, setDeleteId] = useState<string | null>(null);
-  const [searchTerm, setSearchTerm] = useState("");
   const [syncMessage, setSyncMessage] = useState<string | null>(null);
 
-  // Form states
+  // Filter States
+  const [searchTerm, setSearchTerm] = useState("");
+  const [filterSector, setFilterSector] = useState<string>("");
+  const [filterStatus, setFilterStatus] = useState<string>("");
+  const [filterAcademicYear, setFilterAcademicYear] = useState<string>("");
+  const [filterBatch, setFilterBatch] = useState<string>("");
+  const [filterTakenBy, setFilterTakenBy] = useState<string>("");
+  const [filterPaymentStatus, setFilterPaymentStatus] = useState<string>("");
+  const [filterDateFrom, setFilterDateFrom] = useState<string>("");
+  const [filterDateTo, setFilterDateTo] = useState<string>("");
+  const [showFiltersPanel, setShowFiltersPanel] = useState<boolean>(true);
+
+  // Sorting State
+  const [sortField, setSortField] = useState<SortField>("createdAt");
+  const [sortOrder, setSortOrder] = useState<SortOrder>("desc");
+
+  // Selection State
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
+  // Form states for Create / Edit
   const [formName, setFormName] = useState("");
   const [formEmail, setFormEmail] = useState("");
   const [formPassword, setFormPassword] = useState("");
@@ -310,61 +355,376 @@ export default function AdminLearners() {
   const rawUsers = data?.users ?? [];
   const enrollmentsByUserId = data?.enrollmentsByUserId ?? {};
 
-  // Filtered users
-  const filteredUsers = useMemo(() => {
-    if (!searchTerm.trim()) return rawUsers;
-    const term = searchTerm.toLowerCase().trim();
-    return rawUsers.filter(
-      (u) =>
-        u.name.toLowerCase().includes(term) ||
-        u.email.toLowerCase().includes(term) ||
-        (u.idCardNo && u.idCardNo.toLowerCase().includes(term)) ||
-        (u.invoiceNo && u.invoiceNo.toLowerCase().includes(term)) ||
-        (u.phone && u.phone.toLowerCase().includes(term)) ||
-        (u.sector && u.sector.toLowerCase().includes(term))
-    );
-  }, [rawUsers, searchTerm]);
+  // Extract unique options for filter dropdowns
+  const uniqueAcademicYears = useMemo(() => {
+    const set = new Set<string>();
+    rawUsers.forEach((u) => {
+      if (u.academicYear) set.add(u.academicYear);
+    });
+    return Array.from(set).sort().reverse();
+  }, [rawUsers]);
 
-  // Totals calculated from filtered users
-  const { totalFeesSum, paymentSum, balanceSum } = useMemo(() => {
-    let tf = 0;
-    let pm = 0;
-    let bf = 0;
-    for (const u of filteredUsers) {
-      if (u.id === "admin") continue;
-      const t = Number(u.totalFees || 0);
-      const p = Number(u.paymentAmount || 0);
-      const b = Number(u.balanceFee || 0);
-      tf += t;
-      pm += p;
-      bf += b;
-    }
-    return { totalFeesSum: tf, paymentSum: pm, balanceSum: bf };
-  }, [filteredUsers]);
+  const uniqueBatches = useMemo(() => {
+    const set = new Set<string>();
+    rawUsers.forEach((u) => {
+      if (u.admissionBatch) set.add(u.admissionBatch);
+    });
+    return Array.from(set).sort();
+  }, [rawUsers]);
+
+  const uniqueTakenBy = useMemo(() => {
+    const set = new Set<string>();
+    rawUsers.forEach((u) => {
+      if (u.admissionTakenBy) set.add(u.admissionTakenBy);
+    });
+    return Array.from(set).sort();
+  }, [rawUsers]);
 
   function getLearnerCourseDisplay(u: UserPublic, enrollments: EnrollmentWithPerformance[]): string {
     if (enrollments && enrollments.length > 0) {
       return enrollments.map((e) => courseTitleById[e.courseId] || e.courseId).join(", ");
     }
     const sectorLabel = SECTOR_OPTIONS.find((o) => o.value === u.sector)?.label;
-    if (sectorLabel && sectorLabel !== "—") return sectorLabel;
+    if (sectorLabel && sectorLabel !== "All Courses / Sectors") return sectorLabel;
     return "Environmental, Social, and Governance (ESG)";
+  }
+
+  // Active filters count
+  const activeFiltersCount = useMemo(() => {
+    let count = 0;
+    if (searchTerm.trim()) count++;
+    if (filterSector) count++;
+    if (filterStatus) count++;
+    if (filterAcademicYear) count++;
+    if (filterBatch) count++;
+    if (filterTakenBy) count++;
+    if (filterPaymentStatus) count++;
+    if (filterDateFrom) count++;
+    if (filterDateTo) count++;
+    return count;
+  }, [
+    searchTerm,
+    filterSector,
+    filterStatus,
+    filterAcademicYear,
+    filterBatch,
+    filterTakenBy,
+    filterPaymentStatus,
+    filterDateFrom,
+    filterDateTo,
+  ]);
+
+  function clearAllFilters() {
+    setSearchTerm("");
+    setFilterSector("");
+    setFilterStatus("");
+    setFilterAcademicYear("");
+    setFilterBatch("");
+    setFilterTakenBy("");
+    setFilterPaymentStatus("");
+    setFilterDateFrom("");
+    setFilterDateTo("");
+  }
+
+  // Filtering Logic
+  const filteredUsers = useMemo(() => {
+    return rawUsers.filter((u) => {
+      // 1. Text search
+      if (searchTerm.trim()) {
+        const term = searchTerm.toLowerCase().trim();
+        const enrollments = enrollmentsByUserId[u.id] ?? [];
+        const courseStr = getLearnerCourseDisplay(u, enrollments).toLowerCase();
+        const match =
+          u.name.toLowerCase().includes(term) ||
+          u.email.toLowerCase().includes(term) ||
+          (u.idCardNo && u.idCardNo.toLowerCase().includes(term)) ||
+          (u.invoiceNo && u.invoiceNo.toLowerCase().includes(term)) ||
+          (u.registrationNo && u.registrationNo.toLowerCase().includes(term)) ||
+          (u.phone && u.phone.toLowerCase().includes(term)) ||
+          (u.organization && u.organization.toLowerCase().includes(term)) ||
+          (u.admissionBatch && u.admissionBatch.toLowerCase().includes(term)) ||
+          (u.admissionTakenBy && u.admissionTakenBy.toLowerCase().includes(term)) ||
+          courseStr.includes(term);
+        if (!match) return false;
+      }
+
+      // 2. Sector / Course Filter
+      if (filterSector) {
+        if (u.sector !== filterSector) {
+          // Also check if they are enrolled in a course with this sector
+          const enrollments = enrollmentsByUserId[u.id] ?? [];
+          const hasCourse = enrollments.some((e) => e.courseId === filterSector);
+          if (!hasCourse) return false;
+        }
+      }
+
+      // 3. Status Filter
+      if (filterStatus) {
+        if (filterStatus === "active" && !u.approved) return false;
+        if (filterStatus === "pending" && u.approved) return false;
+      }
+
+      // 4. Academic Year Filter
+      if (filterAcademicYear) {
+        if ((u.academicYear || "2026-2027") !== filterAcademicYear) return false;
+      }
+
+      // 5. Admission Batch Filter
+      if (filterBatch) {
+        if ((u.admissionBatch || "Mr Sooraj Jacob") !== filterBatch) return false;
+      }
+
+      // 6. Admission Taken By Filter
+      if (filterTakenBy) {
+        if ((u.admissionTakenBy || "") !== filterTakenBy) return false;
+      }
+
+      // 7. Payment / Balance Status Filter
+      if (filterPaymentStatus) {
+        const bal = Number(u.balanceFee !== undefined ? u.balanceFee : 0);
+        const pay = Number(u.paymentAmount !== undefined ? u.paymentAmount : 0);
+        if (filterPaymentStatus === "paid" && bal > 0) return false;
+        if (filterPaymentStatus === "pending" && bal <= 0) return false;
+        if (filterPaymentStatus === "unpaid" && pay > 0) return false;
+      }
+
+      // 8. Date Range Filter
+      if (filterDateFrom || filterDateTo) {
+        const userDate = u.createdAt ? new Date(u.createdAt).getTime() : 0;
+        if (filterDateFrom) {
+          const fromTime = new Date(filterDateFrom).setHours(0, 0, 0, 0);
+          if (userDate < fromTime) return false;
+        }
+        if (filterDateTo) {
+          const toTime = new Date(filterDateTo).setHours(23, 59, 59, 999);
+          if (userDate > toTime) return false;
+        }
+      }
+
+      return true;
+    });
+  }, [
+    rawUsers,
+    searchTerm,
+    filterSector,
+    filterStatus,
+    filterAcademicYear,
+    filterBatch,
+    filterTakenBy,
+    filterPaymentStatus,
+    filterDateFrom,
+    filterDateTo,
+    enrollmentsByUserId,
+  ]);
+
+  // Sorting Logic
+  const sortedUsers = useMemo(() => {
+    return [...filteredUsers].sort((a, b) => {
+      let aVal: any = "";
+      let bVal: any = "";
+
+      switch (sortField) {
+        case "createdAt":
+          aVal = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          bVal = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          break;
+        case "name":
+          aVal = (a.name || "").toLowerCase();
+          bVal = (b.name || "").toLowerCase();
+          break;
+        case "invoiceNo":
+          aVal = parseInt(a.invoiceNo || "0", 10) || (a.invoiceNo || "");
+          bVal = parseInt(b.invoiceNo || "0", 10) || (b.invoiceNo || "");
+          break;
+        case "idCardNo":
+          aVal = a.idCardNo || "";
+          bVal = b.idCardNo || "";
+          break;
+        case "registrationNo":
+          aVal = parseInt(a.registrationNo || "0", 10) || (a.registrationNo || "");
+          bVal = parseInt(b.registrationNo || "0", 10) || (b.registrationNo || "");
+          break;
+        case "phone":
+          aVal = a.phone || "";
+          bVal = b.phone || "";
+          break;
+        case "coursePackage":
+          aVal = a.coursePackage || "Standard";
+          bVal = b.coursePackage || "Standard";
+          break;
+        case "course":
+          aVal = getLearnerCourseDisplay(a, enrollmentsByUserId[a.id] ?? []);
+          bVal = getLearnerCourseDisplay(b, enrollmentsByUserId[b.id] ?? []);
+          break;
+        case "admissionBatch":
+          aVal = a.admissionBatch || "";
+          bVal = b.admissionBatch || "";
+          break;
+        case "academicYear":
+          aVal = a.academicYear || "";
+          bVal = b.academicYear || "";
+          break;
+        case "approved":
+          aVal = a.approved ? 1 : 0;
+          bVal = b.approved ? 1 : 0;
+          break;
+        case "admissionTakenBy":
+          aVal = a.admissionTakenBy || "";
+          bVal = b.admissionTakenBy || "";
+          break;
+        case "totalFees":
+          aVal = Number(a.totalFees || 0);
+          bVal = Number(b.totalFees || 0);
+          break;
+        case "paymentAmount":
+          aVal = Number(a.paymentAmount || 0);
+          bVal = Number(b.paymentAmount || 0);
+          break;
+        case "balanceFee":
+          aVal = Number(a.balanceFee || 0);
+          bVal = Number(b.balanceFee || 0);
+          break;
+        default:
+          aVal = a.createdAt || "";
+          bVal = b.createdAt || "";
+      }
+
+      if (aVal < bVal) return sortOrder === "asc" ? -1 : 1;
+      if (aVal > bVal) return sortOrder === "asc" ? 1 : -1;
+      return 0;
+    });
+  }, [filteredUsers, sortField, sortOrder, enrollmentsByUserId]);
+
+  function handleSort(field: SortField) {
+    if (sortField === field) {
+      setSortOrder(sortOrder === "asc" ? "desc" : "asc");
+    } else {
+      setSortField(field);
+      setSortOrder("asc");
+    }
+  }
+
+  // Totals calculated from filtered/sorted users
+  const { totalFeesSum, paymentSum, balanceSum } = useMemo(() => {
+    let tf = 0;
+    let pm = 0;
+    let bf = 0;
+    for (const u of sortedUsers) {
+      if (u.id === "admin") continue;
+      const t = Number(u.totalFees || 150000);
+      const p = Number(u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0));
+      const b = Number(u.balanceFee !== undefined ? u.balanceFee : 0);
+      tf += t;
+      pm += p;
+      bf += b;
+    }
+    return { totalFeesSum: tf, paymentSum: pm, balanceSum: bf };
+  }, [sortedUsers]);
+
+  // Selection handlers
+  const allSelected = sortedUsers.length > 0 && sortedUsers.every((u) => selectedIds.has(u.id));
+
+  function toggleSelectAll() {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(sortedUsers.map((u) => u.id)));
+    }
+  }
+
+  function toggleSelectRow(id: string) {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  }
+
+  // Export to CSV
+  function exportToCsv() {
+    const listToExport =
+      selectedIds.size > 0
+        ? sortedUsers.filter((u) => selectedIds.has(u.id))
+        : sortedUsers;
+
+    const headers = [
+      "DATE",
+      "STUDENT",
+      "EMAIL",
+      "INVOICE#",
+      "ID CARD#",
+      "REGISTRATION#",
+      "MOBILE",
+      "COURSE PACKAGE",
+      "COURSE",
+      "ADMISSION BATCH",
+      "ACADEMIC YEAR",
+      "STATUS",
+      "ADMISSION TAKEN BY",
+      "TOTAL FEES",
+      "PAYMENT",
+      "BALANCE",
+    ];
+
+    const rows = listToExport.map((u) => {
+      const course = getLearnerCourseDisplay(u, enrollmentsByUserId[u.id] ?? []);
+      return [
+        `"${formatLearnerDate(u.createdAt)}"`,
+        `"${(u.name || "").replace(/"/g, '""')}"`,
+        `"${(u.email || "").replace(/"/g, '""')}"`,
+        `"${u.invoiceNo || ""}"`,
+        `"${u.idCardNo || ""}"`,
+        `"${u.registrationNo || u.invoiceNo || ""}"`,
+        `"${u.phone || ""}"`,
+        `"${u.coursePackage || "Standard"}"`,
+        `"${course.replace(/"/g, '""')}"`,
+        `"${(u.admissionBatch || "").replace(/"/g, '""')}"`,
+        `"${u.academicYear || "2026-2027"}"`,
+        `"${u.approved ? "Active" : "Pending"}"`,
+        `"${(u.admissionTakenBy || "").replace(/"/g, '""')}"`,
+        u.totalFees || 150000,
+        u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0),
+        u.balanceFee !== undefined ? u.balanceFee : 0,
+      ].join(",");
+    });
+
+    const csvContent = "data:text/csv;charset=utf-8," + [headers.join(","), ...rows].join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `learners_export_${new Date().toISOString().slice(0, 10)}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  }
+
+  function renderSortIcon(field: SortField) {
+    if (sortField !== field) {
+      return <ArrowUpDown className="w-3 h-3 text-gray-400 group-hover:text-primary transition-colors" />;
+    }
+    return sortOrder === "asc" ? (
+      <ArrowUp className="w-3.5 h-3.5 text-primary font-bold" />
+    ) : (
+      <ArrowDown className="w-3.5 h-3.5 text-primary font-bold" />
+    );
   }
 
   return (
     <div className="space-y-6 sm:space-y-8">
       <div className="bg-white rounded-[30px] shadow-sm border border-gray-200 p-6 sm:p-8">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-4">
+        {/* Top Header */}
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 mb-6">
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-primary flex items-center gap-2 mb-1">
-              <Users className="w-6 h-6" />
+              <Users className="w-7 h-7" />
               Learners management
             </h1>
             <p className="text-gray-600 text-sm">
-              Manage learner enrollments, student IDs (e.g. <code>YYYY-CONS-004</code>), invoices, admission batches, and fee balances.
+              View, filter, sort, and manage learner records, student IDs (e.g. <code>2026-CONS-004</code>), payments, and course enrollments.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2.5">
             <button
               type="button"
               onClick={() => {
@@ -372,7 +732,7 @@ export default function AdminLearners() {
                 setFormApproved(false);
                 setCreateOpen(true);
               }}
-              className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-primary/90 shadow-sm transition-all"
+              className="inline-flex items-center gap-2 bg-primary text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-primary/90 shadow-sm transition-all"
             >
               <Plus className="w-4 h-4" />
               Create learner
@@ -381,7 +741,7 @@ export default function AdminLearners() {
               type="button"
               onClick={() => syncMutation.mutate()}
               disabled={syncMutation.isPending}
-              className="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2 rounded-xl text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60 shadow-sm transition-all"
+              className="inline-flex items-center gap-2 bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-sm font-semibold hover:bg-emerald-700 disabled:opacity-60 shadow-sm transition-all"
               title="Update and synchronize all learner student IDs to the sector format (e.g. YYYY-CONS-004)"
             >
               {syncMutation.isPending ? (
@@ -390,6 +750,16 @@ export default function AdminLearners() {
                 <RefreshCw className="w-4 h-4" />
               )}
               Update Student IDs
+            </button>
+            <button
+              type="button"
+              onClick={exportToCsv}
+              disabled={sortedUsers.length === 0}
+              className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 px-4 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60 shadow-sm transition-all border border-gray-200"
+              title="Export current learners view to CSV spreadsheet"
+            >
+              <Download className="w-4 h-4 text-gray-600" />
+              Export CSV
             </button>
           </div>
         </div>
@@ -401,135 +771,476 @@ export default function AdminLearners() {
           </div>
         )}
 
-        {/* Search bar */}
-        <div className="relative mb-6 max-w-md">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Search by student name, ID card#, invoice#, mobile, or sector..."
-            className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-          />
+        {/* Search & Filter Controls Toolbar */}
+        <div className="bg-gray-50/80 rounded-2xl p-4 border border-gray-200 mb-6 space-y-4">
+          <div className="flex flex-col md:flex-row items-stretch md:items-center justify-between gap-3">
+            {/* Universal Search Bar */}
+            <div className="relative flex-1 max-w-lg">
+              <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search student name, email, student ID card#, invoice#, mobile..."
+                className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+              />
+              {searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => setSearchTerm("")}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs"
+                >
+                  ✕
+                </button>
+              )}
+            </div>
+
+            {/* Toggle Filters Panel & Clear */}
+            <div className="flex items-center gap-2 self-end md:self-auto">
+              <button
+                type="button"
+                onClick={() => setShowFiltersPanel(!showFiltersPanel)}
+                className={`inline-flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs font-semibold border transition-all ${
+                  showFiltersPanel
+                    ? "bg-primary/10 border-primary/30 text-primary"
+                    : "bg-white border-gray-200 text-gray-700 hover:bg-gray-100"
+                }`}
+              >
+                <Filter className="w-3.5 h-3.5" />
+                Filters {activeFiltersCount > 0 && `(${activeFiltersCount})`}
+              </button>
+
+              {activeFiltersCount > 0 && (
+                <button
+                  type="button"
+                  onClick={clearAllFilters}
+                  className="inline-flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-semibold bg-red-50 text-red-600 hover:bg-red-100 border border-red-200 transition-all"
+                >
+                  <X className="w-3.5 h-3.5" />
+                  Reset filters
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Expanded Filter Panel */}
+          {showFiltersPanel && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 pt-3 border-t border-gray-200">
+              {/* Filter 1: Course / Sector */}
+              <div>
+                <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">
+                  Course / Sector
+                </label>
+                <select
+                  value={filterSector}
+                  onChange={(e) => setFilterSector(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs outline-none focus:border-primary"
+                >
+                  {SECTOR_OPTIONS.map((o) => (
+                    <option key={o.value || "all"} value={o.value}>
+                      {o.label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Filter 2: Admission Status */}
+              <div>
+                <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">
+                  Admission Status
+                </label>
+                <select
+                  value={filterStatus}
+                  onChange={(e) => setFilterStatus(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs outline-none focus:border-primary"
+                >
+                  <option value="">All Statuses</option>
+                  <option value="active">Active (Approved)</option>
+                  <option value="pending">Pending (Not Approved)</option>
+                </select>
+              </div>
+
+              {/* Filter 3: Academic Year */}
+              <div>
+                <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">
+                  Academic Year
+                </label>
+                <select
+                  value={filterAcademicYear}
+                  onChange={(e) => setFilterAcademicYear(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs outline-none focus:border-primary"
+                >
+                  <option value="">All Academic Years</option>
+                  {uniqueAcademicYears.map((yr) => (
+                    <option key={yr} value={yr}>
+                      {yr}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Filter 4: Payment / Balance Status */}
+              <div>
+                <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">
+                  Payment Status
+                </label>
+                <select
+                  value={filterPaymentStatus}
+                  onChange={(e) => setFilterPaymentStatus(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs outline-none focus:border-primary"
+                >
+                  <option value="">All Payments</option>
+                  <option value="paid">Paid in Full (0 Balance)</option>
+                  <option value="pending">Has Pending Balance</option>
+                  <option value="unpaid">Unpaid (0 Payment)</option>
+                </select>
+              </div>
+
+              {/* Filter 5: Admission Batch */}
+              <div>
+                <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">
+                  Admission Batch
+                </label>
+                <select
+                  value={filterBatch}
+                  onChange={(e) => setFilterBatch(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs outline-none focus:border-primary"
+                >
+                  <option value="">All Batches</option>
+                  {uniqueBatches.map((b) => (
+                    <option key={b} value={b}>
+                      {b}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Filter 6: Admission Taken By */}
+              <div>
+                <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1">
+                  Admission Taken By
+                </label>
+                <select
+                  value={filterTakenBy}
+                  onChange={(e) => setFilterTakenBy(e.target.value)}
+                  className="w-full px-3 py-1.5 rounded-lg border border-gray-200 bg-white text-xs outline-none focus:border-primary"
+                >
+                  <option value="">All Agents</option>
+                  {uniqueTakenBy.map((tb) => (
+                    <option key={tb} value={tb}>
+                      {tb}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Filter 7: From Date */}
+              <div>
+                <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1 flex items-center gap-1">
+                  <Calendar className="w-3 h-3 text-gray-400" /> From Date
+                </label>
+                <input
+                  type="date"
+                  value={filterDateFrom}
+                  onChange={(e) => setFilterDateFrom(e.target.value)}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white text-xs outline-none focus:border-primary"
+                />
+              </div>
+
+              {/* Filter 8: To Date */}
+              <div>
+                <label className="block text-[11px] font-bold text-gray-600 uppercase mb-1 flex items-center gap-1">
+                  <Calendar className="w-3 h-3 text-gray-400" /> To Date
+                </label>
+                <input
+                  type="date"
+                  value={filterDateTo}
+                  onChange={(e) => setFilterDateTo(e.target.value)}
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-gray-200 bg-white text-xs outline-none focus:border-primary"
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Results Summary & Selection Actions */}
+          <div className="flex flex-wrap items-center justify-between gap-2 pt-2 text-xs text-gray-500 font-medium">
+            <div>
+              Showing <span className="font-bold text-gray-900">{sortedUsers.length}</span> of{" "}
+              <span className="font-bold text-gray-900">{rawUsers.length}</span> learners
+              {selectedIds.size > 0 && (
+                <span className="ml-2 font-bold text-primary">
+                  ({selectedIds.size} selected)
+                </span>
+              )}
+            </div>
+
+            {selectedIds.size > 0 && (
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    selectedIds.forEach((id) => {
+                      const u = rawUsers.find((x) => x.id === id);
+                      if (u && !u.approved) approveMutation.mutate(id);
+                    });
+                  }}
+                  className="px-2.5 py-1 rounded-lg bg-primary text-white font-semibold hover:bg-primary/90 text-xs shadow-sm"
+                >
+                  Approve selected ({selectedIds.size})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSelectedIds(new Set())}
+                  className="text-gray-500 hover:text-gray-800 underline text-xs"
+                >
+                  Deselect all
+                </button>
+              </div>
+            )}
+          </div>
         </div>
 
+        {/* Table Content */}
         {isLoading ? (
           <p className="text-gray-500 text-sm mt-6 flex items-center gap-2">
-            <Loader2 className="w-4 h-4 animate-spin" /> Loading learners data…
+            <Loader2 className="w-4 h-4 animate-spin text-primary" /> Loading learners data…
           </p>
-        ) : filteredUsers.length === 0 ? (
-          <p className="text-gray-500 text-sm mt-6">No matching learners found.</p>
+        ) : sortedUsers.length === 0 ? (
+          <div className="text-center py-12 border border-dashed border-gray-200 rounded-2xl">
+            <p className="text-gray-500 text-sm font-semibold">No learners match your filter criteria.</p>
+            {activeFiltersCount > 0 && (
+              <button
+                type="button"
+                onClick={clearAllFilters}
+                className="mt-3 inline-flex items-center gap-1.5 text-xs text-primary font-bold hover:underline"
+              >
+                Clear all filters
+              </button>
+            )}
+          </div>
         ) : (
-          <div className="mt-4 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+          <div className="overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
             <table className="w-full min-w-[1700px] text-left border-collapse text-xs sm:text-sm">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50/90 text-gray-700 select-none">
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[160px]">
-                    <div className="flex items-center gap-1">
+                  {/* Select Checkbox Column */}
+                  <th className="px-3 py-3.5 text-center min-w-[40px] w-[40px]">
+                    <button
+                      type="button"
+                      onClick={toggleSelectAll}
+                      className="text-gray-400 hover:text-primary transition-colors"
+                      title={allSelected ? "Deselect All" : "Select All"}
+                    >
+                      {allSelected ? (
+                        <CheckSquare className="w-4 h-4 text-primary" />
+                      ) : (
+                        <Square className="w-4 h-4" />
+                      )}
+                    </button>
+                  </th>
+
+                  {/* 1. DATE */}
+                  <th
+                    onClick={() => handleSort("createdAt")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[160px] cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center gap-1.5">
                       <span>DATE</span>
-                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                      {renderSortIcon("createdAt")}
                     </div>
                   </th>
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[220px]">
-                    <div className="flex items-center gap-1">
+
+                  {/* 2. STUDENT */}
+                  <th
+                    onClick={() => handleSort("name")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[220px] cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center gap-1.5">
                       <span>STUDENT</span>
-                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                      {renderSortIcon("name")}
                     </div>
                   </th>
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[100px]">
-                    <div className="flex items-center gap-1">
+
+                  {/* 3. INVOICE# */}
+                  <th
+                    onClick={() => handleSort("invoiceNo")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[100px] cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center gap-1.5">
                       <span>INVOICE#</span>
-                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                      {renderSortIcon("invoiceNo")}
                     </div>
                   </th>
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[140px] text-primary">
-                    <div className="flex items-center gap-1">
+
+                  {/* 4. ID CARD# */}
+                  <th
+                    onClick={() => handleSort("idCardNo")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[140px] text-primary cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center gap-1.5">
                       <span>ID CARD#</span>
-                      <ArrowUpDown className="w-3 h-3 text-primary/60" />
+                      {renderSortIcon("idCardNo")}
                     </div>
                   </th>
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[130px]">
-                    <div className="flex items-center gap-1">
+
+                  {/* 5. REGISTRATION# */}
+                  <th
+                    onClick={() => handleSort("registrationNo")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[130px] cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center gap-1.5">
                       <span>REGISTRATION#</span>
-                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                      {renderSortIcon("registrationNo")}
                     </div>
                   </th>
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[120px]">
-                    <div className="flex items-center gap-1">
+
+                  {/* 6. MOBILE */}
+                  <th
+                    onClick={() => handleSort("phone")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[120px] cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center gap-1.5">
                       <span>MOBILE</span>
-                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                      {renderSortIcon("phone")}
                     </div>
                   </th>
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[140px]">
-                    <div className="flex items-center gap-1">
+
+                  {/* 7. COURSE PACKAGE */}
+                  <th
+                    onClick={() => handleSort("coursePackage")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[140px] cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center gap-1.5">
                       <span>COURSE PACKAGE</span>
-                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                      {renderSortIcon("coursePackage")}
                     </div>
                   </th>
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[260px]">
-                    <div className="flex items-center gap-1">
+
+                  {/* 8. COURSE */}
+                  <th
+                    onClick={() => handleSort("course")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[260px] cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center gap-1.5">
                       <span>COURSE</span>
-                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                      {renderSortIcon("course")}
                     </div>
                   </th>
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[150px]">
-                    <div className="flex items-center gap-1">
+
+                  {/* 9. ADMISSION BATCH */}
+                  <th
+                    onClick={() => handleSort("admissionBatch")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[150px] cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center gap-1.5">
                       <span>ADMISSION BATCH</span>
-                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                      {renderSortIcon("admissionBatch")}
                     </div>
                   </th>
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[130px]">
-                    <div className="flex items-center gap-1">
+
+                  {/* 10. ACADEMIC YEAR */}
+                  <th
+                    onClick={() => handleSort("academicYear")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[130px] cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center gap-1.5">
                       <span>ACADEMIC YEAR</span>
-                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                      {renderSortIcon("academicYear")}
                     </div>
                   </th>
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[110px] text-center">
-                    <div className="flex items-center justify-center gap-1">
+
+                  {/* 11. STATUS */}
+                  <th
+                    onClick={() => handleSort("approved")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[110px] text-center cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center justify-center gap-1.5">
                       <span>STATUS</span>
-                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                      {renderSortIcon("approved")}
                     </div>
                   </th>
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[180px]">
-                    <div className="flex items-center gap-1">
+
+                  {/* 12. ADMISSION TAKEN BY */}
+                  <th
+                    onClick={() => handleSort("admissionTakenBy")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[180px] cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center gap-1.5">
                       <span>ADMISSION TAKEN BY</span>
-                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                      {renderSortIcon("admissionTakenBy")}
                     </div>
                   </th>
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[120px] text-right">
-                    <div className="flex items-center justify-end gap-1">
+
+                  {/* 13. TOTAL FEES */}
+                  <th
+                    onClick={() => handleSort("totalFees")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[120px] text-right cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center justify-end gap-1.5">
                       <span>TOTAL FEES</span>
-                      <ArrowUpDown className="w-3 h-3 text-gray-400" />
+                      {renderSortIcon("totalFees")}
                     </div>
                   </th>
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[110px] text-right text-emerald-700">
-                    <div className="flex items-center justify-end gap-1">
+
+                  {/* 14. PAYMENT */}
+                  <th
+                    onClick={() => handleSort("paymentAmount")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[110px] text-right text-emerald-700 cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center justify-end gap-1.5">
                       <span>PAYMENT</span>
-                      <ArrowUpDown className="w-3 h-3 text-emerald-600/70" />
+                      {renderSortIcon("paymentAmount")}
                     </div>
                   </th>
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[110px] text-right text-amber-700">
-                    <div className="flex items-center justify-end gap-1">
+
+                  {/* 15. BALANCE */}
+                  <th
+                    onClick={() => handleSort("balanceFee")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[110px] text-right text-amber-700 cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center justify-end gap-1.5">
                       <span>BALANCE</span>
-                      <ArrowUpDown className="w-3 h-3 text-amber-600/70" />
+                      {renderSortIcon("balanceFee")}
                     </div>
                   </th>
-                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[140px] text-center">
+
+                  {/* ACTIONS */}
+                  <th className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[130px] text-center">
                     ACTIONS
                   </th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">
-                {filteredUsers.map((u) => {
+                {sortedUsers.map((u) => {
                   const enrollments = enrollmentsByUserId[u.id] ?? [];
                   const isExpanded = expandedId === u.id;
                   const courseDisplay = getLearnerCourseDisplay(u, enrollments);
+                  const isSelected = selectedIds.has(u.id);
 
                   return (
                     <Fragment key={u.id}>
-                      <tr className="hover:bg-blue-50/30 transition-colors group">
+                      <tr
+                        className={`transition-colors group ${
+                          isSelected ? "bg-primary/5 hover:bg-primary/10" : "hover:bg-blue-50/30"
+                        }`}
+                      >
+                        {/* Select Checkbox */}
+                        <td className="px-3 py-3 text-center">
+                          <button
+                            type="button"
+                            onClick={() => toggleSelectRow(u.id)}
+                            className="text-gray-400 hover:text-primary transition-colors"
+                          >
+                            {isSelected ? (
+                              <CheckSquare className="w-4 h-4 text-primary" />
+                            ) : (
+                              <Square className="w-4 h-4" />
+                            )}
+                          </button>
+                        </td>
+
                         {/* 1. DATE */}
-                        <td className="px-3.5 py-3 whitespace-nowrap text-gray-600 font-medium">
+                        <td className="px-3.5 py-3 whitespace-nowrap text-gray-600 font-medium font-mono text-xs">
                           {formatLearnerDate(u.createdAt)}
                         </td>
 
@@ -539,7 +1250,7 @@ export default function AdminLearners() {
                             type="button"
                             onClick={() => setExpandedId(isExpanded ? null : u.id)}
                             className="flex items-center gap-2 text-left group/btn"
-                            title="Click to view course enrollments & progress"
+                            title="Click to expand course enrollments & curriculum progress"
                           >
                             {enrollments.length > 0 ? (
                               isExpanded ? (
@@ -566,7 +1277,7 @@ export default function AdminLearners() {
                           {u.invoiceNo || "—"}
                         </td>
 
-                        {/* 4. ID CARD# (e.g. 2026-CONS-001, 2026-MIN-003) */}
+                        {/* 4. ID CARD# (e.g. 2026-CONS-004, 2026-MIN-003) */}
                         <td className="px-3.5 py-3 whitespace-nowrap font-mono font-bold text-primary">
                           <span className="bg-primary/10 text-primary px-2.5 py-1 rounded-md">
                             {u.idCardNo || "—"}
@@ -589,7 +1300,10 @@ export default function AdminLearners() {
                         </td>
 
                         {/* 8. COURSE */}
-                        <td className="px-3.5 py-3 whitespace-nowrap text-gray-800 font-medium max-w-[280px] truncate" title={courseDisplay}>
+                        <td
+                          className="px-3.5 py-3 whitespace-nowrap text-gray-800 font-medium max-w-[280px] truncate"
+                          title={courseDisplay}
+                        >
                           {courseDisplay}
                         </td>
 
@@ -628,7 +1342,9 @@ export default function AdminLearners() {
 
                         {/* 14. PAYMENT */}
                         <td className="px-3.5 py-3 whitespace-nowrap text-right font-mono font-bold text-emerald-700">
-                          {Number(u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0)).toLocaleString()}
+                          {Number(
+                            u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0)
+                          ).toLocaleString()}
                         </td>
 
                         {/* 15. BALANCE */}
@@ -636,7 +1352,7 @@ export default function AdminLearners() {
                           {Number(u.balanceFee !== undefined ? u.balanceFee : 0).toLocaleString()}
                         </td>
 
-                        {/* 16. ACTIONS */}
+                        {/* ACTIONS */}
                         <td className="px-3.5 py-3 whitespace-nowrap text-center">
                           <div className="flex items-center justify-center gap-1.5">
                             {!u.approved && (
@@ -679,10 +1395,10 @@ export default function AdminLearners() {
                         </td>
                       </tr>
 
-                      {/* Expandable Course Enrollment & Quiz Performance Breakdown */}
+                      {/* Expandable Course Enrollment & Curriculum Breakdown */}
                       {isExpanded && (
                         <tr className="bg-blue-50/20 border-b border-gray-100">
-                          <td colSpan={16} className="px-6 py-4">
+                          <td colSpan={17} className="px-6 py-4">
                             <div className="bg-white rounded-2xl p-4 border border-blue-100 shadow-sm">
                               <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                                 <p className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
@@ -740,7 +1456,7 @@ export default function AdminLearners() {
 
                               {enrollments.length === 0 ? (
                                 <p className="text-xs text-gray-500 italic py-2">
-                                  No specific courses enrolled yet. Learner has access to sector-matched courses upon login.
+                                  No specific courses assigned yet. Learner has access to their sector-specific curriculum upon sign-in.
                                 </p>
                               ) : (
                                 <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
@@ -793,7 +1509,7 @@ export default function AdminLearners() {
                                         </div>
                                       </div>
 
-                                      {/* Quiz performance badges */}
+                                      {/* Quiz Performance Badges */}
                                       {en.quizPerformance && Object.keys(en.quizPerformance).length > 0 ? (
                                         <div className="flex flex-wrap gap-1.5 pt-1 border-t border-gray-100">
                                           {Object.entries(en.quizPerformance).map(([qId, perf]) => (
@@ -832,7 +1548,7 @@ export default function AdminLearners() {
               {/* Bottom Summary Footer Row */}
               <tfoot>
                 <tr className="border-t-2 border-gray-300 bg-gray-50/95 font-bold text-gray-900 text-xs sm:text-sm">
-                  <td colSpan={12} className="px-4 py-4 text-right font-black uppercase tracking-wider text-gray-800 text-sm">
+                  <td colSpan={13} className="px-4 py-4 text-right font-black uppercase tracking-wider text-gray-800 text-sm">
                     Total
                   </td>
                   <td className="px-3.5 py-4 text-right font-mono font-black text-gray-900 whitespace-nowrap text-sm">
@@ -939,8 +1655,8 @@ export default function AdminLearners() {
                     onChange={(e) => setFormSector(e.target.value as LearnerSector | "")}
                     className="w-full px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:border-primary outline-none"
                   >
-                    {SECTOR_OPTIONS.map((o) => (
-                      <option key={o.value || "none"} value={o.value}>
+                    {SECTOR_OPTIONS.filter((o) => o.value !== "").map((o) => (
+                      <option key={o.value} value={o.value}>
                         {o.label}
                       </option>
                     ))}
@@ -1148,7 +1864,7 @@ export default function AdminLearners() {
                     type="text"
                     value={formIdCardNo}
                     onChange={(e) => setFormIdCardNo(e.target.value)}
-                    placeholder="e.g. 2026-CONS-001 or 2026-MIN-003"
+                    placeholder="e.g. 2026-CONS-004 or 2026-MIN-003"
                     className="w-full px-3.5 py-2 rounded-xl border border-gray-200 font-mono font-bold text-primary text-sm focus:border-primary outline-none"
                   />
                 </div>
@@ -1199,8 +1915,8 @@ export default function AdminLearners() {
                     onChange={(e) => setFormSector(e.target.value as LearnerSector | "")}
                     className="w-full px-3.5 py-2 rounded-xl border border-gray-200 bg-white text-sm focus:border-primary outline-none"
                   >
-                    {SECTOR_OPTIONS.map((o) => (
-                      <option key={o.value || "none"} value={o.value}>
+                    {SECTOR_OPTIONS.filter((o) => o.value !== "").map((o) => (
+                      <option key={o.value} value={o.value}>
                         {o.label}
                       </option>
                     ))}
@@ -1323,7 +2039,7 @@ export default function AdminLearners() {
                     className="w-4 h-4 text-primary rounded"
                   />
                   <span className="text-sm font-semibold text-gray-700">
-                    Approved (active access to portal & curriculum)
+                    Approved (active access to platform & curriculum)
                   </span>
                 </label>
               </div>
