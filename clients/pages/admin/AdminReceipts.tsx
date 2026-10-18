@@ -264,7 +264,8 @@ export default function AdminReceipts() {
     if (learner.phone) setPayerPhone(learner.phone);
     const studentIdCard = learner.idCardNo || learner.id.slice(0, 8).toUpperCase();
     setIdCardNo(studentIdCard);
-    if (!invoiceId) setInvoiceId(generateNewInvoiceId());
+    const invId = invoiceId || generateNewInvoiceId();
+    if (!invoiceId) setInvoiceId(invId);
 
     const sectorTitle =
       learner.sector === "construction"
@@ -294,7 +295,7 @@ export default function AdminReceipts() {
     setInvoiceDetails([
       {
         id: "inv-" + Date.now(),
-        invoiceNo: learnerInv,
+        invoiceNo: invId,
         packageDetails: sectorTitle,
         feesDetails: "Course Fees",
         invoiceDate: new Date().toLocaleDateString("en-GB"),
@@ -697,17 +698,17 @@ export default function AdminReceipts() {
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-left text-sm min-w-[1000px] border-collapse">
                 <thead className="bg-gray-50 text-xs font-semibold text-gray-600 border-b border-gray-200">
                   <tr>
-                    <th className="py-3 px-4 font-bold text-primary">Invoice ID</th>
-                    <th className="py-3 px-4">Receipt #</th>
-                    <th className="py-3 px-4">Student / Payer</th>
-                    <th className="py-3 px-4">Date</th>
-                    <th className="py-3 px-4">Amount Paid</th>
-                    <th className="py-3 px-4">Certified</th>
-                    <th className="py-3 px-4">Email Status</th>
-                    <th className="py-3 px-4 text-right">Actions</th>
+                    <th className="py-3 px-4 font-bold text-primary whitespace-nowrap min-w-[110px]">Invoice ID</th>
+                    <th className="py-3 px-4 whitespace-nowrap min-w-[140px]">Receipt #</th>
+                    <th className="py-3 px-4 whitespace-nowrap min-w-[200px]">Student / Payer</th>
+                    <th className="py-3 px-4 whitespace-nowrap min-w-[110px]">Date</th>
+                    <th className="py-3 px-4 whitespace-nowrap min-w-[130px]">Amount Paid</th>
+                    <th className="py-3 px-4 whitespace-nowrap min-w-[100px]">Certified</th>
+                    <th className="py-3 px-4 whitespace-nowrap min-w-[110px]">Email Status</th>
+                    <th className="py-3 px-4 text-right whitespace-nowrap min-w-[130px]">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-100">

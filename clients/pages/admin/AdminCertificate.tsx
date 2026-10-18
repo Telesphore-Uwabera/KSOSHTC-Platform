@@ -786,26 +786,26 @@ export default function AdminCertificate() {
               </div>
             ) : (
               <div className="overflow-x-auto w-full">
-                <Table>
+                <Table className="min-w-[950px]">
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Cert ID</TableHead>
-                      <TableHead>Learner</TableHead>
-                      <TableHead>Course</TableHead>
-                      <TableHead>Location</TableHead>
-                      <TableHead>Date</TableHead>
-                      <TableHead className="text-right">Action</TableHead>
+                      <TableHead className="whitespace-nowrap min-w-[120px]">Cert ID</TableHead>
+                      <TableHead className="whitespace-nowrap min-w-[180px]">Learner</TableHead>
+                      <TableHead className="whitespace-nowrap min-w-[200px]">Course</TableHead>
+                      <TableHead className="whitespace-nowrap min-w-[140px]">Location</TableHead>
+                      <TableHead className="whitespace-nowrap min-w-[120px]">Date</TableHead>
+                      <TableHead className="text-right whitespace-nowrap min-w-[140px]">Action</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {certificates?.map((cert: any) => (
                       <TableRow key={cert.id}>
-                        <TableCell className="font-mono text-xs">{cert.certificateId}</TableCell>
-                        <TableCell className="font-medium">{cert.title} {cert.learnerName}</TableCell>
-                        <TableCell className="text-xs">{cert.courses}</TableCell>
-                        <TableCell className="text-xs font-semibold text-gray-700">{cert.issueLocation || "KICUKIRO-KIGALI"}</TableCell>
-                        <TableCell>{format(new Date(cert.dateIssued), "MMM dd, yyyy")}</TableCell>
-                        <TableCell className="text-right">
+                        <TableCell className="font-mono text-xs whitespace-nowrap min-w-[120px]">{cert.certificateId}</TableCell>
+                        <TableCell className="font-medium whitespace-nowrap min-w-[180px]">{cert.title} {cert.learnerName}</TableCell>
+                        <TableCell className="text-xs whitespace-nowrap min-w-[200px]">{cert.courses}</TableCell>
+                        <TableCell className="text-xs font-semibold text-gray-700 whitespace-nowrap min-w-[140px]">{cert.issueLocation || "KICUKIRO-KIGALI"}</TableCell>
+                        <TableCell className="whitespace-nowrap min-w-[120px]">{format(new Date(cert.dateIssued), "MMM dd, yyyy")}</TableCell>
+                        <TableCell className="text-right whitespace-nowrap min-w-[140px]">
                           <div className="flex justify-end gap-1">
                             <Button 
                               variant="ghost" 
@@ -885,7 +885,7 @@ export default function AdminCertificate() {
                     ))}
                     {certificates?.length === 0 && (
                       <TableRow>
-                        <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
+                        <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
                           No certificates issued yet.
                         </TableCell>
                       </TableRow>

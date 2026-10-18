@@ -224,15 +224,15 @@ export default function AdminInstructors() {
         ) : instructors.length === 0 ? (
           <p className="text-gray-600 text-sm">No instructors yet.</p>
         ) : (
-          <div className="overflow-x-auto">
-            <table className="min-w-full text-sm">
+          <div className="overflow-x-auto rounded-xl border border-gray-100 bg-white shadow-sm p-2">
+            <table className="w-full min-w-[900px] text-sm border-collapse">
               <thead>
                 <tr className="text-left text-gray-500 border-b border-gray-100">
-                  <th className="py-3 pr-4 whitespace-nowrap">Name</th>
-                  <th className="py-3 pr-4 whitespace-nowrap">Email</th>
-                  <th className="py-3 pr-4 whitespace-nowrap text-center">Status</th>
-                  <th className="py-3 pr-4 min-w-[200px]">Courses</th>
-                  <th className="py-3 pr-0 text-right whitespace-nowrap">Actions</th>
+                  <th className="py-3 pr-4 whitespace-nowrap min-w-[180px]">Name</th>
+                  <th className="py-3 pr-4 whitespace-nowrap min-w-[200px]">Email</th>
+                  <th className="py-3 pr-4 whitespace-nowrap text-center min-w-[110px]">Status</th>
+                  <th className="py-3 pr-4 min-w-[240px]">Courses</th>
+                  <th className="py-3 pr-0 text-right whitespace-nowrap min-w-[150px]">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-100">

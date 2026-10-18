@@ -83,7 +83,7 @@ async function createLearner(body: { name: string; email: string; password: stri
 
 async function updateLearner(
   id: string,
-  body: { name?: string; email?: string; password?: string; organization?: string; sector?: LearnerSector | ""; approved?: boolean }
+  body: { name?: string; email?: string; password?: string; organization?: string; sector?: LearnerSector | ""; approved?: boolean; idCardNo?: string }
 ): Promise<UserPublic> {
   const res = await adminFetch(getApiBase() + `/api/users/${id}`, {
     method: "PUT",
@@ -250,18 +250,18 @@ export default function AdminLearners() {
         ) : users.length === 0 ? (
           <p className="text-gray-500 text-sm mt-6">No registered users yet.</p>
         ) : (
-          <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200">
-            <table className="w-full min-w-[640px] text-left">
+          <div className="mt-6 overflow-x-auto rounded-xl border border-gray-200 bg-white shadow-sm">
+            <table className="w-full min-w-[1200px] text-left border-collapse">
               <thead>
                 <tr className="border-b border-gray-200 bg-gray-50/80">
-                  <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">ID Card No.</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Name</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Email</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Organization</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Sector</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Status</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider">Courses</th>
-                  <th className="px-4 py-3 text-xs font-semibold text-gray-600 uppercase tracking-wider text-right">Actions</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap min-w-[130px]">ID Card No.</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap min-w-[220px]">Name</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap min-w-[220px]">Email</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap min-w-[160px]">Organization</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap min-w-[160px]">Sector</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap text-center min-w-[120px]">Status</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap text-center min-w-[110px]">Courses</th>
+                  <th className="px-4 py-3.5 text-xs font-semibold text-gray-600 uppercase tracking-wider whitespace-nowrap text-right min-w-[160px]">Actions</th>
                 </tr>
               </thead>
               <tbody>
@@ -271,60 +271,60 @@ export default function AdminLearners() {
                   return (
                     <Fragment key={u.id}>
                       <tr className="border-b border-gray-100 hover:bg-gray-50/50 transition-colors">
-                        <td className="px-4 py-3 font-mono font-bold text-xs text-primary whitespace-nowrap">
+                        <td className="px-4 py-3.5 font-mono font-bold text-xs text-primary whitespace-nowrap min-w-[130px]">
                           {u.idCardNo || "—"}
                         </td>
-                        <td className="px-4 py-3">
+                        <td className="px-4 py-3.5 whitespace-nowrap min-w-[220px]">
                           <button
                             type="button"
                             onClick={() => setExpandedId(isExpanded ? null : u.id)}
-                            className="flex items-center gap-1.5 text-left font-medium text-gray-900 hover:text-primary"
+                            className="flex items-center gap-2 text-left text-gray-900 hover:text-primary whitespace-nowrap group"
                           >
                             {enrollments.length > 0 ? (
                               isExpanded ? (
-                                <ChevronDown className="w-4 h-4 text-gray-500 shrink-0" />
+                                <ChevronDown className="w-4 h-4 text-gray-500 shrink-0 group-hover:text-primary" />
                               ) : (
-                                <ChevronRight className="w-4 h-4 text-gray-500 shrink-0" />
+                                <ChevronRight className="w-4 h-4 text-gray-500 shrink-0 group-hover:text-primary" />
                               )
                             ) : (
                               <span className="w-4 shrink-0" />
                             )}
-                            {u.name}
+                            <span className="font-semibold text-gray-900 group-hover:text-primary whitespace-nowrap">{u.name}</span>
                           </button>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{u.email}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">{u.organization ?? "—"}</td>
-                        <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+                        <td className="px-4 py-3.5 text-sm text-gray-600 whitespace-nowrap font-mono text-xs min-w-[220px]">{u.email}</td>
+                        <td className="px-4 py-3.5 text-sm text-gray-600 whitespace-nowrap min-w-[160px]">{u.organization ?? "—"}</td>
+                        <td className="px-4 py-3.5 text-sm text-gray-600 whitespace-nowrap min-w-[160px]">
                           {SECTOR_OPTIONS.find((o) => o.value === u.sector)?.label ?? "—"}
                         </td>
-                        <td className="px-4 py-3 whitespace-nowrap">
+                        <td className="px-4 py-3.5 whitespace-nowrap text-center min-w-[120px]">
                           <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold whitespace-nowrap border ${
                             u.approved ? "bg-green-50 text-green-700 border-green-200" : "bg-amber-50 text-amber-700 border-amber-200"
                           }`}>
                             {u.approved ? "Approved" : "Pending"}
                           </span>
                         </td>
-                        <td className="px-4 py-3 text-sm text-gray-600 whitespace-nowrap">
+                        <td className="px-4 py-3.5 text-sm text-gray-600 whitespace-nowrap text-center min-w-[110px]">
                           {enrollments.length === 0
                             ? "—"
                             : `${enrollments.length} course${enrollments.length !== 1 ? "s" : ""}`}
                         </td>
-                        <td className="px-4 py-3 text-right whitespace-nowrap">
+                        <td className="px-4 py-3.5 text-right whitespace-nowrap min-w-[160px]">
                           <div className="flex items-center justify-end gap-2 whitespace-nowrap">
                             {!u.approved && (
                               <button
                                 type="button"
                                 onClick={() => approveMutation.mutate(u.id)}
                                 disabled={approveMutation.isPending}
-                                className="inline-flex items-center gap-1.5 bg-primary text-white px-3 py-2 rounded-lg text-sm font-semibold hover:bg-primary/90 disabled:opacity-60"
+                                className="inline-flex items-center gap-1.5 bg-primary text-white px-3 py-1.5 rounded-lg text-xs font-semibold hover:bg-primary/90 disabled:opacity-60 whitespace-nowrap shrink-0 shadow-sm"
                               >
-                                {approveMutation.isPending ? <Loader2 className="w-4 h-4 animate-spin" /> : <><CheckCircle className="w-4 h-4" /> Approve</>}
+                                {approveMutation.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <><CheckCircle className="w-3.5 h-3.5" /> Approve</>}
                               </button>
                             )}
                             <button
                               type="button"
                               onClick={() => openEdit(u)}
-                              className="p-2 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100"
+                              className="p-1.5 rounded-lg border border-gray-200 text-gray-600 hover:bg-gray-100 whitespace-nowrap shrink-0 shadow-sm"
                               title="Edit learner"
                             >
                               <Pencil className="w-4 h-4" />
@@ -332,7 +332,7 @@ export default function AdminLearners() {
                             <button
                               type="button"
                               onClick={() => setDeleteId(u.id)}
-                              className="p-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50"
+                              className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 whitespace-nowrap shrink-0 shadow-sm"
                               title="Delete learner"
                             >
                               <Trash2 className="w-4 h-4" />
@@ -342,7 +342,7 @@ export default function AdminLearners() {
                       </tr>
                       {isExpanded && (
                         <tr className="bg-gray-50/80">
-                          <td colSpan={7} className="px-4 py-3">
+                          <td colSpan={8} className="px-6 py-4">
                             <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Enrollments</p>
                             <div className="mb-3 flex flex-wrap items-center gap-2">
                               {(() => {
