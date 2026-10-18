@@ -4,11 +4,11 @@ import { MongoClient } from "mongodb";
 
 loadEnv({ path: path.resolve(process.cwd(), "backend", ".env") });
 
-const uri = process.env.MONGODB_URI?.trim();
-if (!uri) {
-  console.error("Missing MONGODB_URI");
-  process.exit(1);
+const rawUri = process.env.MONGODB_URI?.trim();
+if (!rawUri) {
+  throw new Error("Missing MONGODB_URI in backend/.env");
 }
+const uri: string = rawUri;
 
 const dbName =
   process.env.MONGODB_DB?.trim() ||
