@@ -22,10 +22,13 @@ import {
   ShieldCheck,
   FileCheck,
   Globe,
+  Receipt,
+  CheckCircle2,
 } from "lucide-react";
 import { useDashboardData, SECTOR_LABELS } from "./dashboardData";
 import { getStoredUser } from "../lib/auth";
 import { buildAdminHandoutStreamUrl, fetchLearnerHandouts } from "@/lib/learnerAdminHandouts";
+import { getApiBase } from "@/lib/apiBase";
 
 const iconBySlug: Record<string, typeof HardHat> = {
   construction: HardHat,
@@ -57,6 +60,20 @@ export default function Dashboard() {
     error,
   } = useDashboardData();
 
+  const { data: freshUser } = useQuery({
+    queryKey: ["user-me", stored?.id],
+    queryFn: async () => {
+      if (!stored?.id) return null;
+      const res = await fetch(`${getApiBase()}/api/users/${stored.id}`);
+      if (!res.ok) return null;
+      const json = await res.json();
+      return json.user;
+    },
+    enabled: !!stored?.id && canAccess,
+  });
+
+  const currentUser = freshUser || user;
+
   const { data: handouts = [], isLoading: handoutsLoading } = useQuery({
     queryKey: ["admin-distributed-assignments", "learner", stored?.id],
     queryFn: () => fetchLearnerHandouts(stored?.id || ""),
@@ -75,8 +92,13 @@ export default function Dashboard() {
     );
   }
 
-  const categoryLabel = user?.sector ? (SECTOR_LABELS[user.sector] ?? user.sector) : "All categories";
+  const categoryLabel = currentUser?.sector ? (SECTOR_LABELS[currentUser.sector] ?? currentUser.sector) : "All categories";
   const handoutPreview = handouts.slice(0, 3);
+
+  const totalFees = currentUser?.totalFees !== undefined ? currentUser.totalFees : 150000;
+  const paymentAmount = currentUser?.paymentAmount !== undefined ? currentUser.paymentAmount : (currentUser?.approved ? 150000 : 0);
+  const balanceFee = currentUser?.balanceFee !== undefined ? currentUser.balanceFee : Math.max(0, totalFees - paymentAmount);
+  const isFeesCleared = balanceFee <= 0;
 
   return (
     <div className="space-y-6 sm:space-y-8">
@@ -93,10 +115,82 @@ export default function Dashboard() {
           <span className="font-semibold text-primary">{categoryLabel}</span>
         </div>
         <p className="text-gray-600 text-sm mb-6">
-          {user?.sector
+          {currentUser?.sector
             ? "You see only courses for your sector (and General). Open a course in My courses to view materials and mark lessons as done."
             : "Open a course in My courses to view materials and track progress."}
         </p>
+
+        {/* Student Financial Dashboard */}
+        <div className="mb-8 rounded-2xl border border-gray-200 bg-gradient-to-br from-white to-gray-50/70 p-5 sm:p-6 shadow-sm">
+          <div className="flex flex-wrap items-center justify-between gap-3 mb-4 pb-3 border-b border-gray-100">
+            <div className="flex items-center gap-2.5">
+              <div className="w-9 h-9 rounded-xl bg-primary/10 flex items-center justify-center text-primary font-bold">
+                <Receipt className="w-5 h-5" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-gray-900 leading-tight">Tuition & Financial Status</h2>
+                <p className="text-xs text-gray-500">
+                  Official Student ID: <span className="font-mono font-bold text-primary">{currentUser?.idCardNo || "—"}</span>
+                </p>
+              </div>
+            </div>
+            {(currentUser?.invoiceNo || currentUser?.idCardNo) && (
+              <Link
+                to={`/receipt/${currentUser.invoiceNo || currentUser.idCardNo}`}
+                target="_blank"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-primary text-white hover:bg-primary/90 transition-colors shadow-2xs"
+              >
+                <FileText className="w-3.5 h-3.5" />
+                View Official Invoice / Receipt
+              </Link>
+            )}
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Total Fees */}
+            <div className="p-4 rounded-xl bg-white border border-gray-100 shadow-2xs flex flex-col justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-gray-400">Total Fees Required</span>
+              <p className="text-xl sm:text-2xl font-black font-mono text-gray-900 mt-1">
+                {Number(totalFees).toLocaleString()}{" "}
+                <span className="text-xs font-medium text-gray-500 font-sans">RWF</span>
+              </p>
+              <span className="text-[11px] text-gray-500 mt-2">Course tuition & exam fees</span>
+            </div>
+
+            {/* Amount Paid */}
+            <div className="p-4 rounded-xl bg-emerald-50/50 border border-emerald-100 shadow-2xs flex flex-col justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-emerald-800">Amount Paid</span>
+              <p className="text-xl sm:text-2xl font-black font-mono text-emerald-700 mt-1">
+                {Number(paymentAmount).toLocaleString()}{" "}
+                <span className="text-xs font-medium text-emerald-600 font-sans">RWF</span>
+              </p>
+              <div className="mt-2 flex items-center gap-1 text-[11px] font-semibold text-emerald-700">
+                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                <span>Verified by finance</span>
+              </div>
+            </div>
+
+            {/* Remaining Balance */}
+            <div
+              className={`p-4 rounded-xl shadow-2xs flex flex-col justify-between border ${
+                isFeesCleared ? "bg-green-50/40 border-green-200" : "bg-amber-50/50 border-amber-200"
+              }`}
+            >
+              <span className={`text-xs font-bold uppercase tracking-wider ${isFeesCleared ? "text-green-800" : "text-amber-800"}`}>
+                Remaining Balance Owed
+              </span>
+              <p className={`text-xl sm:text-2xl font-black font-mono mt-1 ${isFeesCleared ? "text-green-700" : "text-amber-700"}`}>
+                {Number(balanceFee).toLocaleString()}{" "}
+                <span className="text-xs font-medium font-sans">RWF</span>
+              </p>
+              <span className="text-[11px] mt-2 font-medium text-gray-600">
+                {isFeesCleared
+                  ? "✓ All tuition fees fully cleared"
+                  : "MoMo: 0785072512 (EMMANUEL NIYOBUHUNGIRO)"}
+              </span>
+            </div>
+          </div>
+        </div>
 
         {isLoading ? (
           <div className="grid w-full min-w-0 grid-cols-1 gap-6 sm:gap-8 md:grid-cols-2 lg:grid-cols-2 xl:grid-cols-4 mb-10">

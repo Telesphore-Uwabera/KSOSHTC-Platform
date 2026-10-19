@@ -20,7 +20,7 @@ function navForRole(role: string | undefined) {
       { to: "/admin/learners", end: true, label: "Learners", icon: Users },
       { to: "/admin/instructors", end: true, label: "Instructors", icon: UserCog },
       { to: "/admin/certificate", end: true, label: "Certificates", icon: ShieldCheck },
-      { to: "/admin/receipts", end: true, label: "Fee Receipts", icon: Receipt },
+      { to: "/admin/receipts", end: true, label: "Invoices & Receipts", icon: Receipt },
       { to: "/admin/quotations", end: true, label: "Quotations", icon: FileText },
       { to: "/admin/testimonials", end: true, label: "Testimonials", icon: MessageSquareQuote },
       { to: "/admin/team", end: true, label: "Team Members", icon: Users2 },

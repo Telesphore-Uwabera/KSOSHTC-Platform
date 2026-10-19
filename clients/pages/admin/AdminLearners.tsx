@@ -21,6 +21,11 @@ import {
   CheckSquare,
   Square,
   Calendar,
+  Mail,
+  Copy,
+  FileText,
+  Receipt,
+  Coins,
 } from "lucide-react";
 import type { UserPublic, EnrollmentDoc, EnrollmentStatus, CourseDoc, LearnerSector } from "@shared/api";
 import { getApiBase } from "@/lib/apiBase";
@@ -49,6 +54,7 @@ type EnrollmentWithPerformance = EnrollmentDoc & {
 type SortField =
   | "createdAt"
   | "name"
+  | "email"
   | "invoiceNo"
   | "idCardNo"
   | "registrationNo"
@@ -82,7 +88,7 @@ async function fetchCourses(): Promise<CourseDoc[]> {
 }
 
 async function approveUser(id: string): Promise<void> {
-  const res = await adminFetch(getApiBase() + `/api/users/${id}/approve`, { method: "PATCH" });
+  const res = await adminFetch(getApiBase() + `/api/users/${id}/approve`, { method: "POST" });
   if (!res.ok) throw new Error("Failed to approve user");
 }
 
@@ -105,6 +111,36 @@ async function addEnrollment(userId: string, courseId: string): Promise<void> {
     const data = await res.json().catch(() => ({}));
     throw new Error((data as { error?: string }).error ?? "Failed to add course enrollment");
   }
+}
+
+async function removeEnrollment(enrollmentId: string, userId?: string, courseId?: string): Promise<void> {
+  const url = enrollmentId
+    ? `${getApiBase()}/api/enrollments/${enrollmentId}`
+    : `${getApiBase()}/api/enrollments?userId=${encodeURIComponent(userId || "")}&courseId=${encodeURIComponent(courseId || "")}`;
+  const res = await adminFetch(url, {
+    method: "DELETE",
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error((data as { error?: string }).error ?? "Failed to remove course enrollment");
+  }
+}
+
+async function patchLearner(
+  id: string,
+  body: Partial<UserPublic>
+): Promise<UserPublic> {
+  const res = await adminFetch(getApiBase() + `/api/users/${id}`, {
+    method: "PATCH",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => ({}));
+    throw new Error((data as { error?: string }).error ?? "Failed to update fees");
+  }
+  const data = await res.json();
+  return (data as { user: UserPublic }).user;
 }
 
 async function createLearner(body: Partial<UserPublic> & { password?: string }): Promise<UserPublic> {
@@ -235,6 +271,13 @@ export default function AdminLearners() {
   const [formError, setFormError] = useState("");
   const [courseToAddByUserId, setCourseToAddByUserId] = useState<Record<string, string>>({});
 
+  // Quick Fee Edit State
+  const [feeEditUser, setFeeEditUser] = useState<UserPublic | null>(null);
+  const [feeEditTotal, setFeeEditTotal] = useState<number | string>(150000);
+  const [feeEditPaid, setFeeEditPaid] = useState<number | string>(150000);
+  const [feeEditBalance, setFeeEditBalance] = useState<number | string>(0);
+  const [feeEditError, setFeeEditError] = useState("");
+
   const { data, isLoading } = useQuery({
     queryKey: ["learners-summary"],
     queryFn: fetchLearnersSummary,
@@ -260,6 +303,22 @@ export default function AdminLearners() {
     mutationFn: ({ userId, courseId }: { userId: string; courseId: string }) =>
       addEnrollment(userId, courseId),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ["learners-summary"] }),
+  });
+
+  const removeEnrollmentMutation = useMutation({
+    mutationFn: ({ enrollmentId, userId, courseId }: { enrollmentId: string; userId?: string; courseId?: string }) =>
+      removeEnrollment(enrollmentId, userId, courseId),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["learners-summary"] }),
+  });
+
+  const patchFeesMutation = useMutation({
+    mutationFn: ({ id, totalFees, paymentAmount, balanceFee }: { id: string; totalFees: number; paymentAmount: number; balanceFee: number }) =>
+      patchLearner(id, { totalFees, paymentAmount, balanceFee }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["learners-summary"] });
+      setFeeEditUser(null);
+    },
+    onError: (e: Error) => setFeeEditError(e.message),
   });
 
   const syncMutation = useMutation({
@@ -317,7 +376,7 @@ export default function AdminLearners() {
     setFormInvoiceNo("");
     setFormRegistrationNo("");
     setFormCoursePackage("Standard");
-    setFormAdmissionBatch("Mr Sooraj Jacob");
+    setFormAdmissionBatch("EMMANUEL NIYOBUHUNGIRO");
     setFormAcademicYear("2026-2027");
     setFormAdmissionTakenBy("Dipali Kumari Agarwal");
     setFormTotalFees(150000);
@@ -339,13 +398,24 @@ export default function AdminLearners() {
     setFormInvoiceNo(u.invoiceNo ?? "");
     setFormRegistrationNo(u.registrationNo ?? "");
     setFormCoursePackage(u.coursePackage ?? "Standard");
-    setFormAdmissionBatch(u.admissionBatch ?? "Mr Sooraj Jacob");
+    setFormAdmissionBatch(u.admissionBatch ?? "EMMANUEL NIYOBUHUNGIRO");
     setFormAcademicYear(u.academicYear ?? "2026-2027");
     setFormAdmissionTakenBy(u.admissionTakenBy ?? "Dipali Kumari Agarwal");
     setFormTotalFees(u.totalFees !== undefined ? u.totalFees : 150000);
     setFormPaymentAmount(u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0));
     setFormBalanceFee(u.balanceFee !== undefined ? u.balanceFee : 0);
     setFormError("");
+  }
+
+  function openFeeEdit(u: UserPublic) {
+    setFeeEditUser(u);
+    const total = u.totalFees !== undefined ? u.totalFees : 150000;
+    const paid = u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0);
+    const bal = u.balanceFee !== undefined ? u.balanceFee : Math.max(0, total - paid);
+    setFeeEditTotal(total);
+    setFeeEditPaid(paid);
+    setFeeEditBalance(bal);
+    setFeeEditError("");
   }
 
   const courseTitleById = useMemo(() => {
@@ -471,7 +541,7 @@ export default function AdminLearners() {
 
       // 5. Admission Batch Filter
       if (filterBatch) {
-        if ((u.admissionBatch || "Mr Sooraj Jacob") !== filterBatch) return false;
+        if ((u.admissionBatch || "EMMANUEL NIYOBUHUNGIRO") !== filterBatch) return false;
       }
 
       // 6. Admission Taken By Filter
@@ -531,6 +601,10 @@ export default function AdminLearners() {
         case "name":
           aVal = (a.name || "").toLowerCase();
           bVal = (b.name || "").toLowerCase();
+          break;
+        case "email":
+          aVal = (a.email || "").toLowerCase();
+          bVal = (b.email || "").toLowerCase();
           break;
         case "invoiceNo":
           aVal = parseInt(a.invoiceNo || "0", 10) || (a.invoiceNo || "");
@@ -1117,11 +1191,22 @@ export default function AdminLearners() {
                   {/* 2. STUDENT */}
                   <th
                     onClick={() => handleSort("name")}
-                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[220px] cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[200px] cursor-pointer hover:bg-gray-100/70 transition-colors group"
                   >
                     <div className="flex items-center gap-1.5">
                       <span>STUDENT</span>
                       {renderSortIcon("name")}
+                    </div>
+                  </th>
+
+                  {/* EMAIL */}
+                  <th
+                    onClick={() => handleSort("email")}
+                    className="px-3.5 py-3.5 font-bold uppercase tracking-wider text-[11px] whitespace-nowrap min-w-[200px] cursor-pointer hover:bg-gray-100/70 transition-colors group"
+                  >
+                    <div className="flex items-center gap-1.5">
+                      <span>EMAIL</span>
+                      {renderSortIcon("email")}
                     </div>
                   </th>
 
@@ -1329,11 +1414,34 @@ export default function AdminLearners() {
                               <div className="font-bold text-gray-900 group-hover/btn:text-primary transition-colors uppercase">
                                 {u.name}
                               </div>
-                              <div className="text-[11px] text-gray-400 font-mono lowercase">
-                                {u.email}
-                              </div>
                             </div>
                           </button>
+                        </td>
+
+                        {/* EMAIL */}
+                        <td className="px-3.5 py-3 whitespace-nowrap">
+                          <div className="flex items-center gap-1.5 font-mono text-xs text-gray-700">
+                            <span className="truncate max-w-[200px]" title={u.email}>
+                              {u.email}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(u.email);
+                              }}
+                              className="text-gray-400 hover:text-primary transition-colors p-1 rounded"
+                              title="Copy email address"
+                            >
+                              <Copy className="w-3.5 h-3.5" />
+                            </button>
+                            <a
+                              href={`mailto:${u.email}`}
+                              className="text-gray-400 hover:text-primary transition-colors p-1 rounded"
+                              title="Send email"
+                            >
+                              <Mail className="w-3.5 h-3.5" />
+                            </a>
+                          </div>
                         </td>
 
                         {/* 3. INVOICE# */}
@@ -1372,8 +1480,8 @@ export default function AdminLearners() {
                         </td>
 
                         {/* 9. ADMISSION BATCH */}
-                        <td className="px-3.5 py-3 whitespace-nowrap text-gray-700">
-                          {u.admissionBatch || "Mr Sooraj Jacob"}
+                        <td className="px-3.5 py-3 whitespace-nowrap text-gray-700 font-medium">
+                          {u.admissionBatch || "EMMANUEL NIYOBUHUNGIRO"}
                         </td>
 
                         {/* 10. ACADEMIC YEAR */}
@@ -1400,25 +1508,65 @@ export default function AdminLearners() {
                         </td>
 
                         {/* 13. TOTAL FEES */}
-                        <td className="px-3.5 py-3 whitespace-nowrap text-right font-mono font-bold text-gray-900">
-                          {Number(u.totalFees || 150000).toLocaleString()}
+                        <td
+                          onClick={() => openFeeEdit(u)}
+                          className="px-3.5 py-3 whitespace-nowrap text-right font-mono font-bold text-gray-900 cursor-pointer hover:bg-blue-50/70 transition-colors group/fee"
+                          title="Click to edit fees & match receipt"
+                        >
+                          <div className="flex items-center justify-end gap-1">
+                            <span>{Number(u.totalFees || 150000).toLocaleString()}</span>
+                            <Pencil className="w-3 h-3 text-gray-400 opacity-0 group-hover/fee:opacity-100 transition-opacity" />
+                          </div>
                         </td>
 
                         {/* 14. PAYMENT */}
-                        <td className="px-3.5 py-3 whitespace-nowrap text-right font-mono font-bold text-emerald-700">
-                          {Number(
-                            u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0)
-                          ).toLocaleString()}
+                        <td
+                          onClick={() => openFeeEdit(u)}
+                          className="px-3.5 py-3 whitespace-nowrap text-right font-mono font-bold text-emerald-700 cursor-pointer hover:bg-blue-50/70 transition-colors group/fee"
+                          title="Click to edit payment & match receipt"
+                        >
+                          <div className="flex items-center justify-end gap-1">
+                            <span>
+                              {Number(
+                                u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0)
+                              ).toLocaleString()}
+                            </span>
+                            <Pencil className="w-3 h-3 text-gray-400 opacity-0 group-hover/fee:opacity-100 transition-opacity" />
+                          </div>
                         </td>
 
                         {/* 15. BALANCE */}
-                        <td className="px-3.5 py-3 whitespace-nowrap text-right font-mono font-bold text-amber-700">
-                          {Number(u.balanceFee !== undefined ? u.balanceFee : 0).toLocaleString()}
+                        <td
+                          onClick={() => openFeeEdit(u)}
+                          className="px-3.5 py-3 whitespace-nowrap text-right font-mono font-bold text-amber-700 cursor-pointer hover:bg-blue-50/70 transition-colors group/fee"
+                          title="Click to edit balance & match receipt"
+                        >
+                          <div className="flex items-center justify-end gap-1">
+                            <span>{Number(u.balanceFee !== undefined ? u.balanceFee : 0).toLocaleString()}</span>
+                            <Pencil className="w-3 h-3 text-gray-400 opacity-0 group-hover/fee:opacity-100 transition-opacity" />
+                          </div>
                         </td>
 
                         {/* ACTIONS */}
                         <td className="px-3.5 py-3 whitespace-nowrap text-center">
                           <div className="flex items-center justify-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => openFeeEdit(u)}
+                              className="p-1.5 rounded-lg border border-emerald-200 text-emerald-700 hover:bg-emerald-50 shadow-sm transition-all"
+                              title="Edit student fees & match receipt"
+                            >
+                              <Coins className="w-3.5 h-3.5" />
+                            </button>
+                            <a
+                              href={`/receipt/${u.invoiceNo || u.idCardNo}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="p-1.5 rounded-lg border border-blue-200 text-blue-700 hover:bg-blue-50 shadow-sm transition-all"
+                              title="View / Print Official Invoice & Receipt"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                            </a>
                             {!u.approved && (
                               <button
                                 type="button"
@@ -1462,7 +1610,7 @@ export default function AdminLearners() {
                       {/* Expandable Course Enrollment & Curriculum Breakdown */}
                       {isExpanded && (
                         <tr className="bg-blue-50/20 border-b border-gray-100">
-                          <td colSpan={17} className="px-6 py-4">
+                          <td colSpan={18} className="px-6 py-4">
                             <div className="bg-white rounded-2xl p-4 border border-blue-100 shadow-sm">
                               <div className="flex flex-wrap items-center justify-between gap-3 mb-3">
                                 <p className="text-xs font-bold text-gray-700 uppercase tracking-wide flex items-center gap-2">
@@ -1556,6 +1704,27 @@ export default function AdminLearners() {
                                             <option value="completed">Completed</option>
                                             <option value="not_approved">Not approved</option>
                                           </select>
+                                          <button
+                                            type="button"
+                                            onClick={() => {
+                                              if (
+                                                window.confirm(
+                                                  `Are you sure you want to remove the course "${courseTitleById[en.courseId] ?? en.courseId}" for ${u.name}?`
+                                                )
+                                              ) {
+                                                removeEnrollmentMutation.mutate({
+                                                  enrollmentId: en.id,
+                                                  userId: u.id,
+                                                  courseId: en.courseId,
+                                                });
+                                              }
+                                            }}
+                                            disabled={removeEnrollmentMutation.isPending}
+                                            className="p-1.5 rounded-lg text-red-500 hover:text-red-700 hover:bg-red-50 transition-colors border border-red-100"
+                                            title="Remove course from student"
+                                          >
+                                            <Trash2 className="w-3.5 h-3.5" />
+                                          </button>
                                         </div>
                                       </div>
 
@@ -1612,7 +1781,7 @@ export default function AdminLearners() {
               {/* Bottom Summary Footer Row */}
               <tfoot>
                 <tr className="border-t-2 border-gray-300 bg-gray-50/95 font-bold text-gray-900 text-xs sm:text-sm">
-                  <td colSpan={13} className="px-4 py-4 text-right font-black uppercase tracking-wider text-gray-800 text-sm">
+                  <td colSpan={14} className="px-4 py-4 text-right font-black uppercase tracking-wider text-gray-800 text-sm">
                     Total
                   </td>
                   <td className="px-3.5 py-4 text-right font-mono font-black text-gray-900 whitespace-nowrap text-sm">
@@ -1850,7 +2019,7 @@ export default function AdminLearners() {
                     type="text"
                     value={formAdmissionBatch}
                     onChange={(e) => setFormAdmissionBatch(e.target.value)}
-                    placeholder="e.g. Mr Sooraj Jacob"
+                    placeholder="e.g. EMMANUEL NIYOBUHUNGIRO"
                     className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
                   />
                 </div>
@@ -2110,7 +2279,7 @@ export default function AdminLearners() {
                     type="text"
                     value={formAdmissionBatch}
                     onChange={(e) => setFormAdmissionBatch(e.target.value)}
-                    placeholder="e.g. Mr Sooraj Jacob"
+                    placeholder="e.g. EMMANUEL NIYOBUHUNGIRO"
                     className="w-full px-3.5 py-2 rounded-xl border border-gray-200 text-sm focus:border-primary outline-none"
                   />
                 </div>
@@ -2275,6 +2444,168 @@ export default function AdminLearners() {
                 >
                   {deleteMutation.isPending ? "Deleting…" : "Delete"}
                 </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Quick Fee Edit Modal */}
+        {feeEditUser && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+            onClick={() => setFeeEditUser(null)}
+          >
+            <div
+              className="bg-white rounded-3xl shadow-2xl max-w-lg w-full p-6 sm:p-7 space-y-5 border border-gray-100"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between border-b border-gray-100 pb-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-50 text-emerald-700 flex items-center justify-center font-bold">
+                    <Coins className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg font-black text-gray-900 tracking-tight">Edit Learner Fees</h2>
+                    <p className="text-xs text-gray-500 font-medium">
+                      {feeEditUser.name} &bull; <span className="font-mono text-primary font-bold">{feeEditUser.idCardNo || "No ID"}</span>
+                    </p>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setFeeEditUser(null)}
+                  className="p-1.5 rounded-xl text-gray-400 hover:text-gray-600 hover:bg-gray-100 transition-colors"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+
+              {feeEditError && (
+                <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs font-semibold text-red-700">
+                  {feeEditError}
+                </div>
+              )}
+
+              <div className="bg-blue-50/60 rounded-2xl p-4 border border-blue-100 text-xs text-blue-900 space-y-1">
+                <div className="flex items-center gap-1.5 font-bold">
+                  <Receipt className="w-4 h-4 text-primary" />
+                  <span>Automatic Receipt & Invoice Synchronization</span>
+                </div>
+                <p className="text-blue-700/80 leading-relaxed">
+                  Updating fees here will automatically synchronize the official invoice & fee receipt (<span className="font-mono font-bold">{feeEditUser.invoiceNo || feeEditUser.idCardNo}</span>) with the same amounts, installments, and signatory (EMMANUEL NIYOBUHUNGIRO).
+                </p>
+              </div>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-xs font-bold text-gray-700 uppercase tracking-wide mb-1.5">
+                    Total Course Fees (RWF)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1000}
+                    value={feeEditTotal}
+                    onChange={(e) => {
+                      const total = Number(e.target.value) || 0;
+                      setFeeEditTotal(total);
+                      setFeeEditBalance(Math.max(0, total - Number(feeEditPaid || 0)));
+                    }}
+                    className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-mono font-bold text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
+                    placeholder="150000"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-emerald-800 uppercase tracking-wide mb-1.5">
+                    Amount Paid by Student (RWF)
+                  </label>
+                  <input
+                    type="number"
+                    min={0}
+                    step={1000}
+                    value={feeEditPaid}
+                    onChange={(e) => {
+                      const paid = Number(e.target.value) || 0;
+                      setFeeEditPaid(paid);
+                      setFeeEditBalance(Math.max(0, Number(feeEditTotal || 0) - paid));
+                    }}
+                    className="w-full px-4 py-2.5 rounded-xl border border-emerald-300 text-sm font-mono font-bold text-emerald-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
+                    placeholder="150000"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-amber-800 uppercase tracking-wide mb-1.5">
+                    Remaining Balance Owed (RWF)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="number"
+                      min={0}
+                      step={1000}
+                      value={feeEditBalance}
+                      onChange={(e) => setFeeEditBalance(Number(e.target.value) || 0)}
+                      className="w-full px-4 py-2.5 rounded-xl border border-amber-300 text-sm font-mono font-bold text-amber-700 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 outline-none transition-all"
+                      placeholder="0"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setFeeEditBalance(Math.max(0, Number(feeEditTotal || 0) - Number(feeEditPaid || 0)))}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 px-2.5 py-1 text-[11px] font-bold text-amber-700 bg-amber-100 hover:bg-amber-200 rounded-lg transition-colors"
+                      title="Auto calculate from total - paid"
+                    >
+                      Auto Calc
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between pt-3 border-t border-gray-100">
+                <a
+                  href={`/receipt/${feeEditUser.invoiceNo || feeEditUser.idCardNo}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-flex items-center gap-1.5 text-xs font-bold text-blue-600 hover:underline"
+                >
+                  <FileText className="w-3.5 h-3.5" />
+                  View Current Invoice
+                </a>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setFeeEditUser(null)}
+                    className="px-4 py-2 rounded-xl border border-gray-200 text-xs font-bold text-gray-600 hover:bg-gray-50 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      patchFeesMutation.mutate({
+                        id: feeEditUser.id,
+                        totalFees: Number(feeEditTotal || 0),
+                        paymentAmount: Number(feeEditPaid || 0),
+                        balanceFee: Number(feeEditBalance || 0),
+                      });
+                    }}
+                    disabled={patchFeesMutation.isPending}
+                    className="inline-flex items-center gap-1.5 px-5 py-2 rounded-xl bg-emerald-600 text-white text-xs font-bold hover:bg-emerald-700 disabled:opacity-60 shadow-sm transition-all"
+                  >
+                    {patchFeesMutation.isPending ? (
+                      <>
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                        Saving & Syncing…
+                      </>
+                    ) : (
+                      <>
+                        <CheckCircle className="w-3.5 h-3.5" />
+                        Save & Match Receipt
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           </div>

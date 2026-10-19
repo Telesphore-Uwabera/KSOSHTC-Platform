@@ -372,17 +372,30 @@ export async function notifyNewRegistration(data: {
   });
 }
 
-/** Notify learner after registration with programme details, fees, MoMo payment, and links (approval after payment). */
-export async function notifyLearnerRegistrationReceived(data: { name: string; email: string }): Promise<void> {
-  const subject = "[KSOSHTC] Welcome — your registration and next steps";
+/** Notify learner after registration with programme details, student ID, fees, MoMo payment, and links. */
+export async function notifyLearnerRegistrationReceived(data: {
+  name: string;
+  email: string;
+  idCardNo?: string;
+}): Promise<void> {
+  const subject = `[KSOSHTC] Welcome — your registration & Student ID ${data.idCardNo ? `(${data.idCardNo})` : ""}`.trim();
   const name = data.name.trim();
   const web = webBase();
+  const idBadgeText = data.idCardNo
+    ? [
+        "YOUR OFFICIAL STUDENT ID:",
+        `  ${data.idCardNo}`,
+        "  (Please keep this ID for attendance, payment verification, course materials, and certificates)",
+        "",
+      ].join("\n")
+    : "";
 
   const text = [
     `Dear ${name},`,
     "",
     "Thank you for choosing Kigali Safety & OSH Training Centre (KSOS HTC). We are pleased to confirm that we have received your registration.",
     "",
+    idBadgeText,
     "PROGRAMME OVERVIEW",
     "• Training sectors: OSH in Industrial Safety, OSH in Construction, and OSH in Mining.",
     "• In-person classes: Sundays, 09:00–14:00 (EAT), for three months.",
@@ -415,9 +428,18 @@ export async function notifyLearnerRegistrationReceived(data: { name: string; em
     "KSOSHTC Management",
   ].join("\n");
 
+  const idBadgeHtml = data.idCardNo
+    ? `<div style="margin:1.25em 0;padding:16px 20px;background:#eef6ff;border:2px solid #2563eb;border-radius:10px;">
+<p style="margin:0 0 4px;font-size:12px;font-weight:bold;text-transform:uppercase;color:#1e40af;letter-spacing:0.05em;">Your Official Student ID Card Number</p>
+<p style="margin:0;font-size:22px;font-weight:bold;font-family:monospace;color:#1d4ed8;">${escapeHtml(data.idCardNo)}</p>
+<p style="margin:6px 0 0;font-size:12px;color:#4b5563;">Keep this Student ID handy for your attendance, course exams, receipts, and certificate verification.</p>
+</div>`
+    : "";
+
   const htmlBody = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
 <p style="margin:0 0 1em;">Dear ${escapeHtml(name)},</p>
 <p style="margin:0 0 1em;">Thank you for choosing <strong>Kigali Safety &amp; OSH Training Centre (KSOS HTC)</strong>. We are pleased to confirm that we have received your registration.</p>
+${idBadgeHtml}
 <p style="margin:1.25em 0 0.35em;font-weight:bold;letter-spacing:0.03em;">PROGRAMME OVERVIEW</p>
 <ul style="margin:0 0 1em;padding-left:1.25em;">
 <li>Training sectors: OSH in Industrial Safety, OSH in Construction, and OSH in Mining.</li>
@@ -501,18 +523,24 @@ export async function notifyNewContact(data: {
 }
 
 /** Notify the learner that their account has been approved (call after setting approved: true). */
-export async function notifyLearnerApproved(data: { name: string; email: string }): Promise<void> {
-  const subject = "[KSOSHTC] Your account is active — welcome aboard";
+export async function notifyLearnerApproved(data: {
+  name: string;
+  email: string;
+  idCardNo?: string;
+}): Promise<void> {
+  const subject = `[KSOSHTC] Your account is active — Welcome aboard ${data.idCardNo ? `(${data.idCardNo})` : ""}`.trim();
   const name = data.name.trim();
   const web = webBase();
   const loginUrl = `${web}/login`;
   const dashboardUrl = `${web}/dashboard`;
 
+  const idText = data.idCardNo ? `Your Student ID: ${data.idCardNo}\n` : "";
   const text = [
     `Dear ${name},`,
     "",
     "Good news — an administrator has approved your KSOS HTC learner account.",
     "",
+    idText,
     "You can sign in anytime to access your dashboard, courses, materials, and assignments (according to your enrollments).",
     "",
     "Sign in:",
@@ -524,9 +552,17 @@ export async function notifyLearnerApproved(data: { name: string; email: string 
     "If you have any questions, please use the website or WhatsApp details at the end of this email.",
   ].join("\n");
 
+  const idHtml = data.idCardNo
+    ? `<div style="margin:1em 0;padding:12px 18px;background:#f0fdf4;border:1.5px solid #22c55e;border-radius:8px;">
+<p style="margin:0 0 2px;font-size:11px;font-weight:bold;text-transform:uppercase;color:#15803d;letter-spacing:0.04em;">Official Student ID</p>
+<p style="margin:0;font-size:18px;font-weight:bold;font-family:monospace;color:#166534;">${escapeHtml(data.idCardNo)}</p>
+</div>`
+    : "";
+
   const html = `<div style="font-family:Georgia,'Times New Roman',serif;font-size:15px;line-height:1.55;color:#1a1a1a;max-width:640px;">
 <p style="margin:0 0 1em;">Dear ${escapeHtml(name)},</p>
 <p style="margin:0 0 1em;">Good news — an administrator has <strong>approved</strong> your <strong>KSOS HTC</strong> learner account.</p>
+${idHtml}
 <p style="margin:0 0 1em;">You may <strong>sign in</strong> to access your dashboard, courses, materials, and assignments (based on your enrollments).</p>
 <p style="margin:0 0 0.75em;"><a href="${loginUrl}" style="display:inline-block;background:#0d6efd;color:#fff;padding:12px 22px;border-radius:6px;text-decoration:none;font-weight:600;">Sign in to your account</a></p>
 <p style="margin:0;font-size:14px;color:#555;">Or open this link in your browser:<br><a href="${loginUrl}" style="color:#0d6efd;word-break:break-all;">${loginUrl}</a></p>
@@ -546,6 +582,7 @@ export async function notifyLearnerCourseAccess(data: {
   email: string;
   courseTitle: string;
   kind: "enrolled" | "activated";
+  idCardNo?: string;
 }): Promise<void> {
   const name = data.name.trim();
   const courseTitle = data.courseTitle.trim();
@@ -559,8 +596,8 @@ export async function notifyLearnerCourseAccess(data: {
 
   const subject =
     data.kind === "activated"
-      ? `[KSOSHTC] Course access active — ${courseTitle}`
-      : `[KSOSHTC] New course — ${courseTitle}`;
+      ? `[KSOSHTC] Course access active — ${courseTitle} ${data.idCardNo ? `(${data.idCardNo})` : ""}`.trim()
+      : `[KSOSHTC] New course enrollment — ${courseTitle} ${data.idCardNo ? `(${data.idCardNo})` : ""}`.trim();
 
   const text = [
     `Dear ${name},`,

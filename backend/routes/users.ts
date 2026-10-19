@@ -1,7 +1,8 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
-import type { User, UserCreate, UserPublic, LearnerSector } from "@shared/api";
+import type { User, UserCreate, UserPublic, LearnerSector, FeeReceipt } from "@shared/api";
+import { DEFAULT_RECEIPT_TERMS } from "@shared/api";
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import {
   notifyNewRegistration,
@@ -14,6 +15,7 @@ import { issueAdminSessionToken } from "../lib/adminSession";
 import type { EnrollmentWithPercent } from "./enrollments";
 import { getEnrollmentsForUser } from "./enrollments";
 import type { SubmissionDoc } from "@shared/api";
+import { getNextReceiptNo } from "./receipts";
 
 const BCRYPT_ROUNDS = 10;
 
@@ -133,6 +135,137 @@ export async function generateIdCardNo(sector?: string, customYear?: number): Pr
   }
 }
 
+/** Automatically syncs or generates a FeeReceipt matching the learner's financial status and student ID */
+export async function syncLearnerReceipt(u: User): Promise<void> {
+  try {
+    const col = mongoCollection<FeeReceipt>(MONGO_COLLECTIONS.receipts);
+    const invoiceId = u.invoiceNo || u.registrationNo || u.idCardNo || `INV-${Date.now().toString().slice(-6)}`;
+    const studentId = u.idCardNo || "";
+    const totalFees = u.totalFees !== undefined ? u.totalFees : 150000;
+    const payment = u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0);
+    const balance = u.balanceFee !== undefined ? u.balanceFee : Math.max(0, totalFees - payment);
+
+    const orConditions: any[] = [];
+    if (u.idCardNo) orConditions.push({ idCardNo: u.idCardNo });
+    if (u.invoiceNo) orConditions.push({ invoiceId: u.invoiceNo });
+    if (u.email) orConditions.push({ payerEmail: u.email.toLowerCase().trim() });
+    if (u.name) orConditions.push({ receivedFrom: new RegExp(`^${u.name.trim()}$`, "i") });
+
+    const existing = orConditions.length > 0 ? await col.findOne({ $or: orConditions }) : null;
+    const now = new Date().toISOString();
+    const todayFormatted = new Date().toLocaleDateString("en-GB");
+
+    if (existing) {
+      const updatedInvoices = Array.isArray(existing.invoiceDetails) && existing.invoiceDetails.length > 0
+        ? existing.invoiceDetails.map((inv, idx) => idx === 0 ? {
+            ...inv,
+            dueFee: totalFees,
+            receivedFee: payment,
+            invoiceNo: invoiceId,
+            packageDetails: u.coursePackage || inv.packageDetails || "Standard",
+          } : inv)
+        : [{
+            id: crypto.randomUUID(),
+            invoiceNo: invoiceId,
+            packageDetails: u.coursePackage || "Standard",
+            feesDetails: "Tuition & Examination Fee",
+            invoiceDate: existing.receiptDate || todayFormatted,
+            dueFee: totalFees,
+            receivedFee: payment,
+          }];
+
+      const updatedInstallments = Array.isArray(existing.installments) && existing.installments.length > 0
+        ? existing.installments.map((inst, idx) => idx === 0 ? {
+            ...inst,
+            dueFee: totalFees,
+            receivedFee: payment,
+            balanceFee: balance,
+            invoiceNo: invoiceId,
+          } : inst)
+        : [{
+            id: crypto.randomUUID(),
+            dueDate: todayFormatted,
+            invoiceNo: invoiceId,
+            dueFee: totalFees,
+            receivedFee: payment,
+            balanceFee: balance,
+            paymentDetails: "Mobile Money / Bank Transfer",
+          }];
+
+      await col.updateOne(
+        { id: existing.id },
+        {
+          $set: {
+            receivedFee: payment,
+            idCardNo: studentId,
+            receivedFrom: u.name,
+            payerEmail: u.email,
+            payerPhone: u.phone || existing.payerPhone || "",
+            signatoryName: "Emmanuel NIYOBUHUNGIRO",
+            invoiceDetails: updatedInvoices,
+            installments: updatedInstallments,
+            updatedAt: now,
+          },
+        }
+      );
+    } else {
+      const receiptNo = await getNextReceiptNo();
+      const newReceipt: FeeReceipt = {
+        id: invoiceId,
+        invoiceId,
+        receiptNo,
+        receiptDate: todayFormatted,
+        receivedIn: "Bank / MoMo",
+        receivedFee: payment,
+        currency: "RWF",
+        receivedFrom: u.name,
+        idCardNo: studentId,
+        payerEmail: u.email,
+        payerPhone: u.phone || "",
+        companyName: "Kigali Safety OSH Training Center (KSOSHTC)",
+        companyTagline: "Safety today, prosperity tomorrow.",
+        companyAddress: "Kicukiro, Kigali, Rwanda · Phone: +250 785 072 512 · ksoshtc@gmail.com",
+        panNumber: "RTB Accredited Institution",
+        gstinNumber: "TIN: 108520137",
+        logoUrl: "/logo_transparent.webp",
+        signatoryName: "Emmanuel NIYOBUHUNGIRO",
+        signatoryTitle: "Authorized Signatory - Finance & Administration",
+        showStamp: true,
+        showSignature: true,
+        stampUrl: "/certificate/stamp.webp",
+        invoiceDetails: [
+          {
+            id: crypto.randomUUID(),
+            invoiceNo: invoiceId,
+            packageDetails: u.coursePackage || "Standard",
+            feesDetails: "Tuition & Examination Fee",
+            invoiceDate: todayFormatted,
+            dueFee: totalFees,
+            receivedFee: payment,
+          },
+        ],
+        installments: [
+          {
+            id: crypto.randomUUID(),
+            dueDate: todayFormatted,
+            invoiceNo: invoiceId,
+            dueFee: totalFees,
+            receivedFee: payment,
+            balanceFee: balance,
+            paymentDetails: "Mobile Money / Bank Transfer",
+          },
+        ],
+        termsAndConditions: DEFAULT_RECEIPT_TERMS,
+        createdAt: now,
+        updatedAt: now,
+      };
+      await col.insertOne(newReceipt as any);
+    }
+  } catch (err) {
+    console.error("[SYNC_RECEIPT] Failed to sync learner receipt:", err);
+  }
+}
+
 export async function postRegister(req: Request, res: Response): Promise<void> {
   try {
     const body = req.body as UserCreate;
@@ -190,6 +323,7 @@ export async function postRegister(req: Request, res: Response): Promise<void> {
     notifyLearnerRegistrationReceived({
       name: user.name,
       email: user.email,
+      idCardNo: user.idCardNo,
     }).catch((err) => console.error("[REGISTER] Learner payment email failed:", err));
     res.status(201).json({ user: toPublic(user) });
   } catch (e) {
@@ -315,7 +449,9 @@ export async function getLearnersSummary(_req: Request, res: Response): Promise<
       if (pub.paymentAmount === undefined || pub.paymentAmount === null) pub.paymentAmount = pub.approved ? 150000 : 0;
       if (pub.balanceFee === undefined || pub.balanceFee === null) pub.balanceFee = Math.max(0, pub.totalFees - pub.paymentAmount);
       if (!pub.academicYear) pub.academicYear = `${year}-${year + 1}`;
-      if (!pub.admissionBatch) pub.admissionBatch = pub.sector === "mining" ? "Mr Rahul Aren" : "Mr Sooraj Jacob";
+      if (!pub.admissionBatch || pub.admissionBatch === "Mr Sooraj Jacob" || pub.admissionBatch === "Mr Rahul Aren") {
+        pub.admissionBatch = "EMMANUEL NIYOBUHUNGIRO";
+      }
       if (!pub.admissionTakenBy) pub.admissionTakenBy = seq % 2 === 0 ? "SUBHASH KUMAR" : "Dipali Kumari Agarwal";
       if (!pub.coursePackage) pub.coursePackage = "Standard";
       return pub;
@@ -448,7 +584,7 @@ export async function postUser(req: Request, res: Response): Promise<void> {
       organization: organization?.trim(),
       sector: sectorVal,
       coursePackage: coursePackage?.trim(),
-      admissionBatch: admissionBatch?.trim() || "Mr Sooraj Jacob",
+      admissionBatch: admissionBatch?.trim() || "EMMANUEL NIYOBUHUNGIRO",
       academicYear: academicYear?.trim() || `${new Date().getFullYear()}-${new Date().getFullYear() + 1}`,
       admissionTakenBy: admissionTakenBy?.trim() || "Dipali Kumari Agarwal",
       totalFees: finalTotalFees,
@@ -468,10 +604,11 @@ export async function postUser(req: Request, res: Response): Promise<void> {
       throw e;
     }
     if (user.approved) {
-      notifyLearnerApproved({ name: user.name, email: user.email }).catch((err) =>
+      notifyLearnerApproved({ name: user.name, email: user.email, idCardNo: user.idCardNo }).catch((err) =>
         console.error("[CREATE_USER] Notify learner approved failed:", err)
       );
     }
+    await syncLearnerReceipt(user);
     res.status(201).json({ user: toPublic(user) });
   } catch (e) {
     if (isMongoDuplicateKeyError(e)) {
@@ -560,7 +697,12 @@ export async function putUser(req: Request, res: Response): Promise<void> {
       invoiceNo: body.invoiceNo !== undefined ? body.invoiceNo.trim() : current.invoiceNo,
       registrationNo: body.registrationNo !== undefined ? body.registrationNo.trim() : current.registrationNo,
       coursePackage: body.coursePackage !== undefined ? body.coursePackage.trim() : current.coursePackage,
-      admissionBatch: body.admissionBatch !== undefined ? body.admissionBatch.trim() : current.admissionBatch,
+      admissionBatch:
+        body.admissionBatch !== undefined
+          ? body.admissionBatch.trim()
+          : (current.admissionBatch === "Mr Sooraj Jacob" || current.admissionBatch === "Mr Rahul Aren"
+              ? "EMMANUEL NIYOBUHUNGIRO"
+              : current.admissionBatch),
       academicYear: body.academicYear !== undefined ? body.academicYear.trim() : current.academicYear,
       admissionTakenBy: body.admissionTakenBy !== undefined ? body.admissionTakenBy.trim() : current.admissionTakenBy,
       totalFees,
@@ -575,9 +717,12 @@ export async function putUser(req: Request, res: Response): Promise<void> {
     const updated = (await col.findOne({ id })) as User;
     const wasJustApproved = body.approved === true && !current.approved;
     if (wasJustApproved) {
-      notifyLearnerApproved({ name: updated.name, email: updated.email }).catch((err) =>
+      notifyLearnerApproved({ name: updated.name, email: updated.email, idCardNo: updated.idCardNo }).catch((err) =>
         console.error("[APPROVE] Notify learner failed:", err)
       );
+    }
+    if (body.totalFees !== undefined || body.paymentAmount !== undefined || body.balanceFee !== undefined) {
+      await syncLearnerReceipt(updated);
     }
     res.json({ user: toPublic(updated) });
   } catch (e) {
@@ -625,7 +770,7 @@ export async function postSyncLearners(_req: Request, res: Response): Promise<vo
       const payment = u.paymentAmount !== undefined ? u.paymentAmount : (r ? r.receivedFee : (u.approved ? 150000 : 0));
       const balance = u.balanceFee !== undefined ? u.balanceFee : Math.max(0, totalFees - payment);
       const academicYear = u.academicYear || `${year}-${year + 1}`;
-      const admissionBatch = u.admissionBatch || (u.sector === "mining" ? "Mr Rahul Aren" : "Mr Sooraj Jacob");
+      const admissionBatch = "EMMANUEL NIYOBUHUNGIRO";
       const admissionTakenBy = u.admissionTakenBy || (seq % 2 === 0 ? "SUBHASH KUMAR" : "Dipali Kumari Agarwal");
 
       const updateFields: any = {

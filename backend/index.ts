@@ -62,7 +62,7 @@ import {
   listAdminDistributedAssignments,
   listAdminDistributedAssignmentsForLearner,
 } from "./routes/admin-distributed-assignments";
-import { postEnrollment, getEnrollments, patchEnrollment } from "./routes/enrollments";
+import { postEnrollment, getEnrollments, patchEnrollment, deleteEnrollment } from "./routes/enrollments";
 import { getProgress, patchProgress } from "./routes/progress";
 import { postContact } from "./routes/contact";
 import { getSettings, patchSettings } from "./routes/settings";
@@ -354,6 +354,8 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.post("/api/enrollments", postEnrollment);
   app.get("/api/enrollments", getEnrollments);
   app.patch("/api/enrollments/:id", requireAdminSession, patchEnrollment);
+  app.delete("/api/enrollments/:id", deleteEnrollment);
+  app.delete("/api/enrollments", deleteEnrollment);
   app.get("/api/progress", getProgress);
   app.patch("/api/progress", patchProgress);
 

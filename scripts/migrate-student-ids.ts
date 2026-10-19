@@ -89,7 +89,7 @@ async function migrate() {
     const payment = u.paymentAmount !== undefined ? u.paymentAmount : (r ? r.receivedFee : (u.approved ? 150000 : 0));
     const balance = u.balanceFee !== undefined ? u.balanceFee : Math.max(0, totalFees - payment);
     const academicYear = u.academicYear || `${year}-${year + 1}`;
-    const admissionBatch = u.admissionBatch || (u.sector === "mining" ? "Mr Rahul Aren" : "Mr Sooraj Jacob");
+    const admissionBatch = "EMMANUEL NIYOBUHUNGIRO";
     const admissionTakenBy = u.admissionTakenBy || (seq % 2 === 0 ? "SUBHASH KUMAR" : "Dipali Kumari Agarwal");
 
     const updateFields: any = {
@@ -110,13 +110,26 @@ async function migrate() {
 
     await usersCol.updateOne({ id: u.id }, { $set: updateFields });
 
-    // Also update any receipt that references the old ID
-    if (u.idCardNo && u.idCardNo !== newStudentId) {
-      await receiptsCol.updateMany({ idCardNo: u.idCardNo }, { $set: { idCardNo: newStudentId } });
-    }
+    // Also update any receipt that references this user
+    await receiptsCol.updateMany(
+      {
+        $or: [
+          { idCardNo: u.idCardNo },
+          { idCardNo: newStudentId },
+          { invoiceId: invNo },
+          ...(u.email ? [{ payerEmail: u.email.toLowerCase().trim() }] : []),
+        ],
+      },
+      {
+        $set: {
+          idCardNo: newStudentId,
+          signatoryName: "Emmanuel NIYOBUHUNGIRO",
+        },
+      }
+    );
 
     migratedCount++;
-    console.log(`Updated ${u.name} (${u.sector || "GEN"}) -> Student ID: ${newStudentId}, Inv: ${invNo}`);
+    console.log(`Updated ${u.name} (${u.sector || "GEN"}) -> Student ID: ${newStudentId}, Batch: EMMANUEL NIYOBUHUNGIRO`);
   }
 
   console.log(`\nMigration completed successfully for ${migratedCount} learners!`);

@@ -52,6 +52,7 @@ export async function postEnrollment(req: Request, res: Response): Promise<void>
         name: learner.name,
         email: learner.email,
         courseTitle,
+        idCardNo: learner.idCardNo,
         kind: "enrolled",
       }).catch((err) => console.error("[ENROLL] Notify learner failed:", err));
     }
@@ -149,6 +150,7 @@ export async function patchEnrollment(req: Request, res: Response): Promise<void
           name: learner.name,
           email: learner.email,
           courseTitle,
+          idCardNo: learner.idCardNo,
           kind: "activated",
         }).catch((err) => console.error("[ENROLL] Notify learner (activated) failed:", err));
       }
@@ -157,5 +159,33 @@ export async function patchEnrollment(req: Request, res: Response): Promise<void
   } catch (e) {
     console.error("patchEnrollment:", e);
     res.status(500).json({ error: "Failed to update enrollment." });
+  }
+}
+
+/** DELETE /api/enrollments/:id or /api/enrollments?userId=...&courseId=... */
+export async function deleteEnrollment(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    const { userId, courseId } = req.query as { userId?: string; courseId?: string };
+    const col = enrollmentsCol();
+
+    if (id && id !== "undefined") {
+      const result = await col.deleteOne({ id });
+      if (result.deletedCount > 0) {
+        res.json({ message: "Course enrollment removed successfully." });
+        return;
+      }
+    }
+
+    if (userId && courseId) {
+      await col.deleteOne({ userId, courseId });
+      res.json({ message: "Course enrollment removed successfully." });
+      return;
+    }
+
+    res.status(400).json({ error: "Enrollment ID or userId and courseId required." });
+  } catch (e) {
+    console.error("deleteEnrollment:", e);
+    res.status(500).json({ error: "Failed to remove course enrollment." });
   }
 }
