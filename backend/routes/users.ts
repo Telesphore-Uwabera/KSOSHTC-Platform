@@ -226,7 +226,7 @@ export async function syncLearnerReceipt(u: User): Promise<void> {
         companyTagline: "Safety today, prosperity tomorrow.",
         companyAddress: "Kicukiro, Kigali, Rwanda · Phone: +250 785 072 512 · ksoshtc@gmail.com",
         panNumber: "RTB Accredited Institution",
-        gstinNumber: "TIN: 108520137",
+        gstinNumber: "TIN: 153850743",
         logoUrl: "/logo_transparent.webp",
         signatoryName: "Emmanuel NIYOBUHUNGIRO",
         signatoryTitle: "Authorized Signatory - Finance & Administration",

@@ -85,7 +85,7 @@ export default function AdminReceipts() {
     "Kicukiro, Kigali, Rwanda · Phone: +250 785 072 512 · ksoshtc@gmail.com"
   );
   const [panNumber, setPanNumber] = useState("RTB Accredited Institution");
-  const [gstinNumber, setGstinNumber] = useState("TIN: 108520137");
+  const [gstinNumber, setGstinNumber] = useState("TIN: 153850743");
   const [logoUrl, setLogoUrl] = useState("/logo_transparent.webp");
 
   // Invoice & Installments
@@ -182,7 +182,7 @@ export default function AdminReceipts() {
     setCompanyTagline("Safety today, prosperity tomorrow.");
     setCompanyAddress("Kicukiro, Kigali, Rwanda · Phone: +250 785 072 512 · ksoshtc@gmail.com");
     setPanNumber("RTB Accredited Institution");
-    setGstinNumber("TIN: 108520137");
+    setGstinNumber("TIN: 153850743");
     setPolicyUrl("https://ksoshtc.org/terms");
 
     setInvoiceDetails([
@@ -242,7 +242,7 @@ export default function AdminReceipts() {
     setCompanyTagline(r.companyTagline || "Safety today, prosperity tomorrow.");
     setCompanyAddress(r.companyAddress || "Kicukiro, Kigali, Rwanda · Phone: +250 785 072 512 · ksoshtc@gmail.com");
     setPanNumber(r.panNumber || "RTB Accredited Institution");
-    setGstinNumber(r.gstinNumber || "TIN: 108520137");
+    setGstinNumber(r.gstinNumber ? r.gstinNumber.replace("108520137", "153850743") : "TIN: 153850743");
     setLogoUrl(r.logoUrl || "/logo_transparent.webp");
     setPolicyUrl(r.policyUrl || "https://ksoshtc.org/terms");
 
@@ -1361,7 +1361,7 @@ export default function AdminReceipts() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-semibold text-gray-700 mb-1">GSTIN / Reg ID</label>
+                      <label className="block text-xs font-semibold text-gray-700 mb-1">TIN / Tax Registration ID</label>
                       <input
                         type="text"
                         value={gstinNumber}

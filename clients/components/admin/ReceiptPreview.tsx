@@ -177,7 +177,14 @@ export const ReceiptPreview: React.FC<ReceiptPreviewProps> = ({
                 {receipt.panNumber ? `Accreditation: ${receipt.panNumber}` : "RTB Accredited Institution"}
               </span>
               <span className="px-2 py-0.5 rounded bg-gray-100 text-gray-800 font-bold border border-gray-200">
-                {receipt.gstinNumber ? `Reg/TIN: ${receipt.gstinNumber}` : "TIN: 108520137"}
+                {(() => {
+                  const raw = (receipt.gstinNumber || "153850743")
+                    .replace("108520137", "153850743")
+                    .trim();
+                  return raw.toUpperCase().startsWith("TIN:")
+                    ? raw
+                    : `TIN: ${raw.replace(/^(Reg\/TIN:|GSTIN:)/i, "").trim()}`;
+                })()}
               </span>
             </div>
           </div>

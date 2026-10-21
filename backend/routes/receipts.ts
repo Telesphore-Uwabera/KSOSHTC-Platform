@@ -136,7 +136,7 @@ export async function createReceipt(req: Request, res: Response): Promise<void> 
       companyTagline: body.companyTagline || "Safety today, prosperity tomorrow.",
       companyAddress: body.companyAddress || "Kicukiro, Kigali, Rwanda · Phone: +250 785 072 512 · ksoshtc@gmail.com",
       panNumber: body.panNumber || "RTB Accredited Institution",
-      gstinNumber: body.gstinNumber || "TIN: 108520137",
+      gstinNumber: body.gstinNumber ? body.gstinNumber.replace("108520137", "153850743") : "TIN: 153850743",
       logoUrl: body.logoUrl || "/logo_transparent.webp",
 
       // Stamp and Signature

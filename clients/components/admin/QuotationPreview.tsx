@@ -121,6 +121,7 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({ quotation, c
                   <div>Bank Name: <span className="font-semibold text-white">{paymentInfo?.bankName || "EQUITY BANK RWANDA"}</span></div>
                   <div>Account No: <span className="font-semibold text-white">{paymentInfo?.accountNo || "4025201372795"}</span></div>
                   <div>Account Name: <span className="font-semibold text-white">{paymentInfo?.accountName || "Kigali Safety OSH Training Center"}</span></div>
+                  <div>TIN: <span className="font-semibold text-white">153850743</span></div>
                 </div>
               </div>
             </div>
