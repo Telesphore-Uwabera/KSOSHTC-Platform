@@ -269,21 +269,16 @@ export async function updateCourse(req: Request, res: Response): Promise<void> {
 /** Return total lesson + assessment count for a course (for completion %) */
 export async function getCourseTotalSteps(courseId: string): Promise<{ totalLessons: number; totalAssessments: number }> {
   const mods = await mongoCollection<ModuleDoc>(MONGO_COLLECTIONS.modules)
-    .find({ courseId })
-    .sort({ order: 1 })
+    .find({ courseId }, { projection: { id: 1 } })
     .toArray();
-  let totalLessons = 0;
-  let totalAssessments = 0;
+  const moduleIds = mods.map((m) => m.id);
+  if (moduleIds.length === 0) return { totalLessons: 0, totalAssessments: 0 };
   const lessonsCol = mongoCollection<LessonDoc>(MONGO_COLLECTIONS.lessons);
   const assessmentsCol = mongoCollection<AssessmentDoc>(MONGO_COLLECTIONS.assessments);
-  for (const m of mods) {
-    const [lc, ac] = await Promise.all([
-      lessonsCol.countDocuments({ courseId, moduleId: m.id }),
-      assessmentsCol.countDocuments({ courseId, moduleId: m.id }),
-    ]);
-    totalLessons += lc;
-    totalAssessments += ac;
-  }
+  const [totalLessons, totalAssessments] = await Promise.all([
+    lessonsCol.countDocuments({ courseId, moduleId: { $in: moduleIds } }),
+    assessmentsCol.countDocuments({ courseId, moduleId: { $in: moduleIds } }),
+  ]);
   return { totalLessons, totalAssessments };
 }
 

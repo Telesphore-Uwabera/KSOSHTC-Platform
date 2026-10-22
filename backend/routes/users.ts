@@ -1,7 +1,19 @@
 import { Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import crypto from "node:crypto";
-import type { User, UserCreate, UserPublic, LearnerSector, FeeReceipt } from "@shared/api";
+import type {
+  User,
+  UserCreate,
+  UserPublic,
+  LearnerSector,
+  FeeReceipt,
+  EnrollmentDoc,
+  ProgressDoc,
+  LessonDoc,
+  AssessmentDoc,
+  ModuleDoc,
+  SubmissionDoc,
+} from "@shared/api";
 import { DEFAULT_RECEIPT_TERMS } from "@shared/api";
 import { mongoCollection, MONGO_COLLECTIONS } from "../lib/mongo";
 import {
@@ -13,8 +25,6 @@ import {
 } from "../lib/notify";
 import { issueAdminSessionToken } from "../lib/adminSession";
 import type { EnrollmentWithPercent } from "./enrollments";
-import { getEnrollmentsForUser } from "./enrollments";
-import type { SubmissionDoc } from "@shared/api";
 import { getNextReceiptNo } from "./receipts";
 
 const BCRYPT_ROUNDS = 10;
@@ -437,7 +447,25 @@ export async function getUsers(_req: Request, res: Response): Promise<void> {
 
 export async function getLearnersSummary(_req: Request, res: Response): Promise<void> {
   try {
-    const rawUsers = await usersCol().find({}).sort({ createdAt: -1 }).toArray();
+    // Execute all required queries in parallel rather than N+1 queries per user
+    const [
+      rawUsers,
+      allEnrollments,
+      allProgress,
+      allSubmissions,
+      allModules,
+      allLessons,
+      allAssessments,
+    ] = await Promise.all([
+      usersCol().find({}).sort({ createdAt: -1 }).toArray(),
+      mongoCollection<EnrollmentDoc>(MONGO_COLLECTIONS.enrollments).find({}).toArray(),
+      mongoCollection<ProgressDoc>(MONGO_COLLECTIONS.progress).find({}).toArray(),
+      submissionsCol().find({}).toArray(),
+      mongoCollection<ModuleDoc>(MONGO_COLLECTIONS.modules).find({}, { projection: { id: 1, courseId: 1 } }).toArray(),
+      mongoCollection<LessonDoc>(MONGO_COLLECTIONS.lessons).find({}, { projection: { courseId: 1, moduleId: 1 } }).toArray(),
+      mongoCollection<AssessmentDoc>(MONGO_COLLECTIONS.assessments).find({}, { projection: { courseId: 1, moduleId: 1 } }).toArray(),
+    ]);
+
     const totalCount = rawUsers.length;
     const users = rawUsers.map((u, idx) => {
       const pub = toPublic(u);
@@ -456,36 +484,90 @@ export async function getLearnersSummary(_req: Request, res: Response): Promise<
       if (!pub.coursePackage) pub.coursePackage = "Standard";
       return pub;
     });
+
+    // 1. Build lookup for valid module IDs
+    const validModuleIds = new Set<string>();
+    for (const m of allModules) {
+      if (m.id) validModuleIds.add(m.id);
+    }
+
+    // 2. Pre-calculate total lessons and assessments per course in memory
+    const courseStats = new Map<string, { totalLessons: number; totalAssessments: number }>();
+    for (const l of allLessons) {
+      if (!l.courseId || (l.moduleId && !validModuleIds.has(l.moduleId))) continue;
+      const stat = courseStats.get(l.courseId) ?? { totalLessons: 0, totalAssessments: 0 };
+      stat.totalLessons += 1;
+      courseStats.set(l.courseId, stat);
+    }
+    for (const a of allAssessments) {
+      if (!a.courseId || (a.moduleId && !validModuleIds.has(a.moduleId))) continue;
+      const stat = courseStats.get(a.courseId) ?? { totalLessons: 0, totalAssessments: 0 };
+      stat.totalAssessments += 1;
+      courseStats.set(a.courseId, stat);
+    }
+
+    // 3. Pre-index progress by `${userId}_${courseId}` and by `id`
+    const progressMap = new Map<string, ProgressDoc>();
+    for (const p of allProgress) {
+      if (p.id) progressMap.set(p.id, p);
+      if (p.userId && p.courseId) progressMap.set(`${p.userId}_${p.courseId}`, p);
+    }
+
+    // 4. Pre-group submissions by userId
+    const submissionsByUser = new Map<string, SubmissionDoc[]>();
+    for (const s of allSubmissions) {
+      if (!s.userId) continue;
+      const list = submissionsByUser.get(s.userId) ?? [];
+      list.push(s);
+      submissionsByUser.set(s.userId, list);
+    }
+
+    // 5. Pre-group enrollments by userId
+    const enrollmentsByUser = new Map<string, EnrollmentDoc[]>();
+    for (const en of allEnrollments) {
+      if (!en.userId) continue;
+      const list = enrollmentsByUser.get(en.userId) ?? [];
+      list.push(en);
+      enrollmentsByUser.set(en.userId, list);
+    }
+
+    // 6. Enrich all users' enrollments in memory in O(N) time
     const enrollmentsByUserId: Record<string, EnrollmentWithPercent[]> = {};
-    await Promise.all(
-      users.map(async (u) => {
-        const enrollments = await getEnrollmentsForUser(u.id);
-        const subs = await submissionsCol().find({ userId: u.id }).toArray();
+    for (const u of users) {
+      const userEnrollments = enrollmentsByUser.get(u.id) ?? [];
+      const userSubs = submissionsByUser.get(u.id) ?? [];
 
-        const enriched = enrollments.map((en) => {
-          const courseSubs = subs.filter((s) => s.courseId === en.courseId);
-          const quizPerformance = courseSubs.reduce(
-            (acc, s) => {
-              const existing = acc[s.assessmentId];
-              if (!existing || s.percentage > existing.percentage) {
-                acc[s.assessmentId] = {
-                  score: s.score,
-                  maxScore: s.maxScore,
-                  percentage: s.percentage,
-                  passed: s.passed,
-                };
-              }
-              return acc;
-            },
-            {} as Record<string, { score: number; maxScore: number; percentage: number; passed: boolean }>
-          );
+      const enriched: EnrollmentWithPercent[] = userEnrollments.map((en) => {
+        const courseSubs = userSubs.filter((s) => s.courseId === en.courseId);
+        const quizPerformance = courseSubs.reduce(
+          (acc, s) => {
+            const existing = acc[s.assessmentId];
+            if (!existing || s.percentage > existing.percentage) {
+              acc[s.assessmentId] = {
+                score: s.score,
+                maxScore: s.maxScore,
+                percentage: s.percentage,
+                passed: s.passed,
+              };
+            }
+            return acc;
+          },
+          {} as Record<string, { score: number; maxScore: number; percentage: number; passed: boolean }>
+        );
 
-          return { ...en, quizPerformance };
-        });
+        const prog = progressMap.get(`${u.id}_${en.courseId}`);
+        const stats = courseStats.get(en.courseId) ?? { totalLessons: 0, totalAssessments: 0 };
+        const totalSteps = stats.totalLessons + stats.totalAssessments;
+        const completed =
+          (prog?.completedLessonIds?.length ?? 0) + (prog?.completedAssessmentIds?.length ?? 0);
+        const completionPercent = totalSteps > 0 ? Math.round((completed / totalSteps) * 100) : 0;
 
-        enrollmentsByUserId[u.id] = enriched as any;
-      })
-    );
+        return { ...en, completionPercent, quizPerformance } as any;
+      });
+
+      enrollmentsByUserId[u.id] = enriched;
+    }
+
     res.json({ users, enrollmentsByUserId });
   } catch (e) {
     console.error("Learners summary error:", e);

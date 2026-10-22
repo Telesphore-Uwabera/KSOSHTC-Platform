@@ -40,8 +40,8 @@ export function startKeepAlive(options?: {
   const pingUrl = `${baseUrl}/api/ping`;
   const healthUrl = `${baseUrl}/health`;
 
-  // Render idle timeout is 15 minutes. Ping every 5 minutes for guaranteed uptime.
-  const intervalMinutes = options?.intervalMinutes || Number(process.env.KEEP_ALIVE_INTERVAL_MINUTES) || 5;
+  // Render idle timeout is 15 minutes. Ping every 3 minutes for guaranteed 24/7 uptime.
+  const intervalMinutes = options?.intervalMinutes || Number(process.env.KEEP_ALIVE_INTERVAL_MINUTES) || 3;
   const intervalMs = Math.max(1, intervalMinutes) * 60 * 1000;
 
   console.log(`[KEEP-ALIVE] Initializing 24/7 Anti-Sleep engine for: ${baseUrl} (every ${intervalMinutes} min)`);
@@ -88,12 +88,13 @@ export function startKeepAlive(options?: {
 
   const pingCycle = () => {
     executePing(pingUrl);
+    setTimeout(() => executePing(healthUrl), 3000);
   };
 
-  // Run initial ping quickly after 15 seconds so server wakes and establishes connection immediately
+  // Run initial ping quickly after 10 seconds so server wakes and establishes connection immediately
   const initialTimeout = setTimeout(() => {
     pingCycle();
-  }, 15 * 1000);
+  }, 10 * 1000);
 
   keepAliveInterval = setInterval(pingCycle, intervalMs);
 }

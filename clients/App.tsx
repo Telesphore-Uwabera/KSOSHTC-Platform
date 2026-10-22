@@ -122,14 +122,14 @@ function ScrollToTop() {
 function PrefetchKeyData() {
   const queryClient = useQueryClient();
   useEffect(() => {
-    // Keep-alive warm-up ping for Render backend (pings every 3.5 min while app is open)
+    // Keep-alive warm-up ping for Render backend (pings every 2 min while app is open)
     const keepAlivePing = () => {
       const base = getApiBase();
       fetch(base + "/api/ping", { cache: "no-store" }).catch(() => {});
       fetch(base + "/health", { cache: "no-store" }).catch(() => {});
     };
     keepAlivePing();
-    const interval = setInterval(keepAlivePing, 3.5 * 60 * 1000);
+    const interval = setInterval(keepAlivePing, 2 * 60 * 1000);
 
     queryClient.prefetchQuery({
       queryKey: ["course-content", "courses"],

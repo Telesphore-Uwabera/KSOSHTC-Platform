@@ -2,8 +2,8 @@ name: Backend 24/7 Keep-Alive
 
 on:
   schedule:
-    # Runs every 10 minutes 24/7/365 to prevent Render free-tier idle spin-down
-    - cron: "*/10 * * * *"
+    # Runs every 5 minutes 24/7/365 to prevent Render free-tier idle spin-down
+    - cron: "*/5 * * * *"
   workflow_dispatch: # Allows manual trigger from GitHub Actions UI
 
 jobs:

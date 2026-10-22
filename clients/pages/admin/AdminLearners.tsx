@@ -278,14 +278,18 @@ export default function AdminLearners() {
   const [feeEditBalance, setFeeEditBalance] = useState<number | string>(0);
   const [feeEditError, setFeeEditError] = useState("");
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, isFetching, refetch } = useQuery({
     queryKey: ["learners-summary"],
     queryFn: fetchLearnersSummary,
+    staleTime: 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const { data: courses = [] } = useQuery({
     queryKey: ["course-content", "courses"],
     queryFn: fetchCourses,
+    staleTime: 5 * 60 * 1000,
+    refetchOnWindowFocus: false,
   });
 
   const approveMutation = useMutation({
@@ -887,6 +891,16 @@ export default function AdminLearners() {
                 <RefreshCw className="w-4 h-4" />
               )}
               Update Student IDs
+            </button>
+            <button
+              type="button"
+              onClick={() => refetch()}
+              disabled={isFetching}
+              className="inline-flex items-center gap-2 bg-gray-100 text-gray-700 hover:bg-gray-200 px-3.5 py-2.5 rounded-xl text-sm font-semibold disabled:opacity-60 shadow-sm transition-all border border-gray-200"
+              title="Refresh learners data"
+            >
+              <RefreshCw className={`w-4 h-4 text-gray-600 ${isFetching ? "animate-spin" : ""}`} />
+              Refresh
             </button>
             <button
               type="button"
