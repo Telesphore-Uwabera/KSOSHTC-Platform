@@ -22,6 +22,7 @@ import {
   notifyLearnerApproved,
   notifyPasswordReset,
   notifyPasswordResetSuccessful,
+  sendReceiptEmail,
 } from "../lib/notify";
 import { issueAdminSessionToken } from "../lib/adminSession";
 import type { EnrollmentWithPercent } from "./enrollments";
@@ -803,13 +804,117 @@ export async function putUser(req: Request, res: Response): Promise<void> {
         console.error("[APPROVE] Notify learner failed:", err)
       );
     }
-    if (body.totalFees !== undefined || body.paymentAmount !== undefined || body.balanceFee !== undefined) {
+    const feesChanged = body.totalFees !== undefined || body.paymentAmount !== undefined || body.balanceFee !== undefined;
+    if (feesChanged) {
       await syncLearnerReceipt(updated);
+      // Auto-send receipt email to learner when fees are recorded or updated
+      if (updated.email && (updated.paymentAmount ?? 0) > 0) {
+        const receiptNo = updated.invoiceNo || updated.idCardNo || updated.id;
+        const totalFees = updated.totalFees ?? 150000;
+        const payment = updated.paymentAmount ?? 0;
+        const balance = updated.balanceFee ?? Math.max(0, totalFees - payment);
+        const paidLabel = balance <= 0 ? "PAID IN FULL" : `Partial payment — Balance: RWF ${balance.toLocaleString()}`;
+        sendReceiptEmail({
+          to: updated.email,
+          payerName: updated.name,
+          receiptNo: `${receiptNo}`,
+          amount: payment,
+          currency: "RWF",
+          packageName: updated.coursePackage || "Course Fees",
+          receiptDate: new Date().toLocaleDateString("en-GB"),
+        }).then(() => {
+          console.log(`[RECEIPT_EMAIL] Sent to ${updated.email} for receipt ${receiptNo}`);
+        }).catch((err: Error) => {
+          console.error("[RECEIPT_EMAIL] Failed to send fee receipt email:", err.message);
+        });
+      }
     }
     res.json({ user: toPublic(updated) });
   } catch (e) {
     console.error("Update user error:", e);
     res.status(500).json({ error: "Failed to update learner." });
+  }
+}
+
+/**
+ * PATCH /api/users/:id — partial update (used by AdminLearners fee quick-edit)
+ * Accepts a subset of fields; does not require all user fields.
+ */
+export async function patchUser(req: Request, res: Response): Promise<void> {
+  try {
+    const { id } = req.params;
+    if (id === "admin") {
+      res.status(400).json({ error: "Cannot update admin user." });
+      return;
+    }
+    const col = usersCol();
+    const current = await col.findOne({ id });
+    if (!current) {
+      res.status(404).json({ error: "User not found." });
+      return;
+    }
+    const body = req.body as Partial<User>;
+    const allowedFields: (keyof User)[] = [
+      "totalFees", "paymentAmount", "balanceFee",
+      "name", "email", "phone", "organization", "sector",
+      "approved", "idCardNo", "invoiceNo", "registrationNo",
+      "coursePackage", "admissionBatch", "academicYear", "admissionTakenBy",
+    ];
+    const $set: Partial<User> = {};
+    for (const field of allowedFields) {
+      if (body[field] !== undefined) {
+        ($set as any)[field] = (body as any)[field];
+      }
+    }
+    if (Object.keys($set).length === 0) {
+      res.json({ user: toPublic(current) });
+      return;
+    }
+    // Auto-calculate balance when fees/payment changes
+    if ((body.totalFees !== undefined || body.paymentAmount !== undefined) && body.balanceFee === undefined) {
+      const t = body.totalFees !== undefined ? Number(body.totalFees) : (current.totalFees ?? 150000);
+      const p = body.paymentAmount !== undefined ? Number(body.paymentAmount) : (current.paymentAmount ?? 0);
+      $set.balanceFee = Math.max(0, t - p);
+    }
+    await col.updateOne({ id }, { $set });
+    const updated = (await col.findOne({ id })) as User;
+
+    const feesChanged = body.totalFees !== undefined || body.paymentAmount !== undefined || body.balanceFee !== undefined;
+    if (feesChanged) {
+      await syncLearnerReceipt(updated);
+      // Auto-send receipt email when fees are recorded
+      if (updated.email && (updated.paymentAmount ?? 0) > 0) {
+        const receiptNo = updated.invoiceNo || updated.idCardNo || updated.id;
+        const payment = updated.paymentAmount ?? 0;
+        const balance = updated.balanceFee ?? 0;
+        const pkg = updated.coursePackage || "Course Fees";
+        sendReceiptEmail({
+          to: updated.email,
+          payerName: updated.name,
+          receiptNo: `${receiptNo}`,
+          amount: payment,
+          currency: "RWF",
+          packageName: balance <= 0 ? `${pkg} — PAID IN FULL` : `${pkg} — Balance: RWF ${balance.toLocaleString()}`,
+          receiptDate: new Date().toLocaleDateString("en-GB"),
+        }).then(() => {
+          console.log(`[RECEIPT_EMAIL] Auto-sent to ${updated.email} for receipt ${receiptNo}`);
+        }).catch((err: Error) => {
+          console.error("[RECEIPT_EMAIL] Auto-email failed:", err.message);
+        });
+      }
+    }
+
+    const wasJustApproved = body.approved === true && !current.approved;
+    if (wasJustApproved) {
+      notifyLearnerApproved({ name: updated.name, email: updated.email, idCardNo: updated.idCardNo }).catch((err) =>
+        console.error("[APPROVE] Notify learner failed:", err)
+      );
+    }
+
+    res.json({ user: toPublic(updated) });
+  } catch (e) {
+    console.error("Patch user error:", e);
+    res.status(500).json({ error: "Failed to patch learner." });
   }
 }
 

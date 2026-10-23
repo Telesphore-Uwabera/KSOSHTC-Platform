@@ -15,6 +15,7 @@ import {
   getUser,
   getLearnersSummary,
   patchUserApprove,
+  patchUser,
   postUser,
   putUser,
   deleteUser,
@@ -243,6 +244,7 @@ export function createServer(options?: { apiOnly?: boolean }) {
   app.post("/api/reset-password", postResetPassword);
   app.post("/api/users", requireAdminSession, postUser);
   app.put("/api/users/:id", requireAdminSession, putUser);
+  app.patch("/api/users/:id", requireAdminSession, patchUser);
   app.delete("/api/users/:id", requireAdminSession, deleteUser);
 
   // Instructors (admin-only)

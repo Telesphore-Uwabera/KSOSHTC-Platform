@@ -227,17 +227,17 @@ export async function sendEmail(
       }));
       await sendViaBrevo(to, subject, textBody, htmlBody, brevoAtts);
       console.log("[NOTIFY] Email sent via Brevo:", subject, "to", to);
+      return;
     } catch (e) {
-      console.error("[NOTIFY] Brevo failed:", e instanceof Error ? e.message : e);
-      if (e instanceof Error && e.stack) console.error("[NOTIFY_STACK]", e.stack);
+      console.warn("[NOTIFY] Brevo API failed, falling back to SMTP:", e instanceof Error ? e.message : e);
     }
-    return;
   }
 
   const transport = getTransporter();
   if (!transport) {
-    console.log("[NOTIFY] Email not configured (set BREVO_API_KEY or SMTP); skipping:", subject);
-    return;
+    const msg = `Email delivery failed: Brevo was unavailable and SMTP is not configured.`;
+    console.error("[NOTIFY]", msg);
+    throw new Error(msg);
   }
   try {
     const mailOptions: any = {
@@ -259,6 +259,7 @@ export async function sendEmail(
   } catch (e) {
     console.error("[NOTIFY] SMTP failed:", e instanceof Error ? e.message : e);
     if (e instanceof Error && e.stack) console.error("[NOTIFY_STACK]", e.stack);
+    throw new Error(`Email delivery failed via SMTP: ${e instanceof Error ? e.message : String(e)}`);
   }
 }
 
