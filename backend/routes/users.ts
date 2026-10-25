@@ -152,8 +152,8 @@ export async function syncLearnerReceipt(u: User): Promise<void> {
     const col = mongoCollection<FeeReceipt>(MONGO_COLLECTIONS.receipts);
     const invoiceId = u.invoiceNo || u.registrationNo || u.idCardNo || `INV-${Date.now().toString().slice(-6)}`;
     const studentId = u.idCardNo || "";
-    const totalFees = u.totalFees !== undefined ? u.totalFees : 150000;
-    const payment = u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0);
+    const totalFees = u.totalFees !== undefined ? u.totalFees : 200000;
+    const payment = u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 200000 : 0);
     const balance = u.balanceFee !== undefined ? u.balanceFee : Math.max(0, totalFees - payment);
 
     const orConditions: any[] = [];
@@ -474,8 +474,8 @@ export async function getLearnersSummary(_req: Request, res: Response): Promise<
       const seq = totalCount - idx;
       if (!pub.invoiceNo) pub.invoiceNo = `${5000 + seq}`;
       if (!pub.registrationNo) pub.registrationNo = pub.invoiceNo;
-      if (pub.totalFees === undefined || pub.totalFees === null) pub.totalFees = 150000;
-      if (pub.paymentAmount === undefined || pub.paymentAmount === null) pub.paymentAmount = pub.approved ? 150000 : 0;
+      if (pub.totalFees === undefined || pub.totalFees === null) pub.totalFees = 200000;
+      if (pub.paymentAmount === undefined || pub.paymentAmount === null) pub.paymentAmount = pub.approved ? 200000 : 0;
       if (pub.balanceFee === undefined || pub.balanceFee === null) pub.balanceFee = Math.max(0, pub.totalFees - pub.paymentAmount);
       if (!pub.academicYear) pub.academicYear = `${year}-${year + 1}`;
       if (!pub.admissionBatch || pub.admissionBatch === "Mr Sooraj Jacob" || pub.admissionBatch === "Mr Rahul Aren") {
@@ -651,8 +651,8 @@ export async function postUser(req: Request, res: Response): Promise<void> {
     }
     const passwordHash = await hashPassword(password);
     const idCardNo = providedIdCardNo?.trim() || (await generateIdCardNo(sectorVal));
-    const finalTotalFees = totalFees !== undefined ? Number(totalFees) : 150000;
-    const finalPayment = paymentAmount !== undefined ? Number(paymentAmount) : (approved ? 150000 : 0);
+    const finalTotalFees = totalFees !== undefined ? Number(totalFees) : 200000;
+    const finalPayment = paymentAmount !== undefined ? Number(paymentAmount) : (approved ? 200000 : 0);
     const finalBalance = balanceFee !== undefined ? Number(balanceFee) : Math.max(0, finalTotalFees - finalPayment);
 
     const user: User = {
@@ -810,7 +810,7 @@ export async function putUser(req: Request, res: Response): Promise<void> {
       // Auto-send receipt email to learner when fees are recorded or updated
       if (updated.email && (updated.paymentAmount ?? 0) > 0) {
         const receiptNo = updated.invoiceNo || updated.idCardNo || updated.id;
-        const totalFees = updated.totalFees ?? 150000;
+        const totalFees = updated.totalFees ?? 200000;
         const payment = updated.paymentAmount ?? 0;
         const balance = updated.balanceFee ?? Math.max(0, totalFees - payment);
         const paidLabel = balance <= 0 ? "PAID IN FULL" : `Partial payment — Balance: RWF ${balance.toLocaleString()}`;
@@ -872,7 +872,7 @@ export async function patchUser(req: Request, res: Response): Promise<void> {
     }
     // Auto-calculate balance when fees/payment changes
     if ((body.totalFees !== undefined || body.paymentAmount !== undefined) && body.balanceFee === undefined) {
-      const t = body.totalFees !== undefined ? Number(body.totalFees) : (current.totalFees ?? 150000);
+      const t = body.totalFees !== undefined ? Number(body.totalFees) : (current.totalFees ?? 200000);
       const p = body.paymentAmount !== undefined ? Number(body.paymentAmount) : (current.paymentAmount ?? 0);
       $set.balanceFee = Math.max(0, t - p);
     }
@@ -953,8 +953,8 @@ export async function postSyncLearners(_req: Request, res: Response): Promise<vo
 
       const invNo = u.invoiceNo || (r ? r.invoiceId : `${5000 + seq}`);
       const regNo = u.registrationNo || (r ? r.invoiceId : `${5000 + seq}`);
-      const totalFees = u.totalFees !== undefined ? u.totalFees : (r ? (r.dueFee || r.receivedFee || 150000) : 150000);
-      const payment = u.paymentAmount !== undefined ? u.paymentAmount : (r ? r.receivedFee : (u.approved ? 150000 : 0));
+      const totalFees = u.totalFees !== undefined ? u.totalFees : (r ? (r.dueFee || r.receivedFee || 200000) : 200000);
+      const payment = u.paymentAmount !== undefined ? u.paymentAmount : (r ? r.receivedFee : (u.approved ? 200000 : 0));
       const balance = u.balanceFee !== undefined ? u.balanceFee : Math.max(0, totalFees - payment);
       const academicYear = u.academicYear || `${year}-${year + 1}`;
       const admissionBatch = "EMMANUEL NIYOBUHUNGIRO";

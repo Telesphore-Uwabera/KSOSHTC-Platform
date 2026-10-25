@@ -95,8 +95,8 @@ export default function Dashboard() {
   const categoryLabel = currentUser?.sector ? (SECTOR_LABELS[currentUser.sector] ?? currentUser.sector) : "All categories";
   const handoutPreview = handouts.slice(0, 3);
 
-  const totalFees = currentUser?.totalFees !== undefined ? currentUser.totalFees : 150000;
-  const paymentAmount = currentUser?.paymentAmount !== undefined ? currentUser.paymentAmount : (currentUser?.approved ? 150000 : 0);
+  const totalFees = currentUser?.totalFees !== undefined ? currentUser.totalFees : 200000;
+  const paymentAmount = currentUser?.paymentAmount !== undefined ? currentUser.paymentAmount : (currentUser?.approved ? 200000 : 0);
   const balanceFee = currentUser?.balanceFee !== undefined ? currentUser.balanceFee : Math.max(0, totalFees - paymentAmount);
   const isFeesCleared = balanceFee <= 0;
 

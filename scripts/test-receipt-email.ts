@@ -11,7 +11,7 @@ async function run() {
       to: "ksoshtc@gmail.com",
       payerName: "Test Student",
       receiptNo: "KSOSHTC/REC/2026/001",
-      amount: 150000,
+      amount: 200000,
       currency: "RWF",
       packageName: "Construction Safety"
     });

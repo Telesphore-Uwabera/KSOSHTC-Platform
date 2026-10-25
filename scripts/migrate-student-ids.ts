@@ -85,8 +85,8 @@ async function migrate() {
 
     const invNo = u.invoiceNo || (r ? r.invoiceId : `${5000 + seq}`);
     const regNo = u.registrationNo || (r ? r.invoiceId : `${5000 + seq}`);
-    const totalFees = u.totalFees !== undefined ? u.totalFees : (r ? (r.dueFee || r.receivedFee || 150000) : 150000);
-    const payment = u.paymentAmount !== undefined ? u.paymentAmount : (r ? r.receivedFee : (u.approved ? 150000 : 0));
+    const totalFees = u.totalFees !== undefined ? u.totalFees : (r ? (r.dueFee || r.receivedFee || 200000) : 200000);
+    const payment = u.paymentAmount !== undefined ? u.paymentAmount : (r ? r.receivedFee : (u.approved ? 200000 : 0));
     const balance = u.balanceFee !== undefined ? u.balanceFee : Math.max(0, totalFees - payment);
     const academicYear = u.academicYear || `${year}-${year + 1}`;
     const admissionBatch = "EMMANUEL NIYOBUHUNGIRO";

@@ -62,7 +62,7 @@ export default function AdminReceipts() {
   const [receiptDate, setReceiptDate] = useState("05 October 2026");
   const [receivedIn, setReceivedIn] = useState("Equity Bank Rwanda / MoMo");
   const [chequeTranNo, setChequeTranNo] = useState("");
-  const [receivedFee, setReceivedFee] = useState<number | string>(150000);
+  const [receivedFee, setReceivedFee] = useState<number | string>(200000);
   const [currency, setCurrency] = useState("RWF"); // Default to RWF
 
   // Payer State
@@ -96,8 +96,8 @@ export default function AdminReceipts() {
       packageDetails: "Occupational Safety and Health (OSH) Training Course",
       feesDetails: "Course Fees",
       invoiceDate: "05 Oct 2026",
-      dueFee: 150000,
-      receivedFee: 150000,
+      dueFee: 200000,
+      receivedFee: 200000,
     },
   ]);
 
@@ -106,8 +106,8 @@ export default function AdminReceipts() {
       id: "inst-1",
       dueDate: "05 Oct 2026",
       invoiceNo: "7395",
-      dueFee: 150000,
-      receivedFee: 150000,
+      dueFee: 200000,
+      receivedFee: 200000,
       balanceFee: 0,
       paymentDetails: "KSOSHTC/REC/7395 Equity Bank Rwanda",
     },
@@ -166,7 +166,7 @@ export default function AdminReceipts() {
     setReceiptDate(new Date().toLocaleDateString("en-GB"));
     setReceivedIn("Equity Bank Rwanda / MoMo");
     setChequeTranNo("");
-    setReceivedFee(150000);
+    setReceivedFee(200000);
     setCurrency("RWF"); // Default RWF
 
     setReceivedFrom("");
@@ -192,8 +192,8 @@ export default function AdminReceipts() {
         packageDetails: "Occupational Safety and Health Course",
         feesDetails: "Course Fees",
         invoiceDate: new Date().toLocaleDateString("en-GB"),
-        dueFee: 150000,
-        receivedFee: 150000,
+        dueFee: 200000,
+        receivedFee: 200000,
       },
     ]);
 
@@ -202,8 +202,8 @@ export default function AdminReceipts() {
         id: "inst-1",
         dueDate: new Date().toLocaleDateString("en-GB"),
         invoiceNo: newInv,
-        dueFee: 150000,
-        receivedFee: 150000,
+        dueFee: 200000,
+        receivedFee: 200000,
         balanceFee: 0,
         paymentDetails: `KSOSHTC/REC/${newInv} Equity Bank`,
       },

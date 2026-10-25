@@ -265,16 +265,16 @@ export default function AdminLearners() {
   const [formAdmissionBatch, setFormAdmissionBatch] = useState("");
   const [formAcademicYear, setFormAcademicYear] = useState("");
   const [formAdmissionTakenBy, setFormAdmissionTakenBy] = useState("");
-  const [formTotalFees, setFormTotalFees] = useState<number | string>(150000);
-  const [formPaymentAmount, setFormPaymentAmount] = useState<number | string>(150000);
+  const [formTotalFees, setFormTotalFees] = useState<number | string>(200000);
+  const [formPaymentAmount, setFormPaymentAmount] = useState<number | string>(200000);
   const [formBalanceFee, setFormBalanceFee] = useState<number | string>(0);
   const [formError, setFormError] = useState("");
   const [courseToAddByUserId, setCourseToAddByUserId] = useState<Record<string, string>>({});
 
   // Quick Fee Edit State
   const [feeEditUser, setFeeEditUser] = useState<UserPublic | null>(null);
-  const [feeEditTotal, setFeeEditTotal] = useState<number | string>(150000);
-  const [feeEditPaid, setFeeEditPaid] = useState<number | string>(150000);
+  const [feeEditTotal, setFeeEditTotal] = useState<number | string>(200000);
+  const [feeEditPaid, setFeeEditPaid] = useState<number | string>(200000);
   const [feeEditBalance, setFeeEditBalance] = useState<number | string>(0);
   const [feeEditError, setFeeEditError] = useState("");
 
@@ -383,8 +383,8 @@ export default function AdminLearners() {
     setFormAdmissionBatch("EMMANUEL NIYOBUHUNGIRO");
     setFormAcademicYear("2026-2027");
     setFormAdmissionTakenBy("Dipali Kumari Agarwal");
-    setFormTotalFees(150000);
-    setFormPaymentAmount(150000);
+    setFormTotalFees(200000);
+    setFormPaymentAmount(200000);
     setFormBalanceFee(0);
     setFormError("");
   }
@@ -405,16 +405,16 @@ export default function AdminLearners() {
     setFormAdmissionBatch(u.admissionBatch ?? "EMMANUEL NIYOBUHUNGIRO");
     setFormAcademicYear(u.academicYear ?? "2026-2027");
     setFormAdmissionTakenBy(u.admissionTakenBy ?? "Dipali Kumari Agarwal");
-    setFormTotalFees(u.totalFees !== undefined ? u.totalFees : 150000);
-    setFormPaymentAmount(u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0));
+    setFormTotalFees(u.totalFees !== undefined ? u.totalFees : 200000);
+    setFormPaymentAmount(u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 200000 : 0));
     setFormBalanceFee(u.balanceFee !== undefined ? u.balanceFee : 0);
     setFormError("");
   }
 
   function openFeeEdit(u: UserPublic) {
     setFeeEditUser(u);
-    const total = u.totalFees !== undefined ? u.totalFees : 150000;
-    const paid = u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0);
+    const total = u.totalFees !== undefined ? u.totalFees : 200000;
+    const paid = u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 200000 : 0);
     const bal = u.balanceFee !== undefined ? u.balanceFee : Math.max(0, total - paid);
     setFeeEditTotal(total);
     setFeeEditPaid(paid);
@@ -744,8 +744,8 @@ export default function AdminLearners() {
     let bf = 0;
     for (const u of sortedUsers) {
       if (u.id === "admin") continue;
-      const t = Number(u.totalFees || 150000);
-      const p = Number(u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0));
+      const t = Number(u.totalFees || 200000);
+      const p = Number(u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 200000 : 0));
       const b = Number(u.balanceFee !== undefined ? u.balanceFee : 0);
       tf += t;
       pm += p;
@@ -824,8 +824,8 @@ export default function AdminLearners() {
         `"${u.academicYear || "2026-2027"}"`,
         `"${u.approved ? "Active" : "Pending"}"`,
         `"${(u.admissionTakenBy || "").replace(/"/g, '""')}"`,
-        u.totalFees || 150000,
-        u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0),
+        u.totalFees || 200000,
+        u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 200000 : 0),
         u.balanceFee !== undefined ? u.balanceFee : 0,
       ].join(",");
     });
@@ -1528,7 +1528,7 @@ export default function AdminLearners() {
                           title="Click to edit fees & match receipt"
                         >
                           <div className="flex items-center justify-end gap-1">
-                            <span>{Number(u.totalFees || 150000).toLocaleString()}</span>
+                            <span>{Number(u.totalFees || 200000).toLocaleString()}</span>
                             <Pencil className="w-3 h-3 text-gray-400 opacity-0 group-hover/fee:opacity-100 transition-opacity" />
                           </div>
                         </td>
@@ -1542,7 +1542,7 @@ export default function AdminLearners() {
                           <div className="flex items-center justify-end gap-1">
                             <span>
                               {Number(
-                                u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 150000 : 0)
+                                u.paymentAmount !== undefined ? u.paymentAmount : (u.approved ? 200000 : 0)
                               ).toLocaleString()}
                             </span>
                             <Pencil className="w-3 h-3 text-gray-400 opacity-0 group-hover/fee:opacity-100 transition-opacity" />
@@ -2526,7 +2526,7 @@ export default function AdminLearners() {
                       setFeeEditBalance(Math.max(0, total - Number(feeEditPaid || 0)));
                     }}
                     className="w-full px-4 py-2.5 rounded-xl border border-gray-200 text-sm font-mono font-bold text-gray-900 focus:border-primary focus:ring-2 focus:ring-primary/20 outline-none transition-all"
-                    placeholder="150000"
+                    placeholder="200000"
                   />
                 </div>
 
@@ -2545,7 +2545,7 @@ export default function AdminLearners() {
                       setFeeEditBalance(Math.max(0, Number(feeEditTotal || 0) - paid));
                     }}
                     className="w-full px-4 py-2.5 rounded-xl border border-emerald-300 text-sm font-mono font-bold text-emerald-700 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 outline-none transition-all"
-                    placeholder="150000"
+                    placeholder="200000"
                   />
                 </div>
 
