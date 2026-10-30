@@ -98,9 +98,9 @@ export default function Header() {
   return (
     <header className={headerClass}>
       <div className="max-w-7xl mx-auto px-2 sm:px-4 lg:px-6">
-        <div className={`flex items-center gap-1 sm:gap-2 transition-all duration-300 ${compact ? "h-16 sm:h-20 md:h-20" : "h-20 sm:h-24 md:h-28"}`}>
-          <div className="hidden md:flex md:flex-1 md:items-center md:min-w-0" />
-          <div className="hidden md:flex md:items-center md:justify-center md:flex-shrink-0">
+        <div className={`flex items-center gap-1 sm:gap-2 transition-all duration-300 ${compact ? "h-16 sm:h-20 lg:h-20" : "h-20 sm:h-24 lg:h-28"}`}>
+          <div className="hidden lg:flex lg:flex-1 lg:items-center lg:min-w-0" />
+          <div className="hidden lg:flex lg:items-center lg:justify-center lg:flex-shrink-0">
             <div className={`flex items-center gap-2 lg:gap-4 pl-3 pr-3 sm:pl-4 sm:pr-4 transition-all duration-300 ${compact ? "py-1 gap-2" : "py-2 sm:py-3"}`}>
               <Link to="/" className="flex-shrink-0 flex items-center group cursor-pointer transition-all duration-300 hover:scale-105">
                 <SiteImage
@@ -108,13 +108,13 @@ export default function Header() {
                   alt="KSOSHTC Logo"
                   width={512}
                   height={512}
-                  sizes="(max-width: 768px) 96px, 160px"
-                  className={`object-contain max-w-full h-auto transition-all duration-300 group-hover:rotate-3 ${compact ? "w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16" : "w-20 h-20 sm:w-24 sm:h-24 lg:w-28 lg:h-28 xl:w-32 xl:h-32"}`}
+                  sizes="(max-width: 1024px) 96px, 160px"
+                  className={`object-contain max-w-full h-auto transition-all duration-300 group-hover:rotate-3 ${compact ? "w-12 h-12 lg:w-16 lg:h-16" : "w-20 h-20 lg:w-28 lg:h-28 xl:w-32 xl:h-32"}`}
                   loading="eager"
                   decoding="async"
                 />
               </Link>
-              <nav className="flex gap-1 sm:gap-2 lg:gap-3 items-center">
+              <nav className="flex gap-1 lg:gap-2 xl:gap-3 items-center">
                 {navLinks.map((link) => {
                   const Icon = link.icon;
                   if (link.isDropdown) {
@@ -128,7 +128,7 @@ export default function Header() {
                         <span className="relative inline-block">
                           <Link
                             to={link.path}
-                            className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 font-medium transition-all duration-300 text-xs sm:text-sm lg:text-base ${isCoursesActive ? "text-primary" : "text-gray-700 hover:text-primary"}`}
+                            className={`inline-flex items-center gap-1.5 px-2 lg:px-2.5 xl:px-3 py-1.5 sm:py-2 font-medium transition-all duration-300 text-xs lg:text-sm xl:text-base ${isCoursesActive ? "text-primary" : "text-gray-700 hover:text-primary"}`}
                           >
                             <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                             {link.label}
@@ -169,7 +169,7 @@ export default function Header() {
                     <Link
                       key={link.path}
                       to={link.path}
-                      className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 font-medium transition-all duration-300 relative group text-xs sm:text-sm lg:text-base ${location.pathname === link.path ? "text-primary" : "text-gray-700 hover:text-primary"}`}
+                      className={`inline-flex items-center gap-1.5 px-2 lg:px-2.5 xl:px-3 py-1.5 sm:py-2 font-medium transition-all duration-300 relative group text-xs lg:text-sm xl:text-base ${location.pathname === link.path ? "text-primary" : "text-gray-700 hover:text-primary"}`}
                     >
                       <Icon className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                       {link.label}
@@ -180,16 +180,16 @@ export default function Header() {
                 {isRegistrationActive && (
                   <Link
                     to="/training-registration"
-                    className={`inline-flex items-center gap-1.5 px-2 sm:px-3 py-1.5 sm:py-2 font-medium transition-all duration-300 relative group text-xs sm:text-sm lg:text-base ${location.pathname === "/training-registration" ? "text-primary" : "text-gray-700 hover:text-primary"}`}
+                    className={`inline-flex items-center gap-1.5 px-2 lg:px-2.5 xl:px-3 py-1.5 sm:py-2 font-medium transition-all duration-300 relative group text-xs lg:text-sm xl:text-base ${location.pathname === "/training-registration" ? "text-primary" : "text-gray-700 hover:text-primary"}`}
                   >
                     <ClipboardSignature className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
                     Registration
                     <span className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-300 ${location.pathname === "/training-registration" ? "w-full" : "w-0 group-hover:w-full"}`} />
                   </Link>
                 )}
-<Link
-                to={isAdminRoute ? "/admin" : isInstructorRoute ? "/instructor" : "/dashboard"}
-                className={`inline-flex items-center gap-1.5 px-3 sm:px-4 py-1.5 sm:py-2 rounded-full font-semibold transition-all duration-300 text-xs sm:text-sm lg:text-base border-2 ${
+                <Link
+                  to={isAdminRoute ? "/admin" : isInstructorRoute ? "/instructor" : "/dashboard"}
+                  className={`inline-flex items-center gap-1.5 px-3 lg:px-4 py-1.5 sm:py-2 rounded-full font-semibold transition-all duration-300 text-xs lg:text-sm xl:text-base border-2 ${
                     (isAdminRoute
                       ? location.pathname === "/admin"
                       : isInstructorRoute
@@ -211,26 +211,49 @@ export default function Header() {
               </nav>
             </div>
           </div>
-          <div className="hidden md:block md:flex-1 md:min-w-0" />
+          <div className="hidden lg:block lg:flex-1 lg:min-w-0" />
 
-          <Link to="/" className="md:hidden flex-shrink-0 flex items-center group cursor-pointer transition-all duration-300 hover:scale-105">
+          {/* Mobile, Small & Medium Screens (< lg) Header */}
+          <Link to="/" className="lg:hidden flex-shrink-0 flex items-center group cursor-pointer transition-all duration-300 hover:scale-105">
             <SiteImage
               src="/logo.webp"
               alt="KSOSHTC Logo"
               width={512}
               height={512}
               sizes="96px"
-              className={`object-contain max-w-full h-auto transition-all duration-300 group-hover:rotate-3 ${compact ? "w-14 h-14 sm:w-16 sm:h-16" : "w-20 h-20 sm:w-24 sm:h-24"}`}
+              className={`object-contain max-w-full h-auto transition-all duration-300 group-hover:rotate-3 ${
+                compact
+                  ? "w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16"
+                  : "w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20"
+              }`}
               loading="eager"
               decoding="async"
             />
           </Link>
 
-          <div className="md:hidden flex-1 min-w-0" aria-hidden />
+          {/* Registration link in the middle when open */}
+          {isRegistrationActive ? (
+            <div className="lg:hidden flex-1 flex items-center justify-center min-w-0 px-1 sm:px-2">
+              <Link
+                to="/training-registration"
+                className={`inline-flex items-center justify-center gap-1 sm:gap-1.5 px-2.5 sm:px-3.5 py-1.5 rounded-full text-xs sm:text-sm font-semibold transition-all duration-300 whitespace-nowrap border ${
+                  location.pathname === "/training-registration"
+                    ? "bg-primary text-white border-primary shadow-sm"
+                    : "bg-primary/10 text-primary border-primary/30 hover:bg-primary hover:text-white active:scale-95"
+                }`}
+              >
+                <ClipboardSignature className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
+                <span>Registration</span>
+              </Link>
+            </div>
+          ) : (
+            <div className="lg:hidden flex-1 min-w-0" aria-hidden />
+          )}
 
+          {/* Hamburger Menu button on the right */}
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="md:hidden flex items-center gap-2 py-2 pl-3 pr-3 rounded-lg hover:bg-gray-100 transition-colors duration-300 ml-auto"
+            className="lg:hidden flex-shrink-0 flex items-center gap-1.5 sm:gap-2 py-1.5 sm:py-2 px-2.5 sm:px-3 rounded-lg hover:bg-gray-100 transition-colors duration-300 ml-auto"
             aria-expanded={isOpen}
             aria-label={isOpen ? "Close menu" : "Open menu"}
           >
@@ -239,12 +262,12 @@ export default function Header() {
             ) : (
               <Menu className="w-5 h-5 text-primary shrink-0" />
             )}
-            <span className="text-sm font-medium text-gray-700">{isOpen ? "Close" : "Menu"}</span>
+            <span className="text-xs sm:text-sm font-medium text-gray-700">{isOpen ? "Close" : "Menu"}</span>
           </button>
         </div>
 
         {isOpen && (
-          <nav className="md:hidden bg-gradient-to-b from-white to-gray-50 border-t border-gray-200 animate-slide-down">
+          <nav className="lg:hidden bg-gradient-to-b from-white to-gray-50 border-t border-gray-200 animate-slide-down">
             <div className="px-2 pt-2 pb-3 space-y-1">
               {navLinks.map((link) => {
                 const Icon = link.icon;
@@ -309,16 +332,26 @@ export default function Header() {
                 </Link>
               )}
               <Link
-                to={isAdminRoute ? "/admin" : "/dashboard"}
+                to={isAdminRoute ? "/admin" : isInstructorRoute ? "/instructor" : "/dashboard"}
                 onClick={() => setIsOpen(false)}
                 className={`flex items-center gap-2.5 px-4 py-3 rounded-xl font-semibold transition-all duration-300 border-2 ${
-                  (isAdminRoute ? location.pathname === "/admin" : location.pathname === "/dashboard")
+                  (isAdminRoute
+                    ? location.pathname === "/admin"
+                    : isInstructorRoute
+                      ? location.pathname === "/instructor"
+                      : location.pathname === "/dashboard")
                     ? "bg-primary text-white border-primary"
                     : "border-primary text-primary bg-primary/10 hover:bg-primary hover:text-white"
                 }`}
               >
-                {isAdminRoute ? <Shield className="w-4 h-4 shrink-0" /> : <LayoutDashboard className="w-4 h-4 shrink-0" />}
-                {isAdminRoute ? "Admin" : "Dashboard"}
+                {isAdminRoute ? (
+                  <Shield className="w-4 h-4 shrink-0" />
+                ) : isInstructorRoute ? (
+                  <UserCog className="w-4 h-4 shrink-0" />
+                ) : (
+                  <LayoutDashboard className="w-4 h-4 shrink-0" />
+                )}
+                {isAdminRoute ? "Admin" : isInstructorRoute ? "Instructor" : "Dashboard"}
               </Link>
             </div>
           </nav>
