@@ -1,5 +1,6 @@
 import { useEffect } from "react";
-import { BookOpen, GraduationCap, Lightbulb, Rocket, CheckCircle2 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { BookOpen, GraduationCap, Lightbulb, Rocket, CheckCircle2, ShieldCheck, HardHat, ArrowRight } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { SiteImage } from "../components/SiteImage";
@@ -77,6 +78,63 @@ export default function Programs() {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Admission & Eligibility Section */}
+      <section className="py-12 sm:py-16 md:py-20 bg-gray-50 border-t border-b border-gray-100">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="bg-white rounded-[32px] p-6 sm:p-10 md:p-12 border border-gray-200/80 shadow-md">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
+              <div className="max-w-2xl space-y-4">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
+                  <GraduationCap className="w-4 h-4" />
+                  Admission Guidelines
+                </div>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                  Eligibility &amp; Admission Requirements
+                </h2>
+                <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
+                  Admissions to KSOSHTC programmes require <strong>Advanced Level Secondary Education (A2)</strong> or equivalent,
+                  literacy in communication, compliance with institutional regulations, and mandatory <strong>Personal Protective Equipment (PPE)</strong> for supervised practical site visits.
+                </p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs sm:text-sm text-gray-700">
+                  <div className="flex items-center gap-2">
+                    <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
+                    <span>A2 Secondary Education Minimum</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <HardHat className="w-4 h-4 text-amber-600 shrink-0" />
+                    <span>Mandatory PPE for Practical Site Visits</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <ShieldCheck className="w-4 h-4 text-primary shrink-0" />
+                    <span>Accredited RTB Training Standards</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <BookOpen className="w-4 h-4 text-primary shrink-0" />
+                    <span>5-Step Verified Admission Process</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row lg:flex-col gap-3.5 shrink-0">
+                <Link
+                  to="/admissions"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full font-bold text-sm bg-primary text-white hover:bg-primary-light shadow-md hover:shadow-lg transition-all text-center"
+                >
+                  <span>View Admission Policy</span>
+                  <ArrowRight className="w-4 h-4" />
+                </Link>
+                <Link
+                  to="/training-registration"
+                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full font-bold text-sm bg-accent text-gray-900 hover:bg-accent-light shadow-sm hover:shadow transition-all text-center"
+                >
+                  <span>Register for Training</span>
+                </Link>
+              </div>
+            </div>
           </div>
         </div>
       </section>

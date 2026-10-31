@@ -22,6 +22,7 @@ const Contact = lazy(() => import("./pages/Contact"));
 const Courses = lazy(() => import("./pages/Courses"));
 const CourseDetail = lazy(() => import("./pages/CourseDetail"));
 const TrainingRegistration = lazy(() => import("./pages/TrainingRegistration"));
+const AdmissionRequirements = lazy(() => import("./pages/AdmissionRequirements"));
 const Register = lazy(() => import("./pages/Register"));
 const Login = lazy(() => import("./pages/Login"));
 const AdminLayout = lazy(() => import("./pages/admin/AdminLayout"));
@@ -262,6 +263,8 @@ const App = () => {
                   <Route path="handouts" element={<DashboardHandouts />} />
                   <Route path="work-submissions" element={<DashboardWorkSubmissions />} />
                 </Route>
+                <Route path="/admissions" element={<AdmissionRequirements />} />
+                <Route path="/admission-requirements" element={<AdmissionRequirements />} />
                 <Route path="/training-registration" element={<TrainingRegistration />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/login" element={<Login />} />

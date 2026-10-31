@@ -159,6 +159,13 @@ export default function Header() {
                                 <GraduationCap className="w-4 h-4 shrink-0" />
                                 All courses
                               </Link>
+                              <Link
+                                to="/admissions"
+                                className={`flex items-center gap-2.5 px-4 py-2.5 text-sm font-medium transition-colors border-t border-gray-100 ${location.pathname === "/admissions" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-primary/10 hover:text-primary"}`}
+                              >
+                                <FileCheck className="w-4 h-4 shrink-0" />
+                                Admission Requirements
+                              </Link>
                             </div>
                           </div>
                         )}
@@ -301,6 +308,16 @@ export default function Header() {
                             </Link>
                           );
                         })}
+                        <Link
+                          to="/admissions"
+                          onClick={() => setIsOpen(false)}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition-all duration-300 border-t border-gray-100/60 mt-1 ${
+                            location.pathname === "/admissions" ? "bg-primary/10 text-primary" : "text-gray-600 hover:bg-primary/10 hover:text-primary"
+                          }`}
+                        >
+                          <FileCheck className="w-3.5 h-3.5 shrink-0" />
+                          Admission Requirements
+                        </Link>
                       </div>
                     </div>
                   );

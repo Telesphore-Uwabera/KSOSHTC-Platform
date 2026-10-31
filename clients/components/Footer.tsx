@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { SiteImage } from "@/components/SiteImage";
-import { MapPin, Phone, Mail, Code2, ExternalLink, Home, Info, BookOpen, Building2, MessageCircle, Send, Loader2 } from "lucide-react";
+import { MapPin, Phone, Mail, Code2, ExternalLink, Home, Info, BookOpen, Building2, MessageCircle, Send, Loader2, GraduationCap } from "lucide-react";
 import { getApiBase } from "@/lib/apiBase";
 import { toast } from "sonner";
 
@@ -112,6 +112,7 @@ export default function Footer() {
                 { to: "/", label: "Home", icon: Home },
                 { to: "/about", label: "About Us", icon: Info },
                 { to: "/programs", label: "Programs", icon: BookOpen },
+                { to: "/admissions", label: "Admission Requirements", icon: GraduationCap },
                 { to: "/industries", label: "Industries", icon: Building2 },
                 { to: "/contact", label: "Contact", icon: MessageCircle },
               ].map(({ to, label, icon: Icon }) => (

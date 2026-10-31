@@ -1,9 +1,10 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { toast } from "sonner";
-import { Loader2, UploadCloud, File as FileIcon, X } from "lucide-react";
+import { Loader2, UploadCloud, File as FileIcon, X, GraduationCap, ArrowRight } from "lucide-react";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getApiBase } from "@/lib/apiBase";
@@ -359,7 +360,7 @@ export default function TrainingRegistration() {
           </div>
 
           {/* Courses list */}
-          <div className="bg-green-50 text-green-900 p-6 rounded-2xl mb-10 border border-green-100">
+          <div className="bg-green-50 text-green-900 p-6 rounded-2xl mb-6 border border-green-100">
             <h3 className="font-semibold text-lg mb-3">Training we offer:</h3>
             <ol className="list-decimal list-inside space-y-2 ml-2">
               {COURSES_OFFERED.map((course, idx) => (
@@ -368,6 +369,34 @@ export default function TrainingRegistration() {
                 </li>
               ))}
             </ol>
+          </div>
+
+          {/* Eligibility & Admission Requirements Notice */}
+          <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-5 sm:p-6 mb-10 text-amber-950">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="w-8 h-8 rounded-lg bg-amber-200/80 text-amber-900 flex items-center justify-center font-bold">
+                    <GraduationCap className="w-5 h-5" />
+                  </span>
+                  <h3 className="font-bold text-sm sm:text-base text-amber-950">
+                    Eligibility &amp; Admission Requirements
+                  </h3>
+                </div>
+                <p className="text-xs sm:text-sm text-amber-900 leading-relaxed pt-1">
+                  Applicants must have completed <strong>Advanced Level Secondary Education (A2)</strong> (or equivalent) and agree to mandatory <strong>Personal Protective Equipment (PPE)</strong> requirements for practical site visits.
+                </p>
+              </div>
+              <Link
+                to="/admissions"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-amber-600 text-white hover:bg-amber-700 transition-colors whitespace-nowrap shadow-xs shrink-0 self-start sm:self-center"
+              >
+                <span>Read Full Policy</span>
+                <ArrowRight className="w-4 h-4" />
+              </Link>
+            </div>
           </div>
 
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
