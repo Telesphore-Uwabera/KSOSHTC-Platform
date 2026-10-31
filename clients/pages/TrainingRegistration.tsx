@@ -8,6 +8,7 @@ import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import { getApiBase } from "@/lib/apiBase";
 import { Checkbox } from "@/components/ui/checkbox";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { ALLOWED_UPLOAD_EXTENSIONS, FILE_INPUT_ACCEPT_ATTR } from "@shared/allowedUploads";
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
@@ -20,7 +21,7 @@ const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   phone: z.string().min(8, "Phone number is required"),
   dateOfBirth: z.string().min(1, "Date of birth is required"),
-  courses: z.array(z.string()).min(1, "Select at least one course"),
+  courses: z.array(z.string()).min(1, "Please choose a course").max(1, "Only one course is allowed"),
   // Address
   addressForDispatch: z.string().optional(),
   city: z.string().optional(),
@@ -505,29 +506,35 @@ export default function TrainingRegistration() {
             {/* ── Section 3: Course Selection ── */}
             <fieldset className="space-y-4">
               <legend className="text-base font-bold text-gray-900 pb-2 border-b border-gray-100 w-full block mb-2">
-                Choose Course(s) *
+                Choose Course *
               </legend>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {COURSES_OFFERED.map((course) => (
-                  <div key={course} className="flex items-center space-x-3 p-3 rounded-xl border border-gray-100 hover:bg-gray-50 transition-colors">
-                    <Checkbox
-                      id={`course-${course}`}
-                      checked={form.watch("courses").includes(course)}
-                      onCheckedChange={(checked) => {
-                        const current = form.watch("courses");
-                        if (checked) {
-                          form.setValue("courses", [...current, course], { shouldValidate: true });
-                        } else {
-                          form.setValue("courses", current.filter((c) => c !== course), { shouldValidate: true });
-                        }
-                      }}
-                    />
-                    <label htmlFor={`course-${course}`} className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70 cursor-pointer flex-1">
-                      {course}
+              <RadioGroup
+                value={form.watch("courses")?.[0] || ""}
+                onValueChange={(val) => {
+                  form.setValue("courses", val ? [val] : [], { shouldValidate: true });
+                }}
+                className="grid grid-cols-1 sm:grid-cols-2 gap-3"
+              >
+                {COURSES_OFFERED.map((course) => {
+                  const isSelected = form.watch("courses")?.[0] === course;
+                  return (
+                    <label
+                      key={course}
+                      htmlFor={`course-${course}`}
+                      className={`flex items-center space-x-3 p-3.5 rounded-xl border transition-all cursor-pointer ${
+                        isSelected
+                          ? "border-primary bg-primary/5 text-primary shadow-xs font-semibold"
+                          : "border-gray-200 hover:bg-gray-50 hover:border-gray-300 text-gray-800"
+                      }`}
+                    >
+                      <RadioGroupItem value={course} id={`course-${course}`} />
+                      <span className="text-sm leading-snug flex-1">
+                        {course}
+                      </span>
                     </label>
-                  </div>
-                ))}
-              </div>
+                  );
+                })}
+              </RadioGroup>
               {form.formState.errors.courses && (
                 <p className="text-red-500 text-xs mt-1">{form.formState.errors.courses.message}</p>
               )}
