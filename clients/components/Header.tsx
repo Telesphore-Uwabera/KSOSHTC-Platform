@@ -93,7 +93,7 @@ export default function Header() {
 
   const compact = scrolled;
   const headerClass =
-    "fixed top-0 left-0 right-0 z-50 animate-fade-in-down transition-all duration-300 ease-out bg-white shadow-md backdrop-blur-sm";
+    "fixed top-0 left-0 right-0 z-50 animate-fade-in-down transition-all duration-300 ease-out bg-white/95 backdrop-blur-md border-b border-black/[0.08] shadow-[0_2px_12px_rgba(0,0,0,0.03)]";
 
   return (
     <header className={headerClass}>
@@ -102,14 +102,14 @@ export default function Header() {
           <div className="hidden lg:flex lg:flex-1 lg:items-center lg:min-w-0" />
           <div className="hidden lg:flex lg:items-center lg:justify-center lg:flex-shrink-0">
             <div className={`flex items-center gap-2 lg:gap-4 pl-3 pr-3 sm:pl-4 sm:pr-4 transition-all duration-300 ${compact ? "py-1 gap-2" : "py-2 sm:py-3"}`}>
-              <Link to="/" className="flex-shrink-0 flex items-center group cursor-pointer transition-all duration-300 hover:scale-105">
+              <Link to="/" className="flex-shrink-0 flex items-center bg-transparent group cursor-pointer transition-all duration-300 hover:scale-105">
                 <SiteImage
-                  src="/logo.webp"
+                  src="/logo_transparent.webp"
                   alt="KSOSHTC Logo"
                   width={1024}
                   height={331}
                   sizes="(max-width: 1024px) 180px, 320px"
-                  className={`object-contain max-w-full h-auto transition-all duration-300 group-hover:rotate-1 ${
+                  className={`object-contain bg-transparent max-w-full h-auto transition-all duration-300 group-hover:rotate-1 ${
                     compact
                       ? "h-11 sm:h-13 lg:h-14 xl:h-16 w-auto max-w-[170px] lg:max-w-[220px] xl:max-w-[260px]"
                       : "h-14 sm:h-18 lg:h-20 xl:h-22 w-auto max-w-[210px] lg:max-w-[280px] xl:max-w-[320px]"
@@ -191,23 +191,26 @@ export default function Header() {
                 {isRegistrationActive && (
                   <Link
                     to="/training-registration"
-                    className={`inline-flex items-center gap-1.5 px-2 lg:px-2.5 xl:px-3 py-1.5 sm:py-2 font-medium transition-all duration-300 relative group text-xs lg:text-sm xl:text-base ${location.pathname === "/training-registration" ? "text-primary" : "text-gray-700 hover:text-primary"}`}
+                    className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 sm:py-2 rounded-full font-medium transition-all duration-300 text-xs lg:text-sm tracking-wide ${
+                      location.pathname === "/training-registration"
+                        ? "bg-primary text-white shadow-sm"
+                        : "bg-primary text-white hover:bg-brass hover:text-ink shadow-xs"
+                    }`}
                   >
-                    <ClipboardSignature className="w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0" />
-                    Registration
-                    <span className={`absolute bottom-0 left-0 h-0.5 bg-gradient-to-r from-primary to-accent rounded-full transition-all duration-300 ${location.pathname === "/training-registration" ? "w-full" : "w-0 group-hover:w-full"}`} />
+                    <ClipboardSignature className="w-3.5 h-3.5 shrink-0" />
+                    <span>Registration</span>
                   </Link>
                 )}
                 <Link
                   to={isAdminRoute ? "/admin" : isInstructorRoute ? "/instructor" : "/dashboard"}
-                  className={`inline-flex items-center gap-1.5 px-3 lg:px-4 py-1.5 sm:py-2 rounded-full font-semibold transition-all duration-300 text-xs lg:text-sm xl:text-base border-2 ${
+                  className={`inline-flex items-center gap-1.5 px-3.5 lg:px-4 py-1.5 sm:py-2 rounded-full font-medium transition-all duration-300 text-xs lg:text-sm tracking-wide border ${
                     (isAdminRoute
                       ? location.pathname === "/admin"
                       : isInstructorRoute
                         ? location.pathname === "/instructor"
                         : location.pathname === "/dashboard")
-                      ? "bg-primary text-white border-primary shadow-md"
-                      : "border-primary text-primary bg-primary/10 hover:bg-primary hover:text-white hover:shadow-md"
+                      ? "bg-ink text-white border-ink shadow-sm"
+                      : "border-black/15 text-gray-900 bg-black/[0.03] hover:bg-ink hover:text-white hover:border-ink"
                   }`}
                 >
                   {isAdminRoute ? (
@@ -225,14 +228,14 @@ export default function Header() {
           <div className="hidden lg:block lg:flex-1 lg:min-w-0" />
 
           {/* Mobile, Small & Medium Screens (< lg) Header */}
-          <Link to="/" className="lg:hidden flex-shrink-0 flex items-center group cursor-pointer transition-all duration-300 hover:scale-105">
+          <Link to="/" className="lg:hidden flex-shrink-0 flex items-center bg-transparent group cursor-pointer transition-all duration-300 hover:scale-105">
             <SiteImage
-              src="/logo.webp"
+              src="/logo_transparent.webp"
               alt="KSOSHTC Logo"
               width={1024}
               height={331}
               sizes="(max-width: 640px) 130px, 180px"
-              className={`object-contain max-w-full h-auto transition-all duration-300 group-hover:rotate-1 ${
+              className={`object-contain bg-transparent max-w-full h-auto transition-all duration-300 group-hover:rotate-1 ${
                 compact
                   ? "h-9 sm:h-11 md:h-13 w-auto max-w-[110px] sm:max-w-[150px] md:max-w-[180px]"
                   : "h-11 sm:h-14 md:h-16 w-auto max-w-[130px] sm:max-w-[180px] md:max-w-[220px]"

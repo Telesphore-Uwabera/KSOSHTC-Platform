@@ -246,34 +246,41 @@ function SingleLessonCard({
   const title = stripSectionPrefix(rawTitle);
   const section = sectionLabel(number);
   return (
-    <article className="flex flex-col min-h-[100px] rounded-xl border border-gray-200 bg-white p-3 shadow-sm hover:shadow-md hover:border-primary/20 transition-all overflow-hidden">
-      <h2 className="text-sm font-bold text-primary mb-0.5 flex items-center gap-1.5 shrink-0">
-        <FileText className="w-3.5 h-3.5 shrink-0" />
-        {section}
-      </h2>
-      {title ? <span className="text-xs text-gray-700 line-clamp-2 mb-1.5">{title}</span> : null}
-      <>
+    <article className="editorial-card p-5 flex flex-col justify-between overflow-hidden">
+      <div>
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <h2 className="font-mono text-[11px] font-semibold text-brass uppercase tracking-wider flex items-center gap-1.5">
+            <FileText className="w-3.5 h-3.5 text-primary" />
+            {section}
+          </h2>
+          {completed && (
+            <span className="font-mono text-[10px] text-primary uppercase tracking-widest bg-primary/10 px-2 py-0.5 rounded-full">
+              Completed
+            </span>
+          )}
+        </div>
+        {title ? <h3 className="font-display text-base font-normal text-ink line-clamp-2 mb-3">{title}</h3> : null}
+      </div>
+      <div className="pt-3 border-t border-black/[0.06] mt-auto">
         {unlocked ? (
-          <div className="flex flex-wrap items-center gap-2 mt-auto">
-            <button
-              type="button"
-              onClick={() => {
-                if (!completed) onMarkComplete();
-                onViewPdf(lesson.pdfUrl ?? "", `${section} – ${title}`);
-              }}
-              className="inline-flex items-center gap-1.5 text-primary hover:text-accent font-medium text-xs underline underline-offset-1"
-            >
-              Open file
-              <ExternalLink className="w-3.5 h-3.5" />
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={() => {
+              if (!completed) onMarkComplete();
+              onViewPdf(lesson.pdfUrl ?? "", `${section} – ${title}`);
+            }}
+            className="inline-flex items-center gap-1.5 text-ink hover:text-primary font-medium text-xs transition-colors"
+          >
+            <span>Open study material</span>
+            <ExternalLink className="w-3.5 h-3.5 text-brass" />
+          </button>
         ) : (
-          <p className="inline-flex items-center gap-2 text-gray-500 text-xs mt-auto">
+          <p className="inline-flex items-center gap-1.5 text-ink/50 text-xs">
             <Lock className="w-3.5 h-3.5" />
-            Complete the break quiz above to unlock.
+            Complete break quiz to unlock
           </p>
         )}
-      </>
+      </div>
     </article>
   );
 }
@@ -294,22 +301,22 @@ function AssessmentCard({
 }) {
   const section = sectionLabel(number);
   return (
-    <article className="flex flex-col min-h-[80px] rounded-xl border border-primary/20 bg-primary/5 p-3 shadow-sm">
-      <div className="flex items-center gap-1.5 flex-wrap">
+    <article className="p-5 rounded-2xl border border-primary/20 bg-primary/5 flex items-center justify-between gap-3 shadow-xs">
+      <div className="flex items-center gap-2 flex-wrap min-w-0">
         <ClipboardList className="w-4 h-4 text-primary shrink-0" />
-        <span className="font-medium text-gray-900 text-xs">{section}</span>
-        <span className="text-gray-600 text-xs truncate"> – {assessment.title}</span>
-        {passed && <span className="text-xs text-green-700 ml-1">(passed)</span>}
-        {!passed && (
-          <Link
-            to={`/courses/${courseId}/modules/${moduleId}/quiz/${assessment.id}`}
-            className="ml-auto inline-flex items-center gap-1.5 bg-primary text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-primary/90 text-xs"
-          >
-            Take quiz
-            <ExternalLink className="w-3.5 h-3.5" />
-          </Link>
-        )}
+        <span className="font-mono text-xs uppercase tracking-wider text-ink font-semibold">{section}</span>
+        <span className="text-ink/70 text-xs truncate"> – {assessment.title}</span>
+        {passed && <span className="font-mono text-[10px] text-primary uppercase font-bold tracking-widest">[ PASSED ]</span>}
       </div>
+      {!passed && (
+        <Link
+          to={`/courses/${courseId}/modules/${moduleId}/quiz/${assessment.id}`}
+          className="shrink-0 inline-flex items-center gap-1.5 bg-ink text-bone px-3.5 py-1.5 rounded-full font-medium hover:bg-primary text-xs transition-colors"
+        >
+          Take quiz
+          <ExternalLink className="w-3.5 h-3.5 text-accent" />
+        </Link>
+      )}
     </article>
   );
 }
@@ -355,84 +362,86 @@ function ModuleBlock({
   const title = stripSectionPrefix(mod.title);
 
   return (
-    <article className="flex flex-col min-h-[180px] rounded-xl border border-gray-200 bg-white p-3 shadow-sm hover:shadow-md hover:border-primary/20 transition-all overflow-hidden">
-      <h2 className="text-sm font-bold text-primary mb-0.5 flex items-center gap-1.5 shrink-0">
-        <FileText className="w-3.5 h-3.5 shrink-0" />
-        {section}
-      </h2>
-      {title ? <span className="text-xs text-gray-700 mb-2">{title}</span> : null}
-      <ul className="space-y-1.5 flex-1 min-h-0 overflow-y-auto">
-        {items.map((item, itemIndex) => {
-          if (item.type === "lesson") {
-            const lesson = item.data;
-            const unlocked = isLessonUnlocked(itemIndex);
-            const lessonTitle = stripSectionPrefix(cleanLessonTitle(lesson.title));
+    <article className="editorial-card p-6 flex flex-col justify-between overflow-hidden">
+      <div>
+        <h2 className="font-mono text-xs font-semibold text-brass uppercase tracking-wider mb-1 flex items-center gap-1.5">
+          <FileText className="w-3.5 h-3.5 text-primary" />
+          {section}
+        </h2>
+        {title ? <h3 className="font-display text-lg font-medium text-ink mb-4">{title}</h3> : null}
+        <ul className="space-y-3 flex-1 min-h-0">
+          {items.map((item, itemIndex) => {
+            if (item.type === "lesson") {
+              const lesson = item.data;
+              const unlocked = isLessonUnlocked(itemIndex);
+              const lessonTitle = stripSectionPrefix(cleanLessonTitle(lesson.title));
 
-            return (
-              <li key={`lesson-${lesson.id}`} className="flex flex-col gap-1">
-                <span className="font-medium text-gray-900 text-xs">{lessonTitle}</span>
-                {lesson.youtubeUrl && (
-                  <div className="rounded-lg overflow-hidden bg-gray-100 aspect-video max-w-2xl">
-                    <iframe
-                      title={lesson.title}
-                      src={youtubeEmbedUrl(lesson.youtubeUrl)}
-                      className="w-full h-full"
-                      allowFullScreen
-                      loading="lazy"
-                    />
-                  </div>
-                )}
-                <>
-                  {unlocked ? (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        if (!completedLessons.has(lesson.id)) markCompleteMutation.mutate(lesson.id);
-                        onViewPdf(lesson.pdfUrl ?? "", lessonTitle);
-                      }}
-                      className="inline-flex items-center gap-1.5 text-primary hover:text-accent font-medium text-xs underline underline-offset-1 text-left"
-                    >
-                      Open file
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </button>
-                  ) : (
-                    <p className="inline-flex items-center gap-2 text-gray-500 text-sm">
-                      <Lock className="w-4 h-4" />
-                      Complete the break quiz above to unlock this file.
-                    </p>
+              return (
+                <li key={`lesson-${lesson.id}`} className="flex flex-col gap-1.5 pt-2 border-t border-black/[0.04]">
+                  <span className="font-medium text-ink text-xs">{lessonTitle}</span>
+                  {lesson.youtubeUrl && (
+                    <div className="rounded-xl overflow-hidden bg-bone aspect-video max-w-2xl border border-black/[0.08]">
+                      <iframe
+                        title={lesson.title}
+                        src={youtubeEmbedUrl(lesson.youtubeUrl)}
+                        className="w-full h-full"
+                        allowFullScreen
+                        loading="lazy"
+                      />
+                    </div>
                   )}
-                </>
-                {lesson.contentHtml && (
-                  <div
-                    className="prose prose-sm max-w-none text-gray-700"
-                    dangerouslySetInnerHTML={{ __html: lesson.contentHtml }}
-                  />
-                )}
+                  <div>
+                    {unlocked ? (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (!completedLessons.has(lesson.id)) markCompleteMutation.mutate(lesson.id);
+                          onViewPdf(lesson.pdfUrl ?? "", lessonTitle);
+                        }}
+                        className="inline-flex items-center gap-1.5 text-ink hover:text-primary font-medium text-xs transition-colors"
+                      >
+                        <span>Open file</span>
+                        <ExternalLink className="w-3.5 h-3.5 text-brass" />
+                      </button>
+                    ) : (
+                      <p className="inline-flex items-center gap-1.5 text-ink/50 text-xs">
+                        <Lock className="w-3.5 h-3.5" />
+                        Complete break quiz to unlock this file
+                      </p>
+                    )}
+                  </div>
+                  {lesson.contentHtml && (
+                    <div
+                      className="prose prose-sm max-w-none text-ink/75"
+                      dangerouslySetInnerHTML={{ __html: lesson.contentHtml }}
+                    />
+                  )}
+                </li>
+              );
+            }
+            const assessment = item.data;
+            const passed = completedAssessments.has(assessment.id);
+            return (
+              <li key={`assessment-${assessment.id}`} className="pt-2">
+                <div className="flex items-center gap-2 p-3 rounded-xl bg-primary/5 border border-primary/20">
+                  <ClipboardList className="w-4 h-4 text-primary shrink-0" />
+                  <span className="font-medium text-ink text-xs">{assessment.title}</span>
+                  {passed && <span className="font-mono text-[10px] text-primary uppercase font-bold tracking-widest ml-auto">[ PASSED ]</span>}
+                  {!passed && (
+                    <Link
+                      to={`/courses/${courseId}/modules/${mod.id}/quiz/${assessment.id}`}
+                      className="ml-auto inline-flex items-center gap-1.5 bg-ink text-bone px-3 py-1 rounded-full font-medium hover:bg-primary text-xs transition-colors"
+                    >
+                      Take quiz
+                      <ExternalLink className="w-3.5 h-3.5 text-accent" />
+                    </Link>
+                  )}
+                </div>
               </li>
             );
-          }
-          const assessment = item.data;
-          const passed = completedAssessments.has(assessment.id);
-          return (
-            <li key={`assessment-${assessment.id}`} className="pt-1">
-              <div className="flex items-center gap-1.5 p-2 rounded-lg bg-primary/5 border border-primary/20">
-                <ClipboardList className="w-4 h-4 text-primary shrink-0" />
-                <span className="font-medium text-gray-900 text-xs">{assessment.title}</span>
-                {passed && <span className="text-sm text-green-700">(passed)</span>}
-                {!passed && (
-                  <Link
-                    to={`/courses/${courseId}/modules/${mod.id}/quiz/${assessment.id}`}
-                    className="ml-auto inline-flex items-center gap-1.5 bg-primary text-white px-3 py-1.5 rounded-lg font-semibold hover:bg-primary/90 text-xs"
-                  >
-                    Take break quiz
-                    <ExternalLink className="w-4 h-4" />
-                  </Link>
-                )}
-              </div>
-            </li>
-          );
-        })}
-      </ul>
+          })}
+        </ul>
+      </div>
     </article>
   );
 }
@@ -701,38 +710,46 @@ export default function CourseDetail() {
   }
 
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#FCFAF6] text-ink overflow-x-hidden font-sans antialiased">
       <Header />
       <div className="h-28 sm:h-32" aria-hidden="true" />
 
-      <section className="relative text-white py-12 sm:py-16 min-h-[30vh] flex flex-col justify-center overflow-hidden">
+      <section className="relative text-white py-14 sm:py-20 min-h-[32vh] flex flex-col justify-center overflow-hidden bg-[#121815]">
         <div className="absolute inset-0">
           <SiteImage
             src="/ksohtc-3.webp"
             alt=""
             hero
             priority
-            className="w-full h-full object-cover hero-zoom bg-image-animate bg-image-move-endless"
+            className="w-full h-full object-cover opacity-20 mix-blend-luminosity filter contrast-125 hero-zoom bg-image-animate bg-image-move-endless"
             decoding="async"
             aria-hidden
           />
-          <div className="absolute inset-0 bg-black/30" aria-hidden="true" />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/95 via-primary/90 to-secondary/90" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#121815] via-[#121815]/70 to-[#121815]/90" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
           <Link
             to="/dashboard"
-            className="inline-flex items-center gap-2 text-white/90 hover:text-white font-medium mb-4"
+            className="inline-flex items-center gap-2 text-bone/80 hover:text-bone font-mono text-xs uppercase tracking-wider mb-5 transition-colors"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-3.5 h-3.5 text-accent" />
             Back to dashboard
           </Link>
-          <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">{displayCourse.title}</h1>
-          <p className="text-white/90 mt-1">{displayCourse.sector} · {displayCourse.duration}</p>
+          <div className="eyebrow eyebrow--light mb-3">
+            <span className="text-brass">KSOSHTC</span>
+            <span className="eyebrow__rule" />
+            <span>COURSE STUDY PORTAL</span>
+          </div>
+          <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-light text-bone tracking-tight mb-2">
+            {displayCourse.title}
+          </h1>
+          <p className="font-mono text-xs text-brass-lt uppercase tracking-wider">
+            {displayCourse.sector} · {displayCourse.duration}
+          </p>
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 bg-gray-50">
+      <section className="py-14 sm:py-20 bg-[#FCFAF6]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           {!canAccess ? (
             <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-amber-900">

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { User, Building2, Lock, ShieldCheck, Loader2, Eye, EyeOff } from "lucide-react";
+import { User, Building2, Lock, ShieldCheck, Loader2, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { setStoredUser } from "../lib/auth";
 import { clearAdminSessionPolicy, setAdminSessionToken } from "@/lib/adminApi";
 import { getApiBase } from "@/lib/apiBase";
@@ -65,32 +65,30 @@ export default function Register() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email,
-          password,
-          name,
+          name: name.trim(),
+          email: email.trim().toLowerCase(),
           phone: phone.trim(),
-          organization: organization || undefined,
+          organization: organization.trim(),
           sector: sector || undefined,
+          password,
         }),
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        const serverMessage = (data as { error?: string }).error;
-        if (res.status === 404) {
-          setError("Registration service is unavailable. Please try again later or contact support.");
-        } else if (res.status === 409 || res.status === 400) {
-          setError(serverMessage ?? "Registration failed. This email may already be registered.");
+        const msg = (data as { error?: string }).error;
+        if (res.status === 409 || (msg && msg.toLowerCase().includes("already registered"))) {
+          setError("An account with this email already exists. Please use a different email or log in.");
         } else {
-          setError(serverMessage ?? "Registration failed. Please try again.");
+          setError(msg || "Registration failed. Please try again.");
         }
         return;
       }
+      clearAdminSessionPolicy();
+      setAdminSessionToken(null);
       const user = (data as { user?: unknown }).user;
       if (user && typeof user === "object" && "id" in user) {
-        setAdminSessionToken(null);
-        clearAdminSessionPolicy();
         setStoredUser(user as Parameters<typeof setStoredUser>[0]);
-        navigate("/courses");
+        navigate("/dashboard", { replace: true });
       }
     } catch {
       setError("Unable to reach the server. Check your connection and try again.");
@@ -99,35 +97,48 @@ export default function Register() {
     }
   };
 
+  const inputStyle = "w-full px-4 py-3.5 rounded-2xl border border-black/[0.12] bg-bone text-ink placeholder-ink/40 focus:outline-none focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all text-sm";
+
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#FCFAF6] text-ink overflow-x-hidden font-sans antialiased flex flex-col">
       <Header />
       <div className="h-28 sm:h-32" aria-hidden="true" />
 
-      <section className="w-full min-h-[calc(100vh-6rem)] py-12 sm:py-16 md:py-24 bg-gradient-to-b from-gray-50 to-gray-100">
-        <div className="w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-[30px] shadow-xl border border-gray-200 overflow-hidden scroll-reveal reveal-scale">
-            <div className="w-full bg-primary text-white px-6 sm:px-8 md:px-10 py-6">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold">Create an account</h1>
-              <p className="mt-2 text-primary-foreground/90 text-sm sm:text-base max-w-2xl">
-                Register to enroll. You will be able to access courses after an admin approves your account.
+      <section className="flex-1 w-full py-12 sm:py-20 flex items-center justify-center">
+        <div className="w-full max-w-3xl mx-auto px-4 sm:px-6">
+          <div className="bg-white rounded-[32px] shadow-2xl border border-black/[0.08] overflow-hidden">
+            {/* Obsidian Editorial Header */}
+            <div className="w-full bg-[#121815] text-bone px-8 sm:px-12 py-10 border-b border-white/10">
+              <div className="eyebrow eyebrow--light mb-3">
+                <span className="text-brass">KSOSHTC</span>
+                <span className="eyebrow__rule" />
+                <span>STUDENT ENROLLMENT</span>
+              </div>
+              <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-light text-bone tracking-tight">
+                Create an <span className="font-serif italic text-accent font-normal">Account</span>
+              </h1>
+              <p className="mt-2 text-bone/70 text-sm font-light max-w-xl">
+                Register to enroll. You will be able to access course materials and assessments once an administrator approves your account.
               </p>
             </div>
 
-            <div className="p-6 sm:p-8 md:p-10">
-              <form onSubmit={handleSubmit} className="space-y-6 md:space-y-8">
+            <div className="p-8 sm:p-12">
+              <form onSubmit={handleSubmit} className="space-y-8">
                 {error && (
-                  <p className="text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+                  <div className="text-red-700 text-xs sm:text-sm bg-red-50/80 border border-red-200/80 p-4 rounded-2xl">
+                    {error}
+                  </div>
                 )}
+
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <User className="w-4 h-4 text-primary" />
-                    Personal information
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div className="eyebrow eyebrow--dark mb-4">
+                    <User className="w-3.5 h-3.5 text-primary" />
+                    <span>01 // PERSONAL INFORMATION</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div className="md:col-span-2">
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Full name <span className="text-red-500">*</span>
+                      <label htmlFor="name" className="block font-mono text-[11px] uppercase tracking-wider text-ink/70 mb-2 font-semibold">
+                        Full Name <span className="text-red-500">*</span>
                       </label>
                       <input
                         id="name"
@@ -136,12 +147,12 @@ export default function Register() {
                         onChange={(e) => setName(e.target.value)}
                         placeholder="e.g. Jean Claude Habimana"
                         required
-                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                        className={inputStyle}
                       />
                     </div>
                     <div>
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Email <span className="text-red-500">*</span>
+                      <label htmlFor="email" className="block font-mono text-[11px] uppercase tracking-wider text-ink/70 mb-2 font-semibold">
+                        Email Address <span className="text-red-500">*</span>
                       </label>
                       <input
                         id="email"
@@ -151,13 +162,13 @@ export default function Register() {
                         placeholder="your@email.com"
                         required
                         autoComplete="email"
-                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                        className={inputStyle}
                       />
-                      <p className="mt-1.5 text-xs text-gray-500">One account per email; duplicates are not allowed.</p>
+                      <p className="mt-1.5 font-mono text-[10px] text-ink/50 uppercase">One account per email; duplicates rejected.</p>
                     </div>
                     <div>
-                      <label htmlFor="phone" className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Phone number <span className="text-red-500">*</span>
+                      <label htmlFor="phone" className="block font-mono text-[11px] uppercase tracking-wider text-ink/70 mb-2 font-semibold">
+                        Phone Number <span className="text-red-500">*</span>
                       </label>
                       <input
                         id="phone"
@@ -166,16 +177,16 @@ export default function Register() {
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="+250 7XX XXX XXX"
                         required
-                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                        className={inputStyle}
                       />
                     </div>
-                    <div>
-                      <label htmlFor="country" className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Country
+                    <div className="md:col-span-2">
+                      <label htmlFor="country" className="block font-mono text-[11px] uppercase tracking-wider text-ink/70 mb-2 font-semibold">
+                        Country of Residence
                       </label>
                       <select
                         id="country"
-                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 text-gray-900 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-white"
+                        className={inputStyle + " bg-bone"}
                       >
                         <option value="">Select country</option>
                         {COUNTRIES.map((c) => (
@@ -187,44 +198,44 @@ export default function Register() {
                 </div>
 
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Building2 className="w-4 h-4 text-primary" />
-                    Professional details
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div className="eyebrow eyebrow--dark mb-4">
+                    <Building2 className="w-3.5 h-3.5 text-primary" />
+                    <span>02 // PROFESSIONAL DETAILS</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                      <label htmlFor="organization" className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Organization / Company
+                      <label htmlFor="organization" className="block font-mono text-[11px] uppercase tracking-wider text-ink/70 mb-2 font-semibold">
+                        Organization / Employer
                       </label>
                       <input
                         id="organization"
                         type="text"
                         value={organization}
                         onChange={(e) => setOrganization(e.target.value)}
-                        placeholder="Employer or institution name"
-                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                        placeholder="Employer or company name"
+                        className={inputStyle}
                       />
                     </div>
                     <div>
-                      <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Role / Job title
+                      <label htmlFor="role" className="block font-mono text-[11px] uppercase tracking-wider text-ink/70 mb-2 font-semibold">
+                        Job Title / Role
                       </label>
                       <input
                         id="role"
                         type="text"
                         placeholder="e.g. Site Supervisor, Safety Officer"
-                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                        className={inputStyle}
                       />
                     </div>
                     <div className="md:col-span-2">
-                      <label htmlFor="sector" className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Industry / Sector of interest
+                      <label htmlFor="sector" className="block font-mono text-[11px] uppercase tracking-wider text-ink/70 mb-2 font-semibold">
+                        Industry / Sector of Interest
                       </label>
                       <select
                         id="sector"
                         value={sector}
                         onChange={(e) => setSector(e.target.value as "" | LearnerSector)}
-                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 text-gray-900 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all bg-white"
+                        className={inputStyle + " bg-bone"}
                       >
                         {SECTOR_OPTIONS.map((opt) => (
                           <option key={opt.value || "other"} value={opt.value}>
@@ -232,7 +243,7 @@ export default function Register() {
                           </option>
                         ))}
                       </select>
-                      <p className="text-xs text-gray-500 mt-1">
+                      <p className="font-mono text-[10px] text-ink/50 uppercase mt-1.5">
                         You will see courses for your sector plus Safety Management. Leave as Other to see all.
                       </p>
                     </div>
@@ -240,13 +251,13 @@ export default function Register() {
                 </div>
 
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900 mb-4 flex items-center gap-2">
-                    <Lock className="w-4 h-4 text-primary" />
-                    Security
-                  </h2>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                  <div className="eyebrow eyebrow--dark mb-4">
+                    <Lock className="w-3.5 h-3.5 text-primary" />
+                    <span>03 // ACCOUNT SECURITY</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                     <div>
-                      <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
+                      <label htmlFor="password" className="block font-mono text-[11px] uppercase tracking-wider text-ink/70 mb-2 font-semibold">
                         Password <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
@@ -258,20 +269,20 @@ export default function Register() {
                           placeholder="Min. 8 characters"
                           required
                           minLength={8}
-                          className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all pr-12"
+                          className={inputStyle + " pr-12"}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink focus:outline-none"
                         >
-                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
                     </div>
                     <div>
-                      <label htmlFor="confirm" className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Confirm password <span className="text-red-500">*</span>
+                      <label htmlFor="confirm" className="block font-mono text-[11px] uppercase tracking-wider text-ink/70 mb-2 font-semibold">
+                        Confirm Password <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <input
@@ -281,64 +292,67 @@ export default function Register() {
                           onChange={(e) => setConfirm(e.target.value)}
                           placeholder="Repeat password"
                           required
-                          className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all pr-12"
+                          className={inputStyle + " pr-12"}
                         />
                         <button
                           type="button"
                           onClick={() => setShowConfirm(!showConfirm)}
-                          className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 focus:outline-none"
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink focus:outline-none"
                         >
-                          {showConfirm ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          {showConfirm ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-3 pt-2">
                   <input
                     id="terms"
                     type="checkbox"
                     required
-                    className="mt-1 w-4 h-4 rounded border-2 border-gray-300 text-primary focus:ring-primary"
+                    className="mt-1 w-4 h-4 rounded border border-black/20 text-primary focus:ring-primary"
                   />
-                  <label htmlFor="terms" className="text-sm text-gray-600">
+                  <label htmlFor="terms" className="text-xs text-ink/70 leading-relaxed">
                     I agree to the{" "}
                     <Link to="/terms" className="font-semibold text-primary hover:underline">Terms &amp; Conditions</Link>
                     {" "}and{" "}
                     <Link to="/privacy" className="font-semibold text-primary hover:underline">Privacy Policy</Link>
-                    {" "}and understand that my account must be approved by an admin before I can access courses.
+                    {" "}and understand that my account must be approved by an administrator before I can access course materials.
                   </label>
                 </div>
 
-                <div className="flex flex-col sm:flex-row gap-4 pt-2">
+                <div className="flex flex-col sm:flex-row gap-4 pt-4 border-t border-black/[0.08]">
                   <button
                     type="submit"
                     disabled={loading}
-                    className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-accent to-accent/80 text-black font-bold py-3.5 px-6 rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="flex-1 flex items-center justify-center gap-3 bg-accent text-[#121815] font-semibold py-4 px-6 rounded-full shadow-lg hover:shadow-xl hover:bg-accent-light transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed text-sm"
                   >
                     {loading ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <>
-                        <ShieldCheck className="w-5 h-5" />
-                        Create account
+                        <ShieldCheck className="w-4 h-4" />
+                        <span>CREATE ACCOUNT</span>
+                        <span className="w-6 h-6 rounded-full bg-black/10 flex items-center justify-center ml-1">
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </span>
                       </>
                     )}
                   </button>
                   <Link
                     to="/courses"
-                    className="flex-1 text-center py-3.5 px-6 rounded-lg font-semibold border-2 border-gray-300 text-gray-700 hover:border-primary hover:text-primary transition-colors"
+                    className="flex-1 text-center py-4 px-6 rounded-full font-medium border border-black/15 text-ink hover:bg-black/5 transition-colors text-sm"
                   >
-                    View courses first
+                    View Courses First
                   </Link>
                 </div>
               </form>
 
-              <p className="mt-8 pt-6 border-t border-gray-200 text-center text-gray-600 text-sm">
+              <p className="mt-10 pt-6 border-t border-black/[0.08] text-center text-ink/70 text-xs">
                 Already have an account?{" "}
-                <Link to="/login" className="font-semibold text-primary hover:text-primary/80 underline">
-                  Log in
+                <Link to="/login" className="font-semibold text-primary hover:underline">
+                  Sign in here
                 </Link>
               </p>
             </div>

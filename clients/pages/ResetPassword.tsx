@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { ShieldCheck, ArrowLeft, Loader2, CheckCircle2, Eye, EyeOff } from "lucide-react";
+import { ShieldCheck, ArrowLeft, Loader2, CheckCircle2, Eye, EyeOff, ArrowRight } from "lucide-react";
 import { getApiBase } from "@/lib/apiBase";
 
 export default function ResetPassword() {
@@ -56,51 +56,60 @@ export default function ResetPassword() {
     }
   };
 
+  const inputStyle = "w-full px-4 py-3.5 rounded-2xl border border-black/[0.12] bg-bone text-ink placeholder-ink/40 focus:outline-none focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/10 transition-all text-sm";
+
   return (
-    <div className="min-h-screen bg-white overflow-x-hidden">
+    <div className="min-h-screen bg-[#FCFAF6] text-ink overflow-x-hidden font-sans antialiased flex flex-col">
       <Header />
       <div className="h-28 sm:h-32" aria-hidden="true" />
 
-      <section className="w-full min-h-[calc(100vh-6rem)] py-12 sm:py-16 md:py-24 bg-gradient-to-b from-gray-50 to-gray-100">
-        <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-[30px] shadow-xl border border-gray-200 overflow-hidden">
-            <div className="w-full bg-primary text-white px-6 sm:px-8 py-6">
-              <h1 className="text-2xl sm:text-3xl md:text-4xl font-bold flex items-center gap-2">
-                <ShieldCheck className="w-6 h-6" />
-                New Password
+      <section className="flex-1 w-full py-12 sm:py-20 flex items-center justify-center">
+        <div className="w-full max-w-xl mx-auto px-4 sm:px-6">
+          <div className="bg-white rounded-[32px] shadow-2xl border border-black/[0.08] overflow-hidden">
+            {/* Obsidian Header */}
+            <div className="w-full bg-[#121815] text-bone px-8 sm:px-12 py-10 border-b border-white/10">
+              <div className="eyebrow eyebrow--light mb-3">
+                <span className="text-brass">KSOSHTC</span>
+                <span className="eyebrow__rule" />
+                <span>CREDENTIAL UPDATE</span>
+              </div>
+              <h1 className="font-display text-3xl sm:text-4xl font-light text-bone tracking-tight">
+                New <span className="font-serif italic text-accent font-normal">Password</span>
               </h1>
-              <p className="mt-2 text-primary-foreground/90 text-sm sm:text-base">
-                Secure your account by choosing a strong password.
+              <p className="mt-2 text-bone/70 text-sm font-light">
+                Secure your account by choosing a new, resilient password.
               </p>
             </div>
 
-            <div className="p-6 sm:p-8 md:p-10">
+            <div className="p-8 sm:p-12">
               {success ? (
-                <div className="text-center py-8">
-                  <div className="w-20 h-20 bg-green-50 text-green-500 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <CheckCircle2 className="w-10 h-10" />
+                <div className="text-center py-6">
+                  <div className="w-16 h-16 bg-primary/10 text-primary rounded-2xl flex items-center justify-center mx-auto mb-6">
+                    <CheckCircle2 className="w-8 h-8" />
                   </div>
-                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Password Reset!</h2>
-                  <p className="text-gray-600 mb-8 max-w-sm mx-auto">
+                  <h2 className="font-display text-2xl font-normal text-ink mb-2">Password Reset Successful!</h2>
+                  <p className="text-ink/70 text-sm mb-8 max-w-sm mx-auto font-light leading-relaxed">
                     Your password has been successfully updated. Redirecting you to login...
                   </p>
                   <Link
                     to="/login"
-                    className="inline-flex items-center gap-2 text-primary font-bold hover:underline"
+                    className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-primary font-semibold hover:underline"
                   >
-                    Go to login manualy
+                    Go to login manually
                   </Link>
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
                   {error && (
-                    <p className="text-red-600 text-sm bg-red-50 px-3 py-2 rounded-lg">{error}</p>
+                    <div className="text-red-700 text-xs sm:text-sm bg-red-50/80 border border-red-200/80 p-4 rounded-2xl">
+                      {error}
+                    </div>
                   )}
                   
                   <div className="space-y-4">
-                    <div className="relative">
-                      <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1.5">
-                        New Password
+                    <div>
+                      <label htmlFor="password" className="block font-mono text-[11px] uppercase tracking-wider text-ink/70 mb-2 font-semibold">
+                        New Password <span className="text-red-500">*</span>
                       </label>
                       <div className="relative">
                         <input
@@ -110,21 +119,21 @@ export default function ResetPassword() {
                           onChange={(e) => setPassword(e.target.value)}
                           placeholder="••••••••"
                           required
-                          className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all pr-12"
+                          className={inputStyle + " pr-12"}
                         />
                         <button
                           type="button"
                           onClick={() => setShowPassword(!showPassword)}
-                          className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                          className="absolute right-3.5 top-1/2 -translate-y-1/2 text-ink/40 hover:text-ink"
                         >
-                          {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                          {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                         </button>
                       </div>
                     </div>
 
                     <div>
-                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-700 mb-1.5">
-                        Confirm New Password
+                      <label htmlFor="confirmPassword" className="block font-mono text-[11px] uppercase tracking-wider text-ink/70 mb-2 font-semibold">
+                        Confirm New Password <span className="text-red-500">*</span>
                       </label>
                       <input
                         id="confirmPassword"
@@ -133,7 +142,7 @@ export default function ResetPassword() {
                         onChange={(e) => setConfirmPassword(e.target.value)}
                         placeholder="••••••••"
                         required
-                        className="w-full px-4 py-3 rounded-lg border-2 border-gray-200 text-gray-900 placeholder-gray-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                        className={inputStyle}
                       />
                     </div>
                   </div>
@@ -141,14 +150,17 @@ export default function ResetPassword() {
                   <button
                     type="submit"
                     disabled={loading}
-                    className="w-full flex items-center justify-center gap-2 bg-gradient-to-r from-accent to-accent/80 text-black font-bold py-3.5 px-6 rounded-lg hover:shadow-lg transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed"
+                    className="w-full flex items-center justify-center gap-3 bg-accent text-[#121815] font-semibold py-4 px-6 rounded-full shadow-lg hover:shadow-xl hover:bg-accent-light transition-all duration-300 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed text-sm"
                   >
                     {loading ? (
-                      <Loader2 className="w-5 h-5 animate-spin" />
+                      <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
                       <>
-                        <ShieldCheck className="w-5 h-5" />
-                        Update Password
+                        <ShieldCheck className="w-4 h-4" />
+                        <span>UPDATE PASSWORD</span>
+                        <span className="w-6 h-6 rounded-full bg-black/10 flex items-center justify-center ml-1">
+                          <ArrowRight className="w-3.5 h-3.5" />
+                        </span>
                       </>
                     )}
                   </button>
@@ -156,9 +168,9 @@ export default function ResetPassword() {
                   <div className="pt-4 text-center">
                     <Link
                       to="/login"
-                      className="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-primary transition-colors"
+                      className="inline-flex items-center gap-2 font-mono text-xs uppercase tracking-wider text-ink/60 hover:text-primary transition-colors"
                     >
-                      <ArrowLeft className="w-4 h-4" />
+                      <ArrowLeft className="w-3.5 h-3.5" />
                       Back to login
                     </Link>
                   </div>

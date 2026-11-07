@@ -128,7 +128,9 @@ export default function AdminQuotations() {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [date, setDate] = useState(new Date().toLocaleDateString("en-GB"));
   const [quotationNo, setQuotationNo] = useState("KSOSHTC/0426/FA-AWR");
+  const [trainingTitle, setTrainingTitle] = useState("Occupational Safety and Health (OSH) Training");
   const [clientName, setClientName] = useState("Kigali Safety OSH Training Center");
+  const [clientTin, setClientTin] = useState("");
   const [location, setLocation] = useState("Kigali");
   const [numberOfParticipants, setNumberOfParticipants] = useState<number>(10);
   const [costPerPerson, setCostPerPerson] = useState<number>(200000);
@@ -182,7 +184,9 @@ export default function AdminQuotations() {
     setEditingId(null);
     setDate(new Date().toLocaleDateString("en-GB"));
     setQuotationNo(`KSOSHTC/${String(new Date().getMonth() + 1).padStart(2, '0')}${String(new Date().getFullYear()).slice(-2)}/FA-001`);
+    setTrainingTitle("Occupational Safety and Health (OSH) Training");
     setClientName("Kigali Safety OSH Training Center");
+    setClientTin("");
     setLocation("Kigali");
     setNumberOfParticipants(10);
     setCostPerPerson(200000);
@@ -206,7 +210,9 @@ export default function AdminQuotations() {
     setEditingId(q.id);
     setDate(q.date);
     setQuotationNo(q.quotationNo);
+    setTrainingTitle(q.trainingTitle || "Occupational Safety and Health (OSH) Training");
     setClientName(q.clientName);
+    setClientTin(q.clientTin || "");
     setLocation(q.location);
     setNumberOfParticipants(q.numberOfParticipants);
     setCostPerPerson(q.costPerPerson);
@@ -227,6 +233,8 @@ export default function AdminQuotations() {
     quotationNo,
     date,
     clientName,
+    clientTin: clientTin.trim() || undefined,
+    trainingTitle: trainingTitle.trim() || "Occupational Safety and Health (OSH) Training",
     location,
     numberOfParticipants,
     costPerPerson,
@@ -247,6 +255,33 @@ export default function AdminQuotations() {
     createdAt: new Date().toISOString(),
   };
 
+  const saveQuotationToDb = async (qObj: Quotation): Promise<boolean> => {
+    try {
+      const url = editingId ? `/api/quotations/${editingId}` : "/api/quotations";
+      const method = editingId ? "PUT" : "POST";
+      const res = await fetch(url, {
+        method,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token || ""}`,
+        },
+        body: JSON.stringify(qObj),
+      });
+      if (res.ok) {
+        const savedData = await res.json();
+        if (!editingId && savedData?.id) {
+          setEditingId(savedData.id);
+        }
+        await fetchQuotations();
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.error("Save quotation error:", err);
+      return false;
+    }
+  };
+
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!clientName || !location) {
@@ -255,26 +290,12 @@ export default function AdminQuotations() {
     }
 
     try {
-      const payload = currentQuotationObject;
-      const url = editingId ? `/api/quotations/${editingId}` : "/api/quotations";
-      const method = editingId ? "PUT" : "POST";
-
-      const res = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token || ""}`,
-        },
-        body: JSON.stringify(payload),
-      });
-
-      if (res.ok) {
-        await fetchQuotations();
+      const ok = await saveQuotationToDb(currentQuotationObject);
+      if (ok) {
         setActiveTab("list");
-        alert(editingId ? "Quotation updated successfully!" : "Quotation saved successfully!");
+        alert(editingId ? "Quotation updated in database successfully!" : "Quotation saved in database successfully!");
       } else {
-        const data = await res.json();
-        alert(data.error || "Failed to save quotation.");
+        alert("Failed to save quotation to database.");
       }
     } catch (err) {
       console.error(err);
@@ -305,6 +326,11 @@ export default function AdminQuotations() {
   const downloadPdf = async (qToRender?: Quotation) => {
     setIsGeneratingPdf(true);
     try {
+      // Auto-save quotation to database before or upon download so it's guaranteed to be saved in DB
+      if (activeTab === "form" && clientName && location) {
+        await saveQuotationToDb(currentQuotationObject);
+      }
+
       const targetElement = previewRef.current;
       if (!targetElement) {
         alert("Preview element not found.");
@@ -511,8 +537,10 @@ export default function AdminQuotations() {
                 <thead>
                   <tr className="border-b border-gray-200 text-gray-500 uppercase text-[11px] tracking-wider bg-gray-50/50">
                     <th className="py-3 px-4">Quotation No</th>
+                    <th className="py-3 px-4">Quotation No</th>
                     <th className="py-3 px-4">Date</th>
-                    <th className="py-3 px-4">Client</th>
+                    <th className="py-3 px-4">Training Title</th>
+                    <th className="py-3 px-4">Client / TIN</th>
                     <th className="py-3 px-4">Location</th>
                     <th className="py-3 px-4">Participants</th>
                     <th className="py-3 px-4">Total Cost</th>
@@ -524,7 +552,15 @@ export default function AdminQuotations() {
                     <tr key={q.id} className="hover:bg-gray-50/80 transition">
                       <td className="py-3.5 px-4 font-bold text-gray-900">{q.quotationNo}</td>
                       <td className="py-3.5 px-4 text-gray-600">{q.date}</td>
-                      <td className="py-3.5 px-4 font-semibold text-gray-800">{q.clientName}</td>
+                      <td className="py-3.5 px-4 font-semibold text-[#15532c] max-w-xs truncate" title={q.trainingTitle || "OSH Training"}>
+                        {q.trainingTitle || "Occupational Safety & Health Training"}
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className="font-semibold text-gray-800 block">{q.clientName}</span>
+                        {q.clientTin ? (
+                          <span className="text-[11px] font-mono text-gray-500 block">TIN: {q.clientTin}</span>
+                        ) : null}
+                      </td>
                       <td className="py-3.5 px-4 text-gray-600">{q.location}</td>
                       <td className="py-3.5 px-4 text-gray-600">{q.numberOfParticipants}</td>
                       <td className="py-3.5 px-4 font-bold text-[#15532c]">
@@ -567,7 +603,7 @@ export default function AdminQuotations() {
                 type="button"
                 onClick={() => downloadPdf()}
                 disabled={isGeneratingPdf}
-                className="px-4 py-2 bg-[#1b365d] text-white rounded-xl font-semibold hover:bg-[#132845] text-xs flex items-center gap-2 shadow-sm"
+                className="px-4 py-2 bg-[#1b365d] text-white rounded-xl font-semibold hover:bg-[#132845] text-xs flex items-center gap-2 shadow-sm cursor-pointer"
               >
                 <Download className="w-4 h-4" /> {isGeneratingPdf ? "Generating PDF..." : "Download PDF"}
               </button>
@@ -579,6 +615,18 @@ export default function AdminQuotations() {
                 <h3 className="font-semibold text-gray-800 text-xs uppercase tracking-wider text-[#15532c]">
                   Header & Client Info
                 </h3>
+
+                <div>
+                  <label className="block text-xs font-semibold text-gray-700 mb-1">Training Title / Program Subject *</label>
+                  <input
+                    type="text"
+                    required
+                    value={trainingTitle}
+                    onChange={(e) => setTrainingTitle(e.target.value)}
+                    placeholder="e.g. Occupational Safety and Health (OSH) Training"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#15532c] outline-none font-semibold text-gray-900"
+                  />
+                </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
@@ -603,7 +651,7 @@ export default function AdminQuotations() {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Client Name *</label>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Client / Company Name *</label>
                     <input
                       type="text"
                       required
@@ -613,6 +661,19 @@ export default function AdminQuotations() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#15532c] outline-none"
                     />
                   </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Client Company TIN</label>
+                    <input
+                      type="text"
+                      value={clientTin}
+                      onChange={(e) => setClientTin(e.target.value)}
+                      placeholder="e.g. 102345678"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#15532c] outline-none font-mono"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">Location *</label>
                     <input
@@ -624,9 +685,19 @@ export default function AdminQuotations() {
                       className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#15532c] outline-none"
                     />
                   </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-gray-700 mb-1">Duration</label>
+                    <input
+                      type="text"
+                      value={duration}
+                      onChange={(e) => setDuration(e.target.value)}
+                      placeholder="e.g. 5 Days"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#15532c] outline-none"
+                    />
+                  </div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <label className="block text-xs font-semibold text-gray-700 mb-1">Participants</label>
                     <input
@@ -644,16 +715,6 @@ export default function AdminQuotations() {
                       min={0}
                       value={costPerPerson}
                       onChange={(e) => setCostPerPerson(Number(e.target.value))}
-                      className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#15532c] outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-semibold text-gray-700 mb-1">Duration</label>
-                    <input
-                      type="text"
-                      value={duration}
-                      onChange={(e) => setDuration(e.target.value)}
-                      placeholder="e.g. 5 Days"
                       className="w-full px-3 py-2 border border-gray-300 rounded-xl focus:ring-2 focus:ring-[#15532c] outline-none"
                     />
                   </div>

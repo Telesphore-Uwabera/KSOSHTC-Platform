@@ -4,7 +4,7 @@ import { useQuery } from "@tanstack/react-query";
 import { format } from "date-fns";
 import { getApiBase } from "@/lib/apiBase";
 import { Certificate } from "@/components/Certificate";
-import { Loader2, ShieldCheck, AlertCircle, Home, Download, Printer } from "lucide-react";
+import { Loader2, ShieldCheck, AlertCircle, Home, Download } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import html2canvas from 'html2canvas';
@@ -82,26 +82,27 @@ export default function CertificateVerification() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#f8f9fa]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary mb-4" />
-        <p className="text-xl font-medium text-gray-600">Verifying certificate...</p>
+      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-[#FCFAF6]">
+        <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+        <p className="font-mono text-xs uppercase tracking-widest text-ink/70">Verifying credential records...</p>
       </div>
     );
   }
 
   if (error || !cert) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-white text-center">
-        <div className="bg-red-50 p-6 rounded-full mb-6">
-          <AlertCircle className="h-16 w-16 text-red-500" />
+      <div className="min-h-screen flex flex-col items-center justify-center p-6 bg-[#FCFAF6] text-center font-sans">
+        <div className="w-16 h-16 rounded-2xl bg-red-50 text-red-600 flex items-center justify-center mb-6 border border-red-100">
+          <AlertCircle className="h-8 w-8" />
         </div>
-        <h1 className="text-3xl font-bold text-gray-900 mb-2">Invalid Certificate</h1>
-        <p className="text-lg text-gray-600 max-w-md mb-8">
-          The certificate ID provided could not be verified in our records. Please contact KSOHTC for assistance.
+        <div className="font-mono text-xs uppercase tracking-widest text-red-600 mb-2">// Verification Failed</div>
+        <h1 className="font-display text-3xl sm:text-4xl font-normal text-ink mb-3">Invalid Certificate ID</h1>
+        <p className="text-base text-ink/70 max-w-md mb-8 font-light">
+          The certificate ID provided could not be verified in our institutional records. Please contact KSOSHTC for registry assistance.
         </p>
         <Link to="/">
-          <Button variant="outline" size="lg">
-            <Home className="mr-2 h-5 w-5" /> Back to Home
+          <Button variant="outline" className="rounded-full px-6 py-2.5 font-medium border-black/15 bg-white text-ink hover:bg-black/5">
+            <Home className="mr-2 h-4 w-4" /> Back to Home
           </Button>
         </Link>
       </div>
@@ -138,40 +139,52 @@ export default function CertificateVerification() {
   }
 
   return (
-    <div className="min-h-screen bg-[#f3f4f6] pb-20 overflow-x-hidden">
-      <div className="bg-[#004d40] text-white py-12 px-4 shadow-lg mb-12">
-        <div className="max-w-4xl mx-auto flex flex-col md:flex-row items-center gap-6">
-          <div className="bg-white p-3 rounded-2xl shadow-xl">
-             <ShieldCheck className="h-16 w-16 text-[#004d40]" />
-          </div>
-          <div className="text-center md:text-left flex-1">
-            <h1 className="text-4xl font-black tracking-tight mb-1 uppercase">Certificate Verified</h1>
-            <p className="text-green-100 text-lg opacity-90">This is an authentic Kigali Safety OSH Training Center certificate.</p>
+    <div className="min-h-screen bg-[#FCFAF6] text-ink pb-20 overflow-x-hidden font-sans antialiased">
+      {/* Top Editorial Banner */}
+      <div className="bg-[#121815] text-bone py-12 px-4 border-b border-white/10 mb-12">
+        <div className="max-w-5xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-5 text-center md:text-left flex-1">
+            <div className="w-16 h-16 rounded-2xl bg-accent/15 border border-accent/30 text-accent flex items-center justify-center shrink-0">
+               <ShieldCheck className="h-8 w-8" />
+            </div>
+            <div>
+              <div className="font-mono text-[11px] text-brass uppercase tracking-widest mb-1">
+                // INSTITUTIONAL VERIFICATION RECORD
+              </div>
+              <h1 className="font-display text-3xl sm:text-4xl font-light text-bone tracking-tight">
+                Certificate <span className="font-serif italic text-accent font-normal">Verified</span>
+              </h1>
+              <p className="text-bone/70 text-sm font-light mt-0.5">
+                Authentic credential issued by Kigali Safety OSH Training Center (KSOSHTC) · RTB Accredited
+              </p>
+            </div>
           </div>
           <div className="flex flex-col sm:flex-row gap-3">
-            <Button onClick={handleDownload} className="bg-white text-[#004d40] hover:bg-white/90 font-bold shadow-lg">
-              <Download className="mr-2 h-5 w-5" /> Download PDF
+            <Button
+              onClick={handleDownload}
+              className="bg-accent text-[#121815] hover:bg-accent-light font-semibold text-xs tracking-wide uppercase px-6 py-5 rounded-full shadow-lg hover:shadow-xl transition-all"
+            >
+              <Download className="mr-2 h-4 w-4" /> Download PDF
             </Button>
           </div>
         </div>
       </div>
 
       <div className="max-w-[1240px] mx-auto p-4 flex flex-col items-center w-full">
-        
         {/* Responsive Certificate Container */}
-        <div className="w-full flex justify-center overflow-hidden mb-6">
+        <div className="w-full flex justify-center overflow-hidden mb-8">
            <div style={{ 
              width: '1122px', 
              height: '793px',
              transformOrigin: 'top center',
            }} className="transform scale-[0.3] sm:scale-[0.5] md:scale-[0.7] lg:scale-100 transition-transform duration-300">
-              <div className="bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden">
+              <div className="bg-white rounded-xl shadow-2xl border border-black/10 overflow-hidden">
                 <Certificate data={cert} />
               </div>
            </div>
         </div>
 
-        {/* Height adjustment to pull content up (replaces the ghost space logic) */}
+        {/* Height adjustment to pull content up */}
         <style dangerouslySetInnerHTML={{ __html: `
           @media (max-width: 639px) { .responsive-cert-spacer { margin-top: -540px; } }
           @media (min-width: 640px) and (max-width: 767px) { .responsive-cert-spacer { margin-top: -380px; } }
@@ -181,16 +194,22 @@ export default function CertificateVerification() {
         
         <div className="responsive-cert-spacer w-full h-1" />
 
-        <div className="w-full max-w-5xl bg-white shadow-2xl rounded-sm border border-gray-200 p-8 sm:p-12 mb-12">
+        <div className="w-full max-w-5xl bg-white shadow-xl rounded-[28px] border border-black/[0.08] p-8 sm:p-14 mb-12">
           {/* Transcript Header */}
-          <div className="flex flex-col items-center justify-center text-center border-b-2 border-gray-100 pb-8 mb-8 gap-3">
+          <div className="flex flex-col items-center justify-center text-center border-b border-black/[0.08] pb-8 mb-8 gap-3">
             <img src="/logo.webp" alt="KSOSHTC Logo" className="h-20 sm:h-24 w-auto object-contain mx-auto" />
             <div>
-              <h2 className="text-3xl sm:text-4xl font-black text-[#004d40] tracking-tighter uppercase leading-none">KSOSHTC</h2>
-              <p className="text-[10px] sm:text-xs font-bold text-gray-400 uppercase tracking-[0.2em] mt-2">Occupational Safety & Health Training</p>
+              <h2 className="font-display text-2xl sm:text-3xl font-normal text-ink tracking-tight uppercase">
+                Kigali Safety OSH Training Center
+              </h2>
+              <p className="font-mono text-[10px] sm:text-xs text-brass uppercase tracking-[0.25em] mt-1 font-semibold">
+                Occupational Safety &amp; Health Training · RTB Accredited
+              </p>
             </div>
-            <div className="mt-4 border-t border-gray-100 pt-4 w-full max-w-md mx-auto">
-              <h1 className="text-2xl sm:text-3xl font-black text-gray-900 uppercase tracking-tight">Official Student Transcript</h1>
+            <div className="mt-4 border-t border-black/[0.06] pt-4 w-full max-w-md mx-auto">
+              <h1 className="font-display text-xl sm:text-2xl font-light text-ink uppercase tracking-wider">
+                Official Student Transcript
+              </h1>
             </div>
           </div>
 
@@ -198,36 +217,40 @@ export default function CertificateVerification() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
             <div className="space-y-4">
               <div>
-                <Label className="text-[10px] font-bold text-gray-400 uppercase tracking-widest block mb-1">Student Name</Label>
-                <div className="text-xl font-black text-[#004d40] uppercase">{cert.learnerName}</div>
+                <Label className="font-mono text-[10px] font-bold text-brass uppercase tracking-widest block mb-1">
+                  Student Name
+                </Label>
+                <div className="font-display text-2xl font-normal text-ink uppercase tracking-tight">
+                  {cert.learnerName}
+                </div>
               </div>
-              <p className="text-sm text-gray-600 leading-relaxed font-medium">
+              <p className="text-sm text-ink/70 leading-relaxed font-light">
                 {cert.learnerName} has successfully completed the required professional development certificate programs and courses listed below. These accomplishments demonstrate continued academic excellence and a commitment to occupational safety and health.
               </p>
             </div>
-            <div className="border-l border-gray-100 pl-8 space-y-4">
-              <div className="flex justify-between items-center border-b border-gray-50 pb-2">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Student Number</span>
-                <span className="font-mono font-bold text-gray-900">{cert.certificateId}</span>
+            <div className="border-t md:border-t-0 md:border-l border-black/[0.08] pt-6 md:pt-0 md:pl-8 space-y-3.5">
+              <div className="flex justify-between items-center border-b border-black/[0.04] pb-2">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-ink/60">Certificate / Student ID</span>
+                <span className="font-mono font-bold text-ink text-sm">{cert.certificateId}</span>
               </div>
-              <div className="flex justify-between items-center border-b border-gray-50 pb-2">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Enrollment Date</span>
-                <span className="font-bold text-gray-900">{format(new Date(cert.createdAt || cert.dateIssued), "MM/dd/yyyy")}</span>
+              <div className="flex justify-between items-center border-b border-black/[0.04] pb-2">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-ink/60">Enrollment Date</span>
+                <span className="font-medium text-ink text-sm">{format(new Date(cert.createdAt || cert.dateIssued), "MM/dd/yyyy")}</span>
               </div>
-              <div className="flex justify-between items-center border-b border-gray-50 pb-2">
-                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Location of Issue</span>
-                <span className="font-bold text-gray-900">{cert.issueLocation || "KICUKIRO-KIGALI"}</span>
+              <div className="flex justify-between items-center border-b border-black/[0.04] pb-2">
+                <span className="font-mono text-[10px] uppercase tracking-wider text-ink/60">Location of Issue</span>
+                <span className="font-medium text-ink text-sm">{cert.issueLocation || "KICUKIRO-KIGALI"}</span>
               </div>
               {cert.startDate && (
-                <div className="flex justify-between items-center border-b border-gray-50 pb-2">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Program Start</span>
-                  <span className="font-bold text-gray-900">{format(new Date(cert.startDate), "MM/dd/yyyy")}</span>
+                <div className="flex justify-between items-center border-b border-black/[0.04] pb-2">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-ink/60">Program Start</span>
+                  <span className="font-medium text-ink text-sm">{format(new Date(cert.startDate), "MM/dd/yyyy")}</span>
                 </div>
               )}
               {cert.completionDate && (
-                <div className="flex justify-between items-center border-b border-gray-50 pb-2">
-                  <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest">Program Completion</span>
-                  <span className="font-bold text-gray-900">{format(new Date(cert.completionDate), "MM/dd/yyyy")}</span>
+                <div className="flex justify-between items-center border-b border-black/[0.04] pb-2">
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-ink/60">Program Completion</span>
+                  <span className="font-medium text-ink text-sm">{format(new Date(cert.completionDate), "MM/dd/yyyy")}</span>
                 </div>
               )}
             </div>
@@ -235,25 +258,28 @@ export default function CertificateVerification() {
 
           {/* Main Programs Table */}
           <div className="mb-12">
-            <h3 className="text-sm font-black text-gray-900 uppercase border-b border-gray-900 pb-1 mb-4">Professional Certificate Program</h3>
-            <div className="overflow-x-auto pb-4">
+            <div className="font-mono text-xs uppercase tracking-widest text-brass mb-3 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-accent" />
+              PROFESSIONAL CERTIFICATE PROGRAM
+            </div>
+            <div className="overflow-x-auto border border-black/[0.08] rounded-xl">
               <table className="w-full text-left whitespace-nowrap min-w-max">
                 <thead>
-                  <tr className="bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b">
-                    <th className="py-2 px-4">Program Title</th>
-                    <th className="py-2 px-4 text-center">Hours</th>
-                    <th className="py-2 px-4 text-center">Score (%)</th>
-                    <th className="py-2 px-4 text-center">GPA</th>
-                    <th className="py-2 px-4 text-right">Issue Date</th>
+                  <tr className="bg-bone text-[10px] font-mono text-ink/70 uppercase tracking-widest border-b border-black/[0.08]">
+                    <th className="py-3 px-4">Program Title</th>
+                    <th className="py-3 px-4 text-center">Hours</th>
+                    <th className="py-3 px-4 text-center">Score (%)</th>
+                    <th className="py-3 px-4 text-center">GPA</th>
+                    <th className="py-3 px-4 text-right">Issue Date</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
-                  <tr className="border-b font-bold text-gray-800">
-                    <td className="py-3 px-4">{cert.courses}</td>
-                    <td className="py-3 px-4 text-center">{displayHours}</td>
-                    <td className="py-3 px-4 text-center">{displayScore}</td>
-                    <td className="py-3 px-4 text-center">{displayGpa}</td>
-                    <td className="py-3 px-4 text-right">{format(new Date(cert.dateIssued), "MM/dd/yyyy")}</td>
+                  <tr className="border-b border-black/[0.04] font-medium text-ink">
+                    <td className="py-3.5 px-4 font-semibold text-ink">{cert.courses}</td>
+                    <td className="py-3.5 px-4 text-center font-mono">{displayHours}</td>
+                    <td className="py-3.5 px-4 text-center font-mono">{displayScore}%</td>
+                    <td className="py-3.5 px-4 text-center font-mono">{displayGpa}</td>
+                    <td className="py-3.5 px-4 text-right font-mono text-ink/70">{format(new Date(cert.dateIssued), "MM/dd/yyyy")}</td>
                   </tr>
                 </tbody>
               </table>
@@ -262,32 +288,35 @@ export default function CertificateVerification() {
 
           {/* Individual Courses Table */}
           <div>
-            <h3 className="text-sm font-black text-gray-900 uppercase border-b border-gray-900 pb-1 mb-4">Course Details</h3>
-            <div className="overflow-x-auto pb-4">
+            <div className="font-mono text-xs uppercase tracking-widest text-brass mb-3 flex items-center gap-2">
+              <span className="w-2 h-2 rounded-full bg-accent" />
+              DETAILED COURSEWORK &amp; MODULE PERFORMANCE
+            </div>
+            <div className="overflow-x-auto border border-black/[0.08] rounded-xl">
               <table className="w-full text-left whitespace-nowrap min-w-max">
                 <thead>
-                  <tr className="bg-gray-50 text-[10px] font-black text-gray-400 uppercase tracking-widest border-b">
-                    <th className="py-2 px-4">Course Title</th>
-                    <th className="py-2 px-4 text-center">Score (%)</th>
-                    <th className="py-2 px-4 text-center">Issue Date</th>
-                    <th className="py-2 px-4 text-center">Hours</th>
+                  <tr className="bg-bone text-[10px] font-mono text-ink/70 uppercase tracking-widest border-b border-black/[0.08]">
+                    <th className="py-3 px-4">Course Title</th>
+                    <th className="py-3 px-4 text-center">Score (%)</th>
+                    <th className="py-3 px-4 text-center">Issue Date</th>
+                    <th className="py-3 px-4 text-center">Hours</th>
                   </tr>
                 </thead>
                 <tbody className="text-sm">
                   {cert.transcript && cert.transcript.length > 0 ? (
                     cert.transcript.map((item: any, idx: number) => (
-                      <tr key={idx} className={`border-b ${idx % 2 === 0 ? 'bg-white' : 'bg-gray-50/50'}`}>
-                        <td className="py-2.5 px-4 font-bold text-gray-700">{item.title}</td>
-                        <td className="py-2.5 px-4 text-center font-bold text-gray-900">{item.score}</td>
-                        <td className="py-2.5 px-4 text-center text-gray-500 font-medium">
+                      <tr key={idx} className={`border-b border-black/[0.04] ${idx % 2 === 0 ? 'bg-white' : 'bg-bone/40'}`}>
+                        <td className="py-3 px-4 font-medium text-ink">{item.title}</td>
+                        <td className="py-3 px-4 text-center font-mono font-semibold text-ink">{item.score}%</td>
+                        <td className="py-3 px-4 text-center text-ink/60 font-mono text-xs">
                           {format(new Date(item.date || cert.dateIssued), "MM/dd/yyyy")}
                         </td>
-                        <td className="py-2.5 px-4 text-center font-bold text-gray-800">{item.hours}</td>
+                        <td className="py-3 px-4 text-center font-mono text-ink/80">{item.hours} hrs</td>
                       </tr>
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="py-8 text-center text-gray-400 italic">No detailed course breakdown available.</td>
+                      <td colSpan={4} className="py-8 text-center text-ink/50 italic font-light">No detailed course breakdown available.</td>
                     </tr>
                   )}
                 </tbody>
@@ -295,8 +324,10 @@ export default function CertificateVerification() {
             </div>
           </div>
           
-          <div className="mt-16 text-center border-t border-gray-100 pt-8 opacity-30 grayscale hover:grayscale-0 transition-all cursor-default select-none">
-            <p className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.5em]">Kigali Safety OSH Training Center - Official Verification Document</p>
+          <div className="mt-16 text-center border-t border-black/[0.08] pt-8">
+            <p className="font-mono text-[10px] text-ink/40 uppercase tracking-[0.4em]">
+              Kigali Safety OSH Training Center · Official Verification Document · Accredited by RTB
+            </p>
           </div>
         </div>
       </div>

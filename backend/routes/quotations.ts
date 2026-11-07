@@ -9,32 +9,39 @@ import {
   FIXED_MOTTO,
 } from "@shared/api";
 
+// In-memory fallback if Mongo is disconnected or for seamless dev
+let inMemoryQuotations: Quotation[] = [];
+
 async function getNextQuotationNo(): Promise<string> {
-  const col = mongoCollection<Quotation>(MONGO_COLLECTIONS.quotations);
   const now = new Date();
   const month = String(now.getMonth() + 1).padStart(2, '0');
   const year = String(now.getFullYear()).slice(-2);
   const prefix = `KSOSHTC/${month}${year}/FA-`;
 
-  const lastDocs = await col.find({ quotationNo: { $regex: `^${prefix}` } })
-    .sort({ createdAt: -1 })
-    .limit(1)
-    .toArray();
+  try {
+    const col = mongoCollection<Quotation>(MONGO_COLLECTIONS.quotations);
+    const lastDocs = await col.find({ quotationNo: { $regex: `^${prefix}` } })
+      .sort({ createdAt: -1 })
+      .limit(1)
+      .toArray();
 
-  let nextSeq = 1;
-  if (lastDocs.length > 0 && lastDocs[0].quotationNo) {
-    const parts = lastDocs[0].quotationNo.split("FA-");
-    if (parts.length > 1) {
-      const parsed = parseInt(parts[1], 10);
-      if (!isNaN(parsed)) {
-        nextSeq = parsed + 1;
+    let nextSeq = 1;
+    if (lastDocs.length > 0 && lastDocs[0].quotationNo) {
+      const parts = lastDocs[0].quotationNo.split("FA-");
+      if (parts.length > 1) {
+        const parsed = parseInt(parts[1], 10);
+        if (!isNaN(parsed)) {
+          nextSeq = parsed + 1;
+        }
       }
     }
+    const seqStr = String(nextSeq).padStart(3, '0');
+    return `${prefix}AWR${seqStr}`;
+  } catch {
+    const nextSeq = inMemoryQuotations.length + 1;
+    const seqStr = String(nextSeq).padStart(3, '0');
+    return `${prefix}AWR${seqStr}`;
   }
-
-  // Fallback to random alphanumeric suffix or numeric sequence
-  const seqStr = String(nextSeq).padStart(3, '0');
-  return `${prefix}AWR${seqStr}`;
 }
 
 export async function getQuotations(req: Request, res: Response): Promise<void> {
@@ -43,21 +50,29 @@ export async function getQuotations(req: Request, res: Response): Promise<void> 
     const list = await col.find({}).sort({ createdAt: -1 }).toArray();
     res.json(list);
   } catch (e) {
-    console.error("Get quotations error:", e);
-    res.status(500).json({ error: "Failed to fetch quotations" });
+    console.warn("[QUOTATIONS] Failed to fetch from Mongo, using in-memory store:", e);
+    res.json(inMemoryQuotations.sort((a, b) => (b.createdAt || "").localeCompare(a.createdAt || "")));
   }
 }
 
 export async function getQuotationById(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const col = mongoCollection<Quotation>(MONGO_COLLECTIONS.quotations);
-    const doc = await col.findOne({ id });
-    if (!doc) {
+    try {
+      const col = mongoCollection<Quotation>(MONGO_COLLECTIONS.quotations);
+      const doc = await col.findOne({ id });
+      if (doc) {
+        res.json(doc);
+        return;
+      }
+    } catch {}
+
+    const mem = inMemoryQuotations.find((q) => q.id === id);
+    if (!mem) {
       res.status(404).json({ error: "Quotation not found" });
       return;
     }
-    res.json(doc);
+    res.json(mem);
   } catch (e) {
     console.error("Get quotation by ID error:", e);
     res.status(500).json({ error: "Failed to fetch quotation" });
@@ -70,6 +85,8 @@ export async function createQuotation(req: Request, res: Response): Promise<void
       quotationNo,
       date,
       clientName,
+      clientTin,
+      trainingTitle,
       location,
       numberOfParticipants,
       costPerPerson,
@@ -100,6 +117,8 @@ export async function createQuotation(req: Request, res: Response): Promise<void
       quotationNo: generatedNo,
       date: currentDateStr,
       clientName,
+      clientTin: clientTin ? String(clientTin).trim() : undefined,
+      trainingTitle: trainingTitle ? String(trainingTitle).trim() : "Occupational Safety and Health (OSH) Training",
       location,
       numberOfParticipants: participants,
       costPerPerson: cost,
@@ -120,8 +139,15 @@ export async function createQuotation(req: Request, res: Response): Promise<void
       createdAt: new Date().toISOString(),
     };
 
-    const col = mongoCollection<Quotation>(MONGO_COLLECTIONS.quotations);
-    await col.insertOne(newQuotation as any);
+    inMemoryQuotations.unshift(newQuotation);
+
+    try {
+      const col = mongoCollection<Quotation>(MONGO_COLLECTIONS.quotations);
+      await col.insertOne(newQuotation as any);
+      console.log(`[QUOTATIONS] Quotation ${newQuotation.quotationNo} successfully saved to MongoDB database.`);
+    } catch (dbErr) {
+      console.warn("[QUOTATIONS] Mongo save warning, saved in-memory fallback:", dbErr);
+    }
 
     res.json(newQuotation);
   } catch (e) {
@@ -137,6 +163,8 @@ export async function updateQuotation(req: Request, res: Response): Promise<void
       quotationNo,
       date,
       clientName,
+      clientTin,
+      trainingTitle,
       location,
       numberOfParticipants,
       costPerPerson,
@@ -150,8 +178,16 @@ export async function updateQuotation(req: Request, res: Response): Promise<void
       preparedBy,
     } = req.body;
 
-    const col = mongoCollection<Quotation>(MONGO_COLLECTIONS.quotations);
-    const existing = await col.findOne({ id });
+    let existing: Quotation | null = null;
+    try {
+      const col = mongoCollection<Quotation>(MONGO_COLLECTIONS.quotations);
+      existing = await col.findOne({ id });
+    } catch {}
+
+    if (!existing) {
+      existing = inMemoryQuotations.find((q) => q.id === id) || null;
+    }
+
     if (!existing) {
       res.status(404).json({ error: "Quotation not found" });
       return;
@@ -166,6 +202,8 @@ export async function updateQuotation(req: Request, res: Response): Promise<void
       quotationNo: quotationNo || existing.quotationNo,
       date: date || existing.date,
       clientName: clientName || existing.clientName,
+      clientTin: clientTin !== undefined ? String(clientTin).trim() : existing.clientTin,
+      trainingTitle: trainingTitle !== undefined ? String(trainingTitle).trim() : existing.trainingTitle,
       location: location || existing.location,
       numberOfParticipants: participants,
       costPerPerson: cost,
@@ -183,7 +221,16 @@ export async function updateQuotation(req: Request, res: Response): Promise<void
       updatedAt: new Date().toISOString(),
     };
 
-    await col.updateOne({ id }, { $set: updatedDoc as any });
+    inMemoryQuotations = inMemoryQuotations.map((q) => (q.id === id ? updatedDoc : q));
+
+    try {
+      const col = mongoCollection<Quotation>(MONGO_COLLECTIONS.quotations);
+      await col.updateOne({ id }, { $set: updatedDoc as any }, { upsert: true });
+      console.log(`[QUOTATIONS] Quotation ${updatedDoc.quotationNo} successfully updated in MongoDB database.`);
+    } catch (dbErr) {
+      console.warn("[QUOTATIONS] Mongo update warning:", dbErr);
+    }
+
     res.json(updatedDoc);
   } catch (e) {
     console.error("Update quotation error:", e);
@@ -194,12 +241,15 @@ export async function updateQuotation(req: Request, res: Response): Promise<void
 export async function deleteQuotation(req: Request, res: Response): Promise<void> {
   try {
     const { id } = req.params;
-    const col = mongoCollection<Quotation>(MONGO_COLLECTIONS.quotations);
-    const result = await col.deleteOne({ id });
-    if (result.deletedCount === 0) {
-      res.status(404).json({ error: "Quotation not found" });
-      return;
+    inMemoryQuotations = inMemoryQuotations.filter((q) => q.id !== id);
+
+    try {
+      const col = mongoCollection<Quotation>(MONGO_COLLECTIONS.quotations);
+      await col.deleteOne({ id });
+    } catch (dbErr) {
+      console.warn("[QUOTATIONS] Mongo delete warning:", dbErr);
     }
+
     res.json({ success: true });
   } catch (e) {
     console.error("Delete quotation error:", e);

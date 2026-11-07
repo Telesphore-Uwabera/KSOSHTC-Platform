@@ -72,32 +72,36 @@ export default function Contact() {
       <div className="h-28 sm:h-32" aria-hidden="true" />
 
       <section className="relative text-white py-16 sm:py-20 md:py-28 min-h-[40vh] flex flex-col justify-center overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-secondary/95 via-secondary/90 to-primary/90" />
+        <div className="absolute inset-0 bg-[#121815]" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 hero-reveal-slow" style={{ animationDelay: "0.4s", animationFillMode: "both" }}>Get In Touch</h1>
-          <p className="text-sm sm:text-base text-accent/90 max-w-xl hero-reveal-slow" style={{ animationDelay: "0.9s", animationFillMode: "both" }}>Questions or enrollment—we’re here to help.</p>
+          <div className="eyebrow eyebrow--light mb-3 sm:mb-4">
+            <span className="eyebrow__rule" />
+            <span>Connect With Us</span>
+          </div>
+          <h1 className="font-display font-medium text-4xl sm:text-5xl md:text-6xl tracking-tight text-bone mb-3">Get In Touch</h1>
+          <p className="text-sm sm:text-base text-stone-300 max-w-xl">Questions or enrollment—we’re here to help.</p>
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 md:py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-windy">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6 mb-10 sm:mb-12">
+      <section className="py-12 sm:py-16 md:py-24 bg-[#FCFAF6] border-y border-black/[0.06]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 mb-12 sm:mb-16">
             {contacts.map((item, idx) => {
               const Icon = item.icon;
               const isAddress = item.content === "Kicukiro, Kigali, Rwanda" && item.link === "#map";
-              const cardClass = "contact-card-hover bg-white rounded-[30px] p-6 sm:p-8 shadow-lg border-2 border-gray-200 text-center hover:shadow-xl hover:border-primary/40 scroll-reveal reveal-scale-slow";
+              const cardClass = "editorial-card bg-white rounded-2xl p-6 sm:p-8 text-center";
               const cardContent = (
                 <>
-                  <span className="inline-flex w-12 h-12 rounded-[30px] bg-accent/15 items-center justify-center text-accent mb-4">
-                    <Icon className="w-6 h-6" />
+                  <span className="inline-flex w-12 h-12 rounded-xl bg-stone-100 border border-black/[0.06] items-center justify-center text-primary mb-4">
+                    <Icon className="w-5 h-5 text-primary" />
                   </span>
-                  <h3 className="text-base sm:text-lg font-bold text-primary mb-1.5">{item.title}</h3>
-                  <p className="text-gray-600 whitespace-pre-line text-xs sm:text-sm">
+                  <h3 className="font-display font-semibold text-base sm:text-lg text-ink mb-1.5">{item.title}</h3>
+                  <p className="text-stone-600 whitespace-pre-line text-xs sm:text-sm">
                     {item.link ? (
                       item.link.startsWith("http") || item.link.startsWith("mailto:") ? (
                         <a
                           href={item.link}
-                          className="text-primary hover:text-accent underline decoration-dotted"
+                          className="text-primary hover:text-brass underline decoration-dotted transition-colors"
                           {...(item.link.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                         >
                           {item.content}
@@ -114,11 +118,11 @@ export default function Contact() {
               return (
                 <div key={idx}>
                   {isAddress ? (
-                    <a href="#map" className={`block ${cardClass}`} style={{ animationDelay: `${0.9 + idx * 0.3}s` }}>
+                    <a href="#map" className={`block ${cardClass}`}>
                       {cardContent}
                     </a>
                   ) : (
-                    <div className={cardClass} style={{ animationDelay: `${0.9 + idx * 0.3}s` }}>
+                    <div className={cardClass}>
                       {cardContent}
                     </div>
                   )}
@@ -127,8 +131,12 @@ export default function Contact() {
             })}
           </div>
 
-          <div className="contact-form-panel bg-white rounded-[30px] shadow-lg border-2 border-gray-200 p-6 sm:p-8 md:p-10 mb-12 sm:mb-16 scroll-reveal reveal-left-slow delay-1800">
-            <h2 className="text-lg sm:text-xl font-bold text-primary mb-4 sm:mb-6">Send a message</h2>
+          <div className="bg-white rounded-2xl border border-black/[0.08] shadow-sm p-6 sm:p-8 md:p-10 mb-12 sm:mb-16">
+            <div className="eyebrow eyebrow--dark mb-2">
+              <span className="eyebrow__rule" />
+              <span>Direct Message</span>
+            </div>
+            <h2 className="font-display text-xl sm:text-2xl font-semibold text-ink mb-6">Send a message</h2>
             <form className="w-full space-y-4" onSubmit={handleSubmit}>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 w-full">
                 <input
@@ -136,14 +144,14 @@ export default function Contact() {
                   placeholder="Your Name"
                   value={name}
                   onChange={(e) => setName(e.target.value)}
-                  className="contact-input w-full px-4 py-3 sm:px-6 sm:py-4 rounded-[30px] border-2 border-gray-200 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="w-full px-5 py-3.5 sm:px-6 sm:py-4 rounded-xl border border-black/[0.12] bg-[#FCFAF6] text-stone-900 placeholder-stone-400 focus:outline-none focus:border-primary focus:bg-white transition-all text-sm"
                 />
                 <input
                   type="email"
                   placeholder="Your Email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="contact-input w-full px-4 py-3 sm:px-6 sm:py-4 rounded-[30px] border-2 border-gray-200 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                  className="w-full px-5 py-3.5 sm:px-6 sm:py-4 rounded-xl border border-black/[0.12] bg-[#FCFAF6] text-stone-900 placeholder-stone-400 focus:outline-none focus:border-primary focus:bg-white transition-all text-sm"
                 />
               </div>
               <input
@@ -152,29 +160,29 @@ export default function Contact() {
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
                 required
-                className="contact-input w-full px-4 py-3 sm:px-6 sm:py-4 rounded-[30px] border-2 border-gray-200 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all"
+                className="w-full px-5 py-3.5 sm:px-6 sm:py-4 rounded-xl border border-black/[0.12] bg-[#FCFAF6] text-stone-900 placeholder-stone-400 focus:outline-none focus:border-primary focus:bg-white transition-all text-sm"
               />
               <textarea
                 placeholder="Your Message"
                 rows={4}
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
-                className="contact-input w-full px-4 py-3 sm:px-6 sm:py-4 rounded-[30px] border-2 border-gray-200 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all resize-none"
+                className="w-full px-5 py-3.5 sm:px-6 sm:py-4 rounded-xl border border-black/[0.12] bg-[#FCFAF6] text-stone-900 placeholder-stone-400 focus:outline-none focus:border-primary focus:bg-white transition-all text-sm resize-none"
               />
               {error && <p className="text-red-600 text-sm">{error}</p>}
               {success && (
-                <p className="text-green-700 text-sm flex items-center gap-2">
+                <p className="text-emerald-700 text-sm flex items-center gap-2">
                   <CheckCircle className="w-4 h-4" />
                   Message sent. We will get back to you soon.
                 </p>
               )}
-              <div className="flex justify-center w-full">
+              <div className="flex justify-center w-full pt-2">
                 <button
                   type="submit"
                   disabled={loading}
-                  className="contact-btn-primary bg-gradient-to-r from-accent to-accent/90 text-black font-bold py-3 px-8 rounded-[30px] hover:shadow-lg hover:scale-[1.02] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center gap-2"
+                  className="bg-brass text-ink hover:bg-brass-lt font-display font-semibold uppercase tracking-wider text-xs sm:text-sm py-3.5 px-8 rounded-full shadow-md hover:shadow-lg transition-all duration-300 disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center gap-2 cursor-pointer"
                 >
-                  {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
+                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
                   Send Message
                 </button>
               </div>
@@ -182,26 +190,34 @@ export default function Contact() {
           </div>
 
           <div className="w-full flex flex-col items-center">
-          <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-primary mb-4 sm:mb-6 text-center scroll-reveal reveal-scale-slow delay-400">Contact FAQs</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 w-full max-w-5xl mx-auto">
-            {faqs.map((faq, idx) => (
-              <details key={idx} className="group bg-white rounded-[30px] border-2 border-gray-200 overflow-hidden shadow-sm hover:border-primary/40 hover:shadow-md transition-all duration-300 scroll-reveal reveal-blur" style={{ animationDelay: `${0.8 + idx * 0.18}s` }}>
-                <summary className="flex items-start sm:items-center justify-between gap-4 px-5 py-4 sm:px-6 sm:py-5 cursor-pointer list-none font-semibold text-gray-800 hover:text-primary transition-colors min-h-[3.5rem]">
-                  <span className="text-left text-xs sm:text-sm md:text-base line-clamp-2 flex-1 pr-2">{faq.q}</span>
-                  <span className="text-primary text-xl shrink-0 transition-transform duration-300 group-open:rotate-45 flex items-center">+</span>
-                </summary>
-                <p className="px-5 pb-5 sm:px-6 sm:pb-6 pt-0 text-gray-600 text-xs sm:text-sm leading-relaxed border-t border-gray-100 bg-gray-50/50">{faq.a}</p>
-              </details>
-            ))}
-          </div>
+            <div className="eyebrow eyebrow--dark justify-center mb-3 sm:mb-4">
+              <span className="eyebrow__rule" />
+              <span>Inquiries</span>
+            </div>
+            <h2 className="font-display text-2xl sm:text-3xl font-semibold text-ink mb-6 text-center">Contact FAQs</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 w-full max-w-5xl mx-auto">
+              {faqs.map((faq, idx) => (
+                <details key={idx} className="group bg-white rounded-xl border border-black/[0.08] overflow-hidden shadow-xs hover:border-black/20 transition-all duration-300">
+                  <summary className="flex items-start sm:items-center justify-between gap-4 px-6 py-5 cursor-pointer list-none font-display font-medium text-stone-900 hover:text-primary transition-colors min-h-[3.75rem]">
+                    <span className="text-left text-xs sm:text-sm md:text-base line-clamp-2 flex-1 pr-2">{faq.q}</span>
+                    <span className="text-primary font-mono text-xl shrink-0 transition-transform duration-300 group-open:rotate-45 flex items-center justify-center w-6 h-6 rounded-full bg-black/[0.04]">+</span>
+                  </summary>
+                  <p className="px-6 pb-6 pt-1 text-stone-600 text-xs sm:text-sm leading-relaxed border-t border-black/[0.06] bg-[#FCFAF6]/60">{faq.a}</p>
+                </details>
+              ))}
+            </div>
           </div>
 
-          <div id="map" className="mt-10 sm:mt-12 scroll-reveal reveal-raise delay-400 w-full">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-primary mb-2 sm:mb-3">Find us</h2>
-            <p className="text-gray-600 text-sm sm:text-base mb-4">
-              <a href="#map" className="text-primary hover:text-accent underline decoration-dotted">Kicukiro, Kigali, Rwanda</a>
+          <div id="map" className="mt-12 sm:mt-16 w-full">
+            <div className="eyebrow eyebrow--dark mb-2">
+              <span className="eyebrow__rule" />
+              <span>Physical Presence</span>
+            </div>
+            <h2 className="font-display text-2xl sm:text-3xl font-semibold text-ink mb-2">Find us</h2>
+            <p className="text-stone-600 text-sm sm:text-base mb-4">
+              <a href="#map" className="text-primary hover:text-brass underline decoration-dotted">Kicukiro, Kigali, Rwanda</a>
             </p>
-            <div className="w-full rounded-[30px] overflow-hidden shadow-lg border-2 border-gray-200 bg-gray-100 aspect-video">
+            <div className="w-full rounded-2xl overflow-hidden shadow-sm border border-black/[0.08] bg-stone-100 aspect-video">
               <iframe
                 src={MAP_EMBED_URL}
                 width="100%"
@@ -218,10 +234,10 @@ export default function Contact() {
               href={MAP_DIRECTIONS_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-2 mt-4 px-4 py-2.5 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary/90 transition-colors"
+              className="inline-flex items-center gap-2 mt-4 px-6 py-3 rounded-full font-display font-semibold uppercase tracking-wider text-xs bg-primary text-white hover:bg-ink shadow-sm transition-colors"
             >
               <ExternalLink className="w-4 h-4" />
-              Get directions on Google Maps
+              <span>Get directions on Google Maps</span>
             </a>
           </div>
         </div>

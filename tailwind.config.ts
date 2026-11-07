@@ -14,7 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Work Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['"Plus Jakarta Sans"', '"Work Sans"', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['"Jost"', '"Work Sans"', 'sans-serif'],
+        mono: ['"Space Mono"', '"IBM Plex Mono"', 'ui-monospace', 'monospace'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -72,6 +74,20 @@ export default {
           teal: "#20A39E",
           gold: "#D4AF37",
           "gold-light": "#F4C430",
+        },
+        /* Editorial & Refined Theme Tokens (Inspired by WAKA) */
+        ink: {
+          DEFAULT: "#121815",
+          2: "#18201C",
+          3: "#222B26",
+        },
+        bone: "#F7F5F0",
+        paper: "#FCFAF6",
+        brass: {
+          DEFAULT: "#C8A951",
+          lt: "#DFBE68",
+          deep: "#735E24",
+          soft: "rgba(200, 169, 81, 0.14)",
         },
       },
       borderRadius: {

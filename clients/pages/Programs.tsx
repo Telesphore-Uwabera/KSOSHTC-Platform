@@ -32,17 +32,21 @@ export default function Programs() {
       <section className="relative text-white py-16 sm:py-20 md:py-28 min-h-[40vh] flex flex-col justify-center overflow-hidden">
         <div className="absolute inset-0">
           <SiteImage src="/ksohtc-3.webp" alt="" hero priority className="w-full h-full object-cover hero-zoom bg-image-animate bg-image-move-endless" decoding="async" aria-hidden />
-          <div className="absolute inset-0 bg-black/30" aria-hidden="true" />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/95 via-primary/90 to-secondary/90" />
+          <div className="absolute inset-0 bg-[#121815]/80" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#121815] via-transparent to-[#121815]" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 hero-reveal-slow" style={{ animationDelay: "0.4s", animationFillMode: "both" }}>Our Programs</h1>
-          <p className="text-sm sm:text-base text-white/90 max-w-xl hero-reveal-slow" style={{ animationDelay: "0.9s", animationFillMode: "both" }}>Structured OSH. 3 months Intensive or Weekend (2 months).</p>
+          <div className="eyebrow eyebrow--light mb-3 sm:mb-4">
+            <span className="eyebrow__rule" />
+            <span>Curriculum &amp; Formats</span>
+          </div>
+          <h1 className="font-display font-medium text-4xl sm:text-5xl md:text-6xl tracking-tight text-bone mb-3">Our Programs</h1>
+          <p className="text-sm sm:text-base text-stone-300 max-w-xl">Structured OSH. 3 months Intensive or Weekend (2 months).</p>
         </div>
       </section>
 
       {/* What We Provide: image as full-width background, 4 cards overlaying */}
-      <section className="relative py-12 sm:py-16 md:py-20 lg:py-24 min-h-[60vh] flex flex-col justify-center overflow-hidden">
+      <section className="relative py-12 sm:py-16 md:py-20 lg:py-24 min-h-[60vh] flex flex-col justify-center overflow-hidden text-bone">
         <div className="absolute inset-0">
           <SiteImage
             src="/ksohtc-3.webp"
@@ -52,29 +56,30 @@ export default function Programs() {
             decoding="async"
             aria-hidden
           />
-          <div className="absolute inset-0 bg-black/50" aria-hidden />
-          <div className="absolute inset-0 bg-gradient-to-b from-black/40 via-black/30 to-black/60" aria-hidden />
+          <div className="absolute inset-0 bg-[#121815]/75 backdrop-blur-[2px]" aria-hidden />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#121815] via-transparent to-[#121815]" aria-hidden />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="mb-8 sm:mb-10 scroll-reveal reveal-flip delay-400">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-1 sm:mb-2 drop-shadow-md">What We Provide</h2>
-            <p className="text-white/90 text-sm sm:text-base drop-shadow">Practical OSH for competent professionals.</p>
+          <div className="mb-8 sm:mb-10">
+            <div className="eyebrow eyebrow--light mb-3 sm:mb-4">
+              <span className="eyebrow__rule" />
+              <span>Training Methodology</span>
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-bone mb-1 sm:mb-2">What We Provide</h2>
+            <p className="text-stone-300 text-sm sm:text-base">Practical OSH for competent professionals.</p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
             {programs.map((item, idx) => (
               <div
                 key={idx}
-                className={`bg-white/95 backdrop-blur-sm rounded-[30px] p-5 sm:p-6 lg:p-6 border-l-4 ${item.border} border border-white/20 shadow-xl hover:shadow-2xl transition-all duration-300 hover:scale-[1.02] active:scale-[0.99] scroll-reveal ${idx % 3 === 0 ? "reveal-flip" : idx % 3 === 1 ? "reveal-bounce" : "reveal-spring"}`}
-                style={{ animationDelay: `${0.6 + idx * 0.15}s` }}
+                className="editorial-dark-card p-6 flex flex-col justify-between group"
               >
-                <div className="flex items-start gap-3 sm:gap-4">
-                  <span className="flex-shrink-0 w-9 h-9 sm:w-10 sm:h-10 rounded-[20px] bg-primary/10 flex items-center justify-center text-primary">
-                    <item.icon className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </span>
-                  <div className="min-w-0">
-                    <h3 className="text-base sm:text-lg font-bold text-primary mb-1 sm:mb-2">{item.title}</h3>
-                    <p className="text-gray-700 text-xs sm:text-sm leading-snug">{item.desc}</p>
+                <div>
+                  <div className="w-10 h-10 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-center text-brass mb-4 group-hover:scale-110 transition-transform">
+                    <item.icon className="w-5 h-5" />
                   </div>
+                  <h3 className="font-display text-base sm:text-lg font-semibold text-bone mb-2 group-hover:text-brass-lt transition-colors">{item.title}</h3>
+                  <p className="text-stone-300 text-xs sm:text-sm leading-relaxed">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -83,29 +88,29 @@ export default function Programs() {
       </section>
 
       {/* Admission & Eligibility Section */}
-      <section className="py-12 sm:py-16 md:py-20 bg-gray-50 border-t border-b border-gray-100">
+      <section className="py-12 sm:py-16 md:py-20 bg-[#FCFAF6] border-y border-black/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="bg-white rounded-[32px] p-6 sm:p-10 md:p-12 border border-gray-200/80 shadow-md">
+          <div className="bg-white rounded-2xl p-6 sm:p-10 md:p-12 border border-black/[0.08] shadow-sm">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8">
               <div className="max-w-2xl space-y-4">
-                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider">
-                  <GraduationCap className="w-4 h-4" />
-                  Admission Guidelines
+                <div className="eyebrow eyebrow--dark">
+                  <span className="eyebrow__rule" />
+                  <span>Admission Guidelines</span>
                 </div>
-                <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-gray-900 leading-tight">
+                <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold text-ink leading-tight">
                   Eligibility &amp; Admission Requirements
                 </h2>
-                <p className="text-gray-600 text-sm sm:text-base leading-relaxed">
+                <p className="text-stone-600 text-sm sm:text-base leading-relaxed">
                   Admissions to KSOSHTC programmes require <strong>Advanced Level Secondary Education (A2)</strong> or equivalent,
                   literacy in communication, compliance with institutional regulations, and mandatory <strong>Personal Protective Equipment (PPE)</strong> for supervised practical site visits.
                 </p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs sm:text-sm text-gray-700">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2 text-xs sm:text-sm text-stone-700">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-4 h-4 text-primary shrink-0" />
                     <span>A2 Secondary Education Minimum</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <HardHat className="w-4 h-4 text-amber-600 shrink-0" />
+                    <HardHat className="w-4 h-4 text-brass shrink-0" />
                     <span>Mandatory PPE for Practical Site Visits</span>
                   </div>
                   <div className="flex items-center gap-2">
@@ -122,14 +127,14 @@ export default function Programs() {
               <div className="flex flex-col sm:flex-row lg:flex-col gap-3.5 shrink-0">
                 <Link
                   to="/admissions"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full font-bold text-sm bg-primary text-white hover:bg-primary-light shadow-md hover:shadow-lg transition-all text-center"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full font-display font-semibold uppercase tracking-wider text-xs sm:text-sm bg-primary text-white hover:bg-ink shadow-sm hover:shadow transition-all text-center group"
                 >
                   <span>View Admission Policy</span>
-                  <ArrowRight className="w-4 h-4" />
+                  <ArrowRight className="w-4 h-4 btn-arrow-icon" />
                 </Link>
                 <Link
                   to="/training-registration"
-                  className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-full font-bold text-sm bg-accent text-gray-900 hover:bg-accent-light shadow-sm hover:shadow transition-all text-center"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full font-display font-semibold uppercase tracking-wider text-xs sm:text-sm bg-brass text-ink hover:bg-brass-lt shadow-sm hover:shadow transition-all text-center"
                 >
                   <span>Register for Training</span>
                 </Link>
@@ -142,18 +147,22 @@ export default function Programs() {
       <section className="py-12 sm:py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="w-full flex flex-col items-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-8 sm:mb-10 text-center scroll-reveal reveal-fade-scale delay-400">Program FAQs</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 w-full max-w-5xl mx-auto">
-            {faqs.map((faq, idx) => (
-              <details key={idx} className="group bg-white rounded-[30px] border-2 border-gray-200 overflow-hidden shadow-sm hover:border-primary/40 hover:shadow-md transition-all duration-300 scroll-reveal reveal-fade-scale" style={{ animationDelay: `${0.7 + idx * 0.2}s` }}>
-                <summary className="flex items-start sm:items-center justify-between gap-4 px-5 py-4 sm:px-6 sm:py-5 cursor-pointer list-none font-semibold text-gray-800 hover:text-primary transition-colors min-h-[3.5rem]">
-                  <span className="text-left text-sm sm:text-base line-clamp-2 flex-1 pr-2">{faq.q}</span>
-                  <span className="text-primary text-xl shrink-0 transition-transform duration-300 group-open:rotate-45 flex items-center">+</span>
-                </summary>
-                <p className="px-5 pb-5 sm:px-6 sm:pb-6 pt-0 text-gray-600 text-sm sm:text-base leading-relaxed border-t border-gray-100 bg-gray-50/50">{faq.a}</p>
-              </details>
-            ))}
-          </div>
+            <div className="eyebrow eyebrow--dark justify-center mb-3 sm:mb-4">
+              <span className="eyebrow__rule" />
+              <span>Guidance</span>
+            </div>
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold text-ink mb-8 sm:mb-10 text-center">Program FAQs</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 w-full max-w-5xl mx-auto">
+              {faqs.map((faq, idx) => (
+                <details key={idx} className="group bg-[#FCFAF6] rounded-xl border border-black/[0.08] overflow-hidden shadow-xs hover:border-black/20 transition-all duration-300">
+                  <summary className="flex items-start sm:items-center justify-between gap-4 px-6 py-5 cursor-pointer list-none font-display font-medium text-stone-900 hover:text-primary transition-colors min-h-[3.75rem]">
+                    <span className="text-left text-sm sm:text-base leading-snug flex-1 pr-2">{faq.q}</span>
+                    <span className="text-primary font-mono text-xl shrink-0 transition-transform duration-300 group-open:rotate-45 flex items-center justify-center w-6 h-6 rounded-full bg-black/[0.04]">+</span>
+                  </summary>
+                  <p className="px-6 pb-6 pt-1 text-stone-600 text-xs sm:text-sm leading-relaxed border-t border-black/[0.06] bg-white/60">{faq.a}</p>
+                </details>
+              ))}
+            </div>
           </div>
         </div>
       </section>

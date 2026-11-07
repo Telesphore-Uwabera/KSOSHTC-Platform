@@ -1,13 +1,14 @@
 import { useEffect } from "react";
-import { HardHat, Building, Pickaxe } from "lucide-react";
+import { Link } from "react-router-dom";
+import { HardHat, Building, Pickaxe, ArrowRight } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import { SiteImage } from "../components/SiteImage";
 
 const industries = [
-  { icon: HardHat, name: "OSH in Construction", desc: "Height, scaffolding, PPE. Officer, Supervisor, Inspector.", img: "/construction.webp" },
-  { icon: Building, name: "OSH in Industrial", desc: "LOTO, chemical, fire. Officer, HSE Assistant.", img: "/industrial.webp" },
-  { icon: Pickaxe, name: "OSH in Mining", desc: "Blasting, ventilation. Mining Officer, Supervisor.", img: "/mining.webp" },
+  { icon: HardHat, name: "OSH in Construction", desc: "Height, scaffolding, PPE. Officer, Supervisor, Inspector.", img: "/construction.webp", slug: "construction" },
+  { icon: Building, name: "OSH in Industrial", desc: "LOTO, chemical, fire. Officer, HSE Assistant.", img: "/industrial.webp", slug: "industrial-safety" },
+  { icon: Pickaxe, name: "OSH in Mining", desc: "Blasting, ventilation. Mining Officer, Supervisor.", img: "/mining.webp", slug: "mining" },
 ];
 
 const faqs = [
@@ -28,42 +29,52 @@ export default function Industries() {
       <section className="relative text-white py-16 sm:py-20 md:py-28 min-h-[40vh] flex flex-col justify-center overflow-hidden">
         <div className="absolute inset-0">
           <SiteImage src="/ksohtc-4.webp" alt="" hero priority className="w-full h-full object-cover hero-zoom bg-image-animate bg-image-move-endless" decoding="async" aria-hidden />
-          <div className="absolute inset-0 bg-black/30" aria-hidden="true" />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/95 via-primary/90 to-secondary/90" />
+          <div className="absolute inset-0 bg-[#121815]/80" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#121815] via-transparent to-[#121815]" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <h1 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mb-3 hero-reveal-slow" style={{ animationDelay: "0.4s", animationFillMode: "both" }}>Industries We Serve</h1>
-          <p className="text-sm sm:text-base text-white/90 max-w-xl hero-reveal-slow" style={{ animationDelay: "0.9s", animationFillMode: "both" }}>Training for Rwanda&apos;s key sectors.</p>
+          <div className="eyebrow eyebrow--light mb-3 sm:mb-4">
+            <span className="eyebrow__rule" />
+            <span>Target Sectors</span>
+          </div>
+          <h1 className="font-display font-medium text-4xl sm:text-5xl md:text-6xl tracking-tight text-bone mb-3">Industries We Serve</h1>
+          <p className="text-sm sm:text-base text-stone-300 max-w-xl">Training for Rwanda&apos;s key sectors.</p>
         </div>
       </section>
 
-      <section className="py-12 sm:py-16 md:py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 rounded-[30px] border-2 border-accent/20 bg-white/70 shadow-lg py-12">
+      <section className="py-12 sm:py-16 md:py-24 bg-[#FCFAF6] border-y border-black/[0.06]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
             {industries.map((item, idx) => (
-              <div
+              <Link
                 key={idx}
-                className="bg-white rounded-[30px] overflow-hidden shadow-lg border border-gray-200 hover:shadow-2xl hover:border-primary/30 transition-all duration-300 hover:scale-[1.02] active:scale-[0.99] scroll-reveal reveal-scale-slow"
-                style={{ animationDelay: `${1 + idx * 0.3}s` }}
+                to={`/courses/${item.slug}`}
+                className="editorial-card group block bg-white rounded-2xl overflow-hidden cursor-pointer"
               >
-                <div className="relative">
+                <div className="relative overflow-hidden aspect-[16/10]">
                   <SiteImage
                     src={item.img}
                     alt={item.name}
-                    className="w-full h-48 sm:h-52 object-cover rounded-[30px]"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     sizes="(max-width: 1024px) 100vw, 33vw"
                     decoding="async"
                   />
-                  <div className="img-overlay rounded-[30px]" aria-hidden="true" />
+                  <div className="img-overlay" aria-hidden="true" />
                 </div>
-                <div className="p-6 sm:p-8">
-                  <span className="inline-flex w-12 h-12 sm:w-14 sm:h-14 rounded-[30px] bg-primary/10 items-center justify-center text-primary mb-4">
-                    <item.icon className="w-6 h-6 sm:w-7 sm:h-7" />
-                  </span>
-                  <h2 className="text-lg sm:text-xl md:text-2xl font-bold text-primary mb-2">{item.name}</h2>
-                  <p className="text-gray-600 text-xs sm:text-sm leading-snug">{item.desc}</p>
+                <div className="p-6 sm:p-8 flex flex-col justify-between">
+                  <div>
+                    <span className="inline-flex w-12 h-12 rounded-xl bg-stone-100 border border-black/[0.06] items-center justify-center text-primary mb-4 group-hover:bg-primary group-hover:text-white transition-colors">
+                      <item.icon className="w-6 h-6" />
+                    </span>
+                    <h2 className="font-display text-xl sm:text-2xl font-semibold text-ink group-hover:text-primary transition-colors mb-2">{item.name}</h2>
+                    <p className="text-stone-600 text-sm leading-relaxed">{item.desc}</p>
+                  </div>
+                  <div className="pt-6 mt-6 border-t border-black/[0.06] flex items-center justify-between text-xs font-mono uppercase tracking-wider text-primary font-semibold">
+                    <span>Explore Specialization</span>
+                    <ArrowRight className="w-4 h-4 btn-arrow-icon" />
+                  </div>
                 </div>
-              </div>
+              </Link>
             ))}
           </div>
         </div>
@@ -72,18 +83,22 @@ export default function Industries() {
       <section className="py-12 sm:py-16 md:py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="w-full flex flex-col items-center">
-          <h2 className="text-2xl sm:text-3xl font-bold text-primary mb-8 sm:mb-10 text-center scroll-reveal reveal-scale-slow delay-400">Industry FAQs</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 w-full max-w-5xl mx-auto">
-            {faqs.map((faq, idx) => (
-              <details key={idx} className="group bg-white rounded-[30px] border-2 border-gray-200 overflow-hidden shadow-sm hover:border-primary/40 hover:shadow-md transition-all duration-300 scroll-reveal reveal-blur" style={{ animationDelay: `${0.8 + idx * 0.2}s` }}>
-                <summary className="flex items-start sm:items-center justify-between gap-4 px-5 py-4 sm:px-6 sm:py-5 cursor-pointer list-none font-semibold text-gray-800 hover:text-primary transition-colors min-h-[3.5rem]">
-                  <span className="text-left text-sm sm:text-base line-clamp-2 flex-1 pr-2">{faq.q}</span>
-                  <span className="text-primary text-xl shrink-0 transition-transform duration-300 group-open:rotate-45 flex items-center">+</span>
-                </summary>
-                <p className="px-5 pb-5 sm:px-6 sm:pb-6 pt-0 text-gray-600 text-sm sm:text-base leading-relaxed border-t border-gray-100 bg-gray-50/50">{faq.a}</p>
-              </details>
-            ))}
-          </div>
+            <div className="eyebrow eyebrow--dark justify-center mb-3 sm:mb-4">
+              <span className="eyebrow__rule" />
+              <span>Sectors FAQ</span>
+            </div>
+            <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold text-ink mb-8 sm:mb-10 text-center">Industry FAQs</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 w-full max-w-5xl mx-auto">
+              {faqs.map((faq, idx) => (
+                <details key={idx} className="group bg-[#FCFAF6] rounded-xl border border-black/[0.08] overflow-hidden shadow-xs hover:border-black/20 transition-all duration-300">
+                  <summary className="flex items-start sm:items-center justify-between gap-4 px-6 py-5 cursor-pointer list-none font-display font-medium text-stone-900 hover:text-primary transition-colors min-h-[3.75rem]">
+                    <span className="text-left text-sm sm:text-base leading-snug flex-1 pr-2">{faq.q}</span>
+                    <span className="text-primary font-mono text-xl shrink-0 transition-transform duration-300 group-open:rotate-45 flex items-center justify-center w-6 h-6 rounded-full bg-black/[0.04]">+</span>
+                  </summary>
+                  <p className="px-6 pb-6 pt-1 text-stone-600 text-xs sm:text-sm leading-relaxed border-t border-black/[0.06] bg-white/60">{faq.a}</p>
+                </details>
+              ))}
+            </div>
           </div>
         </div>
       </section>

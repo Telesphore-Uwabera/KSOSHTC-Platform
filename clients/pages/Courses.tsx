@@ -104,12 +104,16 @@ export default function Courses() {
       <section className="relative text-white py-16 sm:py-20 md:py-28 min-h-[40vh] flex flex-col justify-center overflow-hidden">
         <div className="absolute inset-0">
           <SiteImage src="/ksohtc-3.webp" alt="" hero priority className="w-full h-full object-cover hero-zoom bg-image-animate bg-image-move-endless" decoding="async" aria-hidden />
-          <div className="absolute inset-0 bg-black/30" aria-hidden="true" />
-          <div className="absolute inset-0 bg-gradient-to-br from-primary/95 via-primary/90 to-secondary/90" />
+          <div className="absolute inset-0 bg-[#121815]/80" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#121815] via-transparent to-[#121815]" />
         </div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full text-center">
-          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-4 hero-reveal-slow" style={{ animationDelay: "0.4s", animationFillMode: "both" }}>Our Courses</h1>
-          <p className="text-lg sm:text-xl text-white/90 max-w-2xl mx-auto hero-reveal-slow" style={{ animationDelay: "0.9s", animationFillMode: "both" }}>
+          <div className="eyebrow eyebrow--light justify-center mb-3 sm:mb-4">
+            <span className="eyebrow__rule" />
+            <span>Academic Curriculum</span>
+          </div>
+          <h1 className="font-display font-medium text-4xl sm:text-5xl md:text-6xl tracking-tight text-bone mb-4">Our Courses</h1>
+          <p className="text-base sm:text-lg text-stone-200 max-w-2xl mx-auto leading-relaxed">
             {!user
               ? "Browse all course categories below. Click Enroll on a course to log in and enroll."
               : canAccess
@@ -135,15 +139,15 @@ export default function Courses() {
         </section>
       )}
       {pending && (
-        <section className="py-8 px-4 sm:px-6 lg:px-8 bg-amber-50 border-b border-amber-200">
+        <section className="py-8 px-4 sm:px-6 lg:px-8 bg-amber-50/80 border-b border-amber-200">
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <span className="inline-flex w-10 h-10 rounded-full bg-amber-200 items-center justify-center text-amber-800">
+            <div className="flex items-center gap-3.5">
+              <span className="inline-flex w-10 h-10 rounded-full bg-amber-100 items-center justify-center text-amber-800 border border-amber-200">
                 <Clock className="w-5 h-5" />
               </span>
               <div>
-                <p className="font-semibold text-amber-900">Registration under review</p>
-                <p className="text-sm text-amber-800">
+                <p className="font-display font-semibold text-amber-900">Registration under review</p>
+                <p className="text-sm text-amber-800 leading-relaxed">
                   Thank you for registering with KSOSHTC. Your account is currently under review by our administration team. You will be able to access your courses and learning materials once your registration has been approved. If you have already been approved, please log out and log in again to refresh your access.
                 </p>
               </div>
@@ -151,7 +155,7 @@ export default function Courses() {
             <button
               type="button"
               onClick={() => { clearStoredUser(); window.location.href = "/courses"; }}
-              className="inline-flex items-center gap-2 text-amber-800 font-semibold hover:text-amber-900"
+              className="inline-flex items-center gap-2 text-amber-900 font-semibold hover:text-black transition-colors cursor-pointer text-sm shrink-0"
             >
               <LogOut className="w-4 h-4" />
               Log out
@@ -160,23 +164,29 @@ export default function Courses() {
         </section>
       )}
 
-      <section className="py-12 sm:py-16 md:py-24 bg-gray-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-sway">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10 scroll-reveal reveal-right-slow delay-400">
-            <h2 className="text-2xl sm:text-3xl font-bold text-primary">Available courses</h2>
+      <section className="py-12 sm:py-16 md:py-24 bg-[#FCFAF6] border-y border-black/[0.06]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-10 sm:mb-12">
+            <div>
+              <div className="eyebrow eyebrow--dark mb-2">
+                <span className="eyebrow__rule" />
+                <span>Available Catalog</span>
+              </div>
+              <h2 className="font-display text-2xl sm:text-3xl md:text-4xl font-semibold text-ink">Available courses</h2>
+            </div>
             {!user && (
-              <p className="text-sm text-gray-600">Click <strong>View materials</strong> on a card to go to the login page.</p>
+              <p className="text-sm text-stone-600">Click <strong className="text-stone-900">View materials</strong> on a card to go to the login page.</p>
             )}
           </div>
 
           {isLoading && (
-            <p className="text-gray-600 py-8">Loading courses…</p>
+            <p className="text-stone-500 py-8 font-mono text-sm">Loading courses…</p>
           )}
           {error && (
-            <p className="text-red-600 py-8">Could not load courses. Please try again later.</p>
+            <p className="text-red-600 py-8 text-sm">Could not load courses. Please try again later.</p>
           )}
           {!isLoading && !error && courses.length === 0 && (
-            <p className="text-gray-600 py-8">No courses available yet. Courses will appear here once they’re set up.</p>
+            <p className="text-stone-500 py-8 text-sm">No courses available yet. Courses will appear here once they’re set up.</p>
           )}
 
           <div className="grid w-full min-w-0 grid-cols-1 gap-5 sm:gap-6 md:grid-cols-2 lg:grid-cols-4 items-stretch">
@@ -190,16 +200,15 @@ export default function Courses() {
               return (
                 <div
                   key={course.id}
-                  className="flex flex-col h-full min-w-0 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden hover:shadow-lg hover:border-primary/40 transition-all duration-200 course-card"
-                  style={{ animationDelay: `${0.9 + idx * 0.15}s` }}
+                  className="editorial-card group flex flex-col h-full min-w-0 bg-white rounded-2xl overflow-hidden cursor-pointer"
                   title={fullDesc}
                 >
-                  <div className="w-full h-32 shrink-0 bg-gray-100 flex items-center justify-center overflow-hidden">
+                  <div className="w-full h-36 shrink-0 bg-stone-100 flex items-center justify-center overflow-hidden relative">
                     {coverUrl ? (
                       <SiteImage
                         src={coverUrl}
                         alt=""
-                        className="w-full h-full object-cover"
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                         sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 25vw"
                         cloudinaryMaxWidth={640}
                         decoding="async"
@@ -210,28 +219,28 @@ export default function Courses() {
                       </span>
                     )}
                   </div>
-                  <div className="p-4 sm:p-5 flex flex-col flex-1 min-h-0">
-                    <span className="inline-flex w-9 h-9 rounded-lg bg-primary/10 items-center justify-center text-primary mb-2 shrink-0">
+                  <div className="p-5 sm:p-6 flex flex-col flex-1 min-h-0">
+                    <span className="inline-flex w-9 h-9 rounded-xl bg-stone-100 border border-black/[0.06] items-center justify-center text-primary mb-3 shrink-0 group-hover:bg-primary group-hover:text-white transition-colors">
                       <Icon className="w-4 h-4" />
                     </span>
-                    <h3 className="text-base font-bold text-primary mb-1 line-clamp-2">{displayTitle}</h3>
-                    <p className="text-xs text-accent font-medium mb-1">{course.sector}</p>
-                    <p className="text-gray-600 text-xs line-clamp-2 flex-1 min-h-0" title={fullDesc}>
+                    <h3 className="font-display font-semibold text-base sm:text-lg text-ink mb-1 line-clamp-2 group-hover:text-primary transition-colors">{displayTitle}</h3>
+                    <p className="text-xs font-mono uppercase tracking-wider text-brass font-semibold mb-2">{course.sector}</p>
+                    <p className="text-stone-600 text-xs sm:text-sm line-clamp-2 flex-1 min-h-0 leading-relaxed" title={fullDesc}>
                       {shortDesc}
                       {(course.description || "").length > 80 ? "…" : ""}
                     </p>
-                    <p className="text-gray-500 text-xs mb-3 shrink-0">
+                    <p className="text-stone-400 font-mono text-xs my-3 shrink-0">
                       Duration: {course.duration}
                       {lessonCount != null && lessonCount > 0 && ` · ${lessonCount} lesson${lessonCount !== 1 ? "s" : ""}`}
                     </p>
-                    <div className="mt-auto pt-2 border-t border-gray-100 shrink-0">
+                    <div className="mt-auto pt-3 border-t border-black/[0.06] shrink-0">
                       <Link
                         to="/login"
                         state={{ from: `/courses/${course.id}` }}
-                        className="inline-flex items-center gap-1.5 text-primary font-semibold text-sm hover:text-accent transition-colors"
+                        className="inline-flex items-center gap-1.5 text-primary font-mono text-xs uppercase tracking-wider font-semibold group-hover:text-brass transition-colors"
                       >
-                        View materials
-                        <ArrowRight className="w-4 h-4" />
+                        <span>View materials</span>
+                        <ArrowRight className="w-3.5 h-3.5 btn-arrow-icon" />
                       </Link>
                     </div>
                   </div>
@@ -240,22 +249,22 @@ export default function Courses() {
             })}
           </div>
           {hasMoreCourses && (
-            <div className="flex flex-wrap items-center gap-3 mt-8">
+            <div className="flex flex-wrap items-center gap-3 mt-10">
               {canShowMoreCourses && (
                 <button
                   type="button"
                   onClick={() => setVisibleCourseCount((c) => c + COURSE_CARDS_STEP)}
-                  className="inline-flex items-center gap-2 text-primary font-semibold hover:text-accent transition-colors"
+                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-full border border-black/[0.1] bg-white text-ink font-display text-xs font-semibold uppercase tracking-wider hover:bg-stone-50 transition-colors cursor-pointer group"
                 >
-                  View more
-                  <ArrowRight className="w-4 h-4" />
+                  <span>View more</span>
+                  <ArrowRight className="w-3.5 h-3.5 btn-arrow-icon" />
                 </button>
               )}
               {canShowLessCourses && (
                 <button
                   type="button"
                   onClick={() => setVisibleCourseCount(INITIAL_COURSE_CARDS)}
-                  className="text-gray-600 font-medium hover:text-gray-900 transition-colors"
+                  className="px-6 py-2.5 rounded-full border border-transparent text-stone-600 font-display text-xs font-semibold uppercase tracking-wider hover:text-ink transition-colors cursor-pointer"
                 >
                   View less
                 </button>

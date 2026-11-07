@@ -349,6 +349,8 @@ export interface Quotation {
   quotationNo: string;
   date: string;
   clientName: string;
+  clientTin?: string;
+  trainingTitle?: string;
   location: string;
   numberOfParticipants: number;
   costPerPerson: number;

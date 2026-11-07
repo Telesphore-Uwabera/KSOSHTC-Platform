@@ -1,5 +1,5 @@
 /** @import must precede all other statements */
-@import url("https://fonts.googleapis.com/css2?family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Satisfy&family=Mrs+Saint+Delafield&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Work+Sans:ital,wght@0,400;0,500;0,600;0,700;0,800;1,400&family=Satisfy&family=Mrs+Saint+Delafield&display=swap");
 
 @tailwind base;
 @tailwind components;
@@ -1347,3 +1347,68 @@
     animation: none !important;
   }
 }
+
+/* ── Editorial Design System (Inspired by WAKA) ── */
+.eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  font-family: "Space Mono", "IBM Plex Mono", ui-monospace, monospace;
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.eyebrow__rule {
+  display: block;
+  width: 24px;
+  height: 1.5px;
+  background: #C8A951;
+  flex: none;
+}
+
+.eyebrow--light {
+  color: rgba(247, 245, 240, 0.85);
+}
+
+.eyebrow--dark {
+  color: #121815;
+}
+
+.editorial-card {
+  background: #FCFAF6;
+  border: 1px solid rgba(18, 24, 21, 0.08);
+  border-radius: 16px;
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.editorial-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 16px 32px -12px rgba(18, 24, 21, 0.08);
+  border-color: rgba(27, 94, 63, 0.25);
+}
+
+.editorial-dark-card {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  transition: all 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.editorial-dark-card:hover {
+  background: rgba(255, 255, 255, 0.10);
+  border-color: rgba(200, 169, 81, 0.4);
+  transform: translateY(-3px);
+}
+
+.btn-arrow-icon {
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.group:hover .btn-arrow-icon {
+  transform: translateX(4px);
+}
+

@@ -82,26 +82,27 @@ export default function TeamSlider() {
   };
 
   return (
-    <section className="relative py-20 bg-gradient-to-b from-gray-50 via-white to-gray-50 overflow-hidden">
+    <section className="relative py-20 bg-[#FCFAF6] border-t border-black/[0.06] overflow-hidden">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mb-12">
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
           <div>
-            <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-wider mb-3">
-              <ShieldCheck className="w-4 h-4" /> Qualified Leadership &amp; Faculty
+            <div className="eyebrow eyebrow--dark mb-3 sm:mb-4">
+              <span className="eyebrow__rule" />
+              <span>Qualified Leadership &amp; Faculty</span>
             </div>
-            <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-gray-900 tracking-tight">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-ink">
               Meet Our Expert Team
             </h2>
-            <p className="mt-3 text-base sm:text-lg text-gray-600 max-w-2xl">
+            <p className="mt-3 text-base sm:text-lg text-stone-600 max-w-2xl">
               Accredited health, safety, and environmental professionals dedicated to developing competent safety leaders across industries.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <button
               type="button"
               onClick={() => scrollManual("left")}
-              className="p-3 rounded-2xl border border-gray-200 bg-white shadow-sm hover:bg-gray-50 text-gray-700 transition"
+              className="p-3 rounded-full border border-black/[0.1] bg-white shadow-xs hover:bg-stone-50 text-stone-800 transition cursor-pointer"
               aria-label="Scroll left"
             >
               <ChevronLeft className="w-5 h-5" />
@@ -109,7 +110,7 @@ export default function TeamSlider() {
             <button
               type="button"
               onClick={() => scrollManual("right")}
-              className="p-3 rounded-2xl border border-gray-200 bg-white shadow-sm hover:bg-gray-50 text-gray-700 transition"
+              className="p-3 rounded-full border border-black/[0.1] bg-white shadow-xs hover:bg-stone-50 text-stone-800 transition cursor-pointer"
               aria-label="Scroll right"
             >
               <ChevronRight className="w-5 h-5" />
@@ -125,8 +126,8 @@ export default function TeamSlider() {
         onMouseLeave={() => setIsPaused(false)}
       >
         {/* Left & Right gradient edge fades for smooth blend */}
-        <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-28 bg-gradient-to-r from-gray-50 to-transparent z-10 pointer-events-none" />
-        <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-28 bg-gradient-to-l from-gray-50 to-transparent z-10 pointer-events-none" />
+        <div className="absolute left-0 top-0 bottom-0 w-16 sm:w-28 bg-gradient-to-r from-[#FCFAF6] to-transparent z-10 pointer-events-none" />
+        <div className="absolute right-0 top-0 bottom-0 w-16 sm:w-28 bg-gradient-to-l from-[#FCFAF6] to-transparent z-10 pointer-events-none" />
 
         <div
           ref={containerRef}
@@ -139,10 +140,10 @@ export default function TeamSlider() {
           {loopItems.map((member, idx) => (
             <div
               key={`${member.id}-${idx}`}
-              className="w-[280px] sm:w-[320px] shrink-0 mx-3.5 bg-white rounded-[28px] border border-gray-200/90 shadow-sm hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col overflow-hidden group/card transform hover:-translate-y-1.5"
+              className="w-[280px] sm:w-[320px] shrink-0 mx-3.5 bg-white rounded-2xl border border-black/[0.08] shadow-sm hover:shadow-xl hover:border-primary/40 transition-all duration-300 flex flex-col overflow-hidden group/card transform hover:-translate-y-1"
             >
               {/* Photo Area */}
-              <div className="relative h-64 w-full overflow-hidden bg-gradient-to-b from-gray-100 to-gray-200">
+              <div className="relative h-64 w-full overflow-hidden bg-stone-100">
                 <img
                   src={member.avatarUrl || "/logo_transparent.webp"}
                   alt={member.name}
@@ -155,7 +156,7 @@ export default function TeamSlider() {
                 
                 {/* Floating Role Badge */}
                 <div className="absolute bottom-3 left-3 right-3">
-                  <span className="inline-block px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-[11px] font-bold text-primary shadow-sm tracking-wide line-clamp-1">
+                  <span className="inline-block px-3 py-1 rounded-full bg-white/95 backdrop-blur-md text-[11px] font-mono font-bold text-primary shadow-sm tracking-wide line-clamp-1">
                     {member.role}
                   </span>
                 </div>

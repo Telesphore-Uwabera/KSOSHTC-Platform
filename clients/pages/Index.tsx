@@ -35,6 +35,7 @@ import {
   HeartPulse,
   ShieldCheck,
   FileCheck,
+  ArrowRight,
 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
@@ -182,86 +183,90 @@ export default function Index() {
         </div>
 
         <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center text-center flex-1 justify-center">
-          <div className="w-full max-w-7xl flex flex-col items-center space-y-4 sm:space-y-5">
-            <div className="inline-flex items-center gap-2 bg-accent/20 px-3 py-1.5 sm:px-4 sm:py-2 rounded-full hero-reveal-slow text-animate-fade-in-out" style={{ animationDelay: "0.3s", animationFillMode: "both" }}>
-              <Award className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-accent" />
-              <span className="text-accent font-semibold text-xs sm:text-sm">Professional OSH Training Institution</span>
+          <div className="w-full max-w-5xl flex flex-col items-center space-y-4 sm:space-y-6">
+            <div className="eyebrow eyebrow--light px-3.5 py-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-sm hero-reveal-slow text-animate-fade-in-out" style={{ animationDelay: "0.3s", animationFillMode: "both" }}>
+              <span className="eyebrow__rule" />
+              <span className="text-brass font-bold text-xs sm:text-sm tracking-widest">Professional OSH Training Institution</span>
             </div>
-            <h1 className="text-xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight hero-text-line-1 sm:whitespace-nowrap mt-2 sm:mt-4">
+            <h1 className="font-display font-medium text-3xl sm:text-5xl md:text-6xl lg:text-7xl tracking-tight leading-[1.08] text-bone hero-text-line-1 mt-2 sm:mt-4">
               <span className="hero-typing-inner">Kigali Safety OSH Training Center</span>
             </h1>
-            <p className="text-xl sm:text-2xl md:text-3xl lg:text-4xl text-accent font-bold hero-text-line-2 pt-4 sm:pt-6 lg:pt-8">
+            <p className="font-display italic text-2xl sm:text-3xl md:text-4xl text-brass tracking-wide hero-text-line-2 pt-2 sm:pt-4">
               Safety today, Prosperity tomorrow.
             </p>
-            <p className="text-base sm:text-lg md:text-xl lg:text-2xl text-gray-200 w-full max-w-full leading-relaxed hero-text-line-3 pt-4 sm:pt-6 lg:pt-8">
-              Become safety Manager in <span className="font-bold text-accent drop-shadow-sm">3 months</span>
+            <p className="text-base sm:text-lg md:text-xl text-stone-200/90 font-sans max-w-2xl leading-relaxed hero-text-line-3 pt-2 sm:pt-4">
+              Become safety Manager in <span className="font-semibold text-brass-lt underline decoration-brass/50 decoration-1 underline-offset-4">3 months</span>
             </p>
           </div>
         </div>
 
-        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 sm:pt-16 lg:pt-20 pb-8 sm:pb-10 flex flex-col items-center">
-          <div className="flex flex-row flex-nowrap gap-4 sm:gap-6">
+        <div className="relative z-10 w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10 sm:pt-14 pb-8 sm:pb-10 flex flex-col items-center">
+          <div className="flex flex-row flex-wrap items-center justify-center gap-4 sm:gap-6">
             <Link
               to="/login"
               state={{ from: "/dashboard" }}
-              className="group cursor-pointer bg-transparent border-2 border-white text-white px-6 py-4 sm:px-8 sm:py-5 rounded-xl font-bold text-base sm:text-lg transition-all duration-300 hover:bg-white hover:text-primary hover:scale-105 hover:shadow-xl hover:border-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent active:scale-[0.98] inline-flex items-center justify-center shrink-0 min-h-[3.25rem] sm:min-h-[3.75rem]"
+              className="group cursor-pointer inline-flex items-center justify-center gap-2 px-7 sm:px-9 py-3.5 sm:py-4 rounded-full font-display font-semibold uppercase tracking-wider text-xs sm:text-sm bg-brass text-ink hover:bg-brass-lt transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-[0.98] shrink-0"
             >
-              ENROLL NOW!
-              <Target className="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+              <span>ENROLL NOW!</span>
+              <Target className="w-4 h-4 text-ink btn-arrow-icon" />
             </Link>
             <a
               href="#who"
-              className="group cursor-pointer bg-transparent border-2 border-white text-white px-6 py-4 sm:px-8 sm:py-5 rounded-xl font-bold text-base sm:text-lg transition-all duration-300 hover:bg-white hover:text-primary hover:scale-105 hover:shadow-xl hover:border-white focus:outline-none focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-transparent active:scale-[0.98] inline-flex items-center justify-center shrink-0 min-h-[3.25rem] sm:min-h-[3.75rem]"
+              className="group cursor-pointer inline-flex items-center justify-center gap-2 px-7 sm:px-9 py-3.5 sm:py-4 rounded-full font-display font-semibold uppercase tracking-wider text-xs sm:text-sm bg-white/10 hover:bg-white/20 text-bone border border-white/25 hover:border-white/50 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 active:scale-[0.98] shrink-0"
             >
-              Learn More
-              <Shield className="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-y-0.5 transition-transform" />
+              <span>Learn More</span>
+              <Shield className="w-4 h-4 text-brass btn-arrow-icon" />
             </a>
           </div>
         </div>
       </section>
 
       {/* Who We Are Section (home) — no background image; sticky so it covers hero when scrolling down; connects to hero with no gap */}
-      <section id="who" className="relative sticky top-0 z-20 py-16 sm:py-20 md:py-24 lg:py-28 min-h-[60vh] flex flex-col justify-center overflow-hidden -mt-px bg-gradient-to-br from-primary to-primary/90 text-white">
+      <section id="who" className="relative sticky top-0 z-20 py-16 sm:py-20 md:py-24 lg:py-28 min-h-[60vh] flex flex-col justify-center overflow-hidden -mt-px bg-[#121815] text-bone border-t border-white/[0.08]">
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full animate-windy">
-          <div className="mb-8 sm:mb-10">
-            <div className="inline-block bg-white/20 backdrop-blur-sm text-white px-6 py-2.5 sm:px-8 sm:py-3 rounded-lg mb-3 sm:mb-4 shadow-lg scroll-reveal reveal-flip border border-white/20">
-              <h2 className="section-header text-white">Who We Are</h2>
+          <div className="mb-10 sm:mb-12">
+            <div className="eyebrow eyebrow--light mb-3 sm:mb-4">
+              <span className="eyebrow__rule" />
+              <span>Who We Are</span>
             </div>
-            <p className="text-white/90 text-base sm:text-lg mt-3 sm:mt-4 max-w-2xl scroll-reveal text-reveal-fade" style={{ animationDelay: "0.15s" }}>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-bone">
+              Who We Are
+            </h2>
+            <p className="text-stone-300 text-base sm:text-lg mt-3 sm:mt-4 max-w-2xl leading-relaxed">
               A Rwanda-accredited institution specializing in Occupational Safety and Health (OSH) short-course training.
             </p>
           </div>
 
-          <div className="mb-8 rounded-[32px] border border-white/25 bg-white/12 backdrop-blur-md p-5 sm:p-7 shadow-2xl scroll-reveal reveal-spring delay-1200">
-            <div className="flex flex-col sm:flex-row items-center gap-5 sm:gap-8">
-              <img src="/rtb.webp" alt="RTB Rwanda TVET Board" className="h-28 sm:h-36 w-auto object-contain rounded-2xl bg-white/90 p-3 shadow-lg" />
+          <div className="mb-10 rounded-2xl border border-white/15 bg-white/[0.04] backdrop-blur-md p-6 sm:p-8 shadow-xl hover:border-brass/40 transition-all duration-300">
+            <div className="flex flex-col sm:flex-row items-center gap-6 sm:gap-8">
+              <img src="/rtb.webp" alt="RTB Rwanda TVET Board" className="h-24 sm:h-32 w-auto object-contain rounded-xl bg-white p-3 shadow-md" />
               <div className="text-center sm:text-left">
-                <p className="text-sm sm:text-base uppercase tracking-[0.28em] text-accent font-black">Rwanda TVET Board</p>
-                <p className="mt-2 text-base sm:text-lg md:text-xl text-white/95 leading-relaxed font-medium">
+                <p className="text-xs sm:text-sm uppercase tracking-[0.22em] text-brass font-mono font-bold">Rwanda TVET Board</p>
+                <p className="mt-2 text-base sm:text-lg md:text-xl text-stone-200 leading-relaxed font-normal">
                   Accredited institution delivering practical and industry-relevant Occupational Safety and Health (OSH) short-course training.
                 </p>
               </div>
             </div>
           </div>
 
-          <p className="text-white/95 text-sm sm:text-base leading-relaxed max-w-3xl mb-8 scroll-reveal reveal-spring delay-1400">
-            <span className="font-bold text-white">KSOSHTC</span> — competent safety professionals for construction, industrial & mining. Structured, regulation-aligned programs.
+          <p className="text-stone-300 text-sm sm:text-base leading-relaxed max-w-3xl mb-10">
+            <span className="font-bold text-bone">KSOSHTC</span> — competent safety professionals for construction, industrial &amp; mining. Structured, regulation-aligned programs.
           </p>
 
           {/* Description cards — scale in with stagger */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 mb-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6 mb-10">
             {[
-              { icon: GraduationCap, title: "Safety Supervision", desc: "Labour-aligned education.", bg: "bg-accent/20" },
-              { icon: Users, title: "Structured Training", desc: "Practice-oriented culture.", bg: "bg-white/20" },
-              { icon: Shield, title: "Risk & Incidents", desc: "Fewer accidents, compliance.", bg: "bg-secondary/20" },
+              { icon: GraduationCap, title: "Safety Supervision", desc: "Labour-aligned education." },
+              { icon: Users, title: "Structured Training", desc: "Practice-oriented culture." },
+              { icon: Shield, title: "Risk & Incidents", desc: "Fewer accidents, compliance." },
             ].map((item, i) => (
-              <div key={i} className="flex flex-col sm:flex-row gap-4 p-5 rounded-[30px] border border-white/20 hover:border-white/40 hover:bg-white/10 bg-white/10 backdrop-blur-sm transition-all duration-300 group scroll-reveal reveal-bounce" style={{ animationDelay: `${1.4 + i * 0.25}s` }}>
-                <span className={`flex-shrink-0 w-10 h-10 rounded-xl ${item.bg} flex items-center justify-center text-accent group-hover:scale-110 transition-transform`}>
-                  <item.icon className="w-6 h-6" />
+              <div key={i} className="editorial-dark-card flex flex-col sm:flex-row gap-4 p-6 group">
+                <span className="flex-shrink-0 w-11 h-11 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-center text-brass group-hover:scale-110 transition-transform">
+                  <item.icon className="w-5 h-5" />
                 </span>
                 <div className="min-w-0">
-                  <p className="font-bold text-white mb-1 group-hover:text-accent transition-colors text-sm sm:text-base">{item.title}</p>
-                  <p className="text-white/80 text-xs sm:text-sm leading-relaxed">{item.desc}</p>
+                  <p className="font-display font-semibold text-bone mb-1 group-hover:text-brass-lt transition-colors text-base sm:text-lg">{item.title}</p>
+                  <p className="text-stone-400 text-xs sm:text-sm leading-relaxed">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -287,14 +292,11 @@ export default function Index() {
                 <Link
                   key={course.slug}
                   to={`/courses/${course.slug}`}
-                  className="block bg-white/10 backdrop-blur-sm rounded-[26px] min-h-[10.5rem] flex items-center justify-center shadow-lg hover:shadow-xl hover:bg-white/15 transition-all duration-300 group cursor-pointer border-2 border-white/20 hover:border-white/40 scroll-reveal reveal-rotate-in"
-                  style={{ animationDelay: `${1.8 + idx * 0.12}s` }}
+                  className="editorial-dark-card block min-h-[10rem] flex flex-col items-center justify-center p-6 text-center group cursor-pointer"
                 >
-                  <div className="text-center p-3.5">
-                    <Icon className="w-10 h-10 sm:w-12 sm:h-12 text-accent mb-2 group-hover:scale-110 transition-transform duration-300 mx-auto" />
-                    <p className="font-bold text-white text-base sm:text-lg leading-tight">{course.label}</p>
-                    <p className="text-xs sm:text-sm text-white/80 mt-1">{course.sub}</p>
-                  </div>
+                  <Icon className="w-9 h-9 text-brass mb-3 group-hover:scale-110 transition-transform duration-300 mx-auto" />
+                  <p className="font-display font-semibold text-bone text-base sm:text-lg leading-tight group-hover:text-brass-lt transition-colors">{course.label}</p>
+                  <p className="text-xs text-stone-400 mt-1.5">{course.sub}</p>
                 </Link>
               );
             })}
@@ -303,18 +305,20 @@ export default function Index() {
       </section>
 
       {/* What We Provide Section — background image with overlay and text on top */}
-      <section id="provide" className="relative py-16 md:py-28 min-h-[50vh] flex flex-col justify-center overflow-hidden text-white">
+      <section id="provide" className="relative py-16 md:py-28 min-h-[50vh] flex flex-col justify-center overflow-hidden text-bone">
         <div className="absolute inset-0">
           <SiteImage src="/ksohtc-3.webp" alt="" hero className="w-full h-full object-cover bg-image-animate bg-image-move-endless" decoding="async" aria-hidden />
-          <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/70" aria-hidden="true" />
+          <div className="absolute inset-0 bg-[#121815]/75 backdrop-blur-[2px]" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#121815] via-transparent to-[#121815]" aria-hidden="true" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="mb-10">
-            <div className="inline-block bg-secondary/90 backdrop-blur-sm text-white px-8 py-3 rounded-lg mb-4 shadow-lg scroll-reveal reveal-bounce">
-              <h2 className="section-header text-white">What We Provide</h2>
+          <div className="mb-10 sm:mb-12">
+            <div className="eyebrow eyebrow--light mb-3 sm:mb-4">
+              <span className="eyebrow__rule" />
+              <span>Training Excellence</span>
             </div>
-            <p className="text-white/90 text-xs sm:text-sm mt-2 max-w-2xl scroll-reveal text-reveal-fade drop-shadow" style={{ animationDelay: "0.2s" }}>Practical OSH for competent professionals.</p>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-bone">What We Provide</h2>
+            <p className="text-stone-300 text-xs sm:text-sm md:text-base mt-2 max-w-2xl leading-relaxed">Practical OSH for competent professionals.</p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 sm:gap-6">
@@ -326,13 +330,14 @@ export default function Index() {
             ].map((item, idx) => (
               <div
                 key={idx}
-                className="flex flex-col sm:flex-row sm:items-start gap-3 p-5 sm:p-6 bg-white/10 backdrop-blur-sm rounded-[30px] border border-white/20 hover:bg-white/15 transition-all duration-300 hover:scale-[1.02] scroll-reveal reveal-spring"
-                style={{ animationDelay: `${1.2 + idx * 0.3}s` }}
+                className="editorial-dark-card flex flex-col sm:flex-row sm:items-start gap-4 p-6 sm:p-7 group"
               >
-                <item.icon className="w-6 h-6 sm:w-8 sm:h-8 text-accent flex-shrink-0 hover:scale-125 transition-transform duration-300" />
+                <div className="w-11 h-11 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-center text-brass flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <item.icon className="w-5 h-5" />
+                </div>
                 <div className="min-w-0">
-                  <h3 className="text-base sm:text-lg font-bold text-white mb-1 sm:mb-2">{item.title}</h3>
-                  <p className="text-white/90 text-sm sm:text-base">{item.desc}</p>
+                  <h3 className="font-display text-base sm:text-lg font-semibold text-bone mb-1 sm:mb-1.5 group-hover:text-brass-lt transition-colors">{item.title}</h3>
+                  <p className="text-stone-300 text-sm sm:text-base leading-relaxed">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -340,15 +345,19 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Industries Section — white background, no images */}
-      <section id="industries" className="py-12 sm:py-16 md:py-20 lg:py-28 bg-white">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16">
-          <div className="text-center mb-10 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-primary mb-3 sm:mb-4 scroll-reveal reveal-flip">Industries We Serve</h2>
-            <p className="text-gray-600 text-base sm:text-lg max-w-2xl mx-auto px-2 scroll-reveal text-reveal-fade" style={{ animationDelay: "0.15s" }}>Specialized training for Rwanda's key sectors</p>
+      {/* Industries Section — warm paper background, editorial cards */}
+      <section id="industries" className="py-16 sm:py-20 md:py-24 lg:py-28 bg-[#FCFAF6] border-y border-black/[0.06]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12 sm:mb-16">
+            <div className="eyebrow eyebrow--dark justify-center mb-3 sm:mb-4">
+              <span className="eyebrow__rule" />
+              <span>Sectors of Expertise</span>
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-ink mb-3 sm:mb-4">Industries We Serve</h2>
+            <p className="text-stone-600 text-base sm:text-lg max-w-2xl mx-auto px-2">Specialized training for Rwanda's key sectors</p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 sm:gap-7">
             {[
               { icon: HardHat, name: "OSH in Construction", desc: "Height, scaffolding, PPE. Officer, Supervisor, Inspector.", courseId: "construction" as const },
               { icon: Building, name: "OSH in Industrial", desc: "LOTO, chemical, fire. Officer, HSE Assistant.", courseId: "industrial-safety" as const },
@@ -367,13 +376,18 @@ export default function Index() {
                 <Link
                   key={industry.courseId}
                   to={`/courses/${industry.courseId}`}
-                  className="block bg-gray-50 rounded-[30px] text-center border-2 border-primary/10 hover:border-primary/30 hover:shadow-xl transition-all duration-300 hover:scale-[1.02] hover:-translate-y-1 active:scale-[0.99] group cursor-pointer scroll-reveal reveal-flip"
-                  style={{ animationDelay: `${0.1 + (idx % 3) * 0.15}s` }}
+                  className="editorial-card group p-7 sm:p-8 bg-white flex flex-col justify-between cursor-pointer"
                 >
-                  <div className="p-8">
-                    <Icon className="w-16 h-16 text-primary mb-4 inline-block group-hover:scale-125 transition-transform duration-300" />
-                    <h3 className="text-lg sm:text-xl font-bold text-primary mb-2 sm:mb-3 group-hover:text-accent transition-colors">{industry.name}</h3>
-                    <p className="text-gray-600 text-sm sm:text-base group-hover:text-gray-800 transition-colors leading-snug">{industry.desc}</p>
+                  <div>
+                    <div className="w-12 h-12 rounded-xl bg-stone-100/80 border border-black/[0.06] flex items-center justify-center text-primary mb-5 group-hover:bg-primary group-hover:text-white transition-all duration-300">
+                      <Icon className="w-6 h-6" />
+                    </div>
+                    <h3 className="font-display text-lg sm:text-xl font-semibold text-ink mb-2 sm:mb-2.5 group-hover:text-primary transition-colors">{industry.name}</h3>
+                    <p className="text-stone-600 text-sm leading-relaxed">{industry.desc}</p>
+                  </div>
+                  <div className="pt-6 mt-6 border-t border-black/[0.06] flex items-center justify-between text-xs font-mono uppercase tracking-wider text-primary font-semibold">
+                    <span>Explore Course</span>
+                    <ArrowRight className="w-4 h-4 btn-arrow-icon" />
                   </div>
                 </Link>
               );
@@ -383,19 +397,23 @@ export default function Index() {
       </section>
 
       {/* Graduates Training Section — background image with overlay and text on top */}
-      <section className="relative py-16 md:py-28 min-h-[50vh] flex flex-col justify-center overflow-hidden text-white">
+      <section className="relative py-16 md:py-28 min-h-[50vh] flex flex-col justify-center overflow-hidden text-bone">
         <div className="absolute inset-0">
           <SiteImage src="/what-they-do.webp" alt="" hero className="w-full h-full object-cover bg-image-animate bg-image-move-endless" decoding="async" aria-hidden />
-          <div className="absolute inset-0 bg-black/50" aria-hidden="true" />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-black/40 to-black/70" aria-hidden="true" />
+          <div className="absolute inset-0 bg-[#121815]/80 backdrop-blur-[2px]" aria-hidden="true" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#121815] via-transparent to-[#121815]" aria-hidden="true" />
         </div>
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 w-full">
-          <div className="mb-10">
-            <h2 className="section-header text-white mb-2 text-xl sm:text-2xl md:text-3xl scroll-reveal reveal-bounce drop-shadow-md">What Our Graduates Are Trained To Do</h2>
-            <p className="text-white/90 text-sm sm:text-base md:text-lg scroll-reveal text-reveal-fade drop-shadow" style={{ animationDelay: "0.2s" }}>Essential safety competencies for workplace excellence</p>
+          <div className="mb-10 sm:mb-12">
+            <div className="eyebrow eyebrow--light mb-3 sm:mb-4">
+              <span className="eyebrow__rule" />
+              <span>Career Pathways</span>
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-bone mb-2">What Our Graduates Are Trained To Do</h2>
+            <p className="text-stone-300 text-sm sm:text-base md:text-lg">Essential safety competencies for workplace excellence</p>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-5 sm:gap-6">
             {[
               { title: "Safety Officer", desc: "On completion." },
               { title: "Safety Supervisor", desc: "Site/Factory." },
@@ -406,13 +424,14 @@ export default function Index() {
             ].map((item, idx) => (
               <div
                 key={idx}
-                className="flex gap-4 p-6 bg-white/10 backdrop-blur-sm rounded-[30px] hover:bg-white/20 border border-white/10 transition-all duration-300 hover:scale-[1.02] scroll-reveal reveal-spring"
-                style={{ animationDelay: `${1.2 + idx * 0.15}s` }}
+                className="editorial-dark-card flex gap-4 p-6 group"
               >
-                <CheckCircle2 className="w-6 h-6 text-accent flex-shrink-0 hover:scale-110 transition-transform" />
+                <div className="w-10 h-10 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-center text-brass flex-shrink-0 group-hover:scale-110 transition-transform">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
                 <div>
-                  <h3 className="text-base sm:text-lg font-bold mb-1.5 text-white hover:text-accent transition-colors">{item.title}</h3>
-                  <p className="text-white/90 text-xs sm:text-sm">{item.desc}</p>
+                  <h3 className="font-display text-base sm:text-lg font-semibold mb-1 text-bone group-hover:text-brass-lt transition-colors">{item.title}</h3>
+                  <p className="text-stone-300 text-xs sm:text-sm leading-relaxed">{item.desc}</p>
                 </div>
               </div>
             ))}
@@ -420,67 +439,82 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Mission & Vision Section — left/right slow with long delay; sway on Mission card */}
-      <section id="mission" className="py-16 md:py-28 bg-gray-50">
+      {/* Mission & Vision Section */}
+      <section id="mission" className="py-16 sm:py-20 md:py-24 lg:py-28 bg-[#F7F5F0]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="mb-16">
-            <h2 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-primary scroll-reveal reveal-rotate-in">Our Vision & Mission</h2>
+          <div className="mb-12 sm:mb-16">
+            <div className="eyebrow eyebrow--dark mb-3 sm:mb-4">
+              <span className="eyebrow__rule" />
+              <span>Institutional Commitment</span>
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-ink">Our Vision &amp; Mission</h2>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-12 items-stretch">
+          <div className="grid md:grid-cols-2 gap-8 sm:gap-10 items-stretch">
             {/* Mission */}
-            <div className="bg-white rounded-[30px] shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 scroll-reveal reveal-rotate-in delay-600 animate-sway">
-              <div className="bg-gradient-to-r from-secondary to-secondary/80 text-white py-8 px-8">
-                <h3 className="section-header text-white">Our Mission</h3>
+            <div className="bg-white rounded-2xl border border-black/[0.08] shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
+              <div className="bg-[#121815] text-bone py-5 px-6 sm:px-8 flex items-center justify-between border-b border-white/10">
+                <span className="eyebrow eyebrow--light text-brass-lt"><span className="eyebrow__rule" /> Purpose</span>
+                <h3 className="font-display text-xl sm:text-2xl font-semibold text-bone">Our Mission</h3>
               </div>
               <div className="relative">
                 <SiteImage
                   src="/ksohtc-8.webp"
                   alt="KSOSHTC mission in action"
-                  className="w-full h-36 sm:h-44 object-cover"
+                  className="w-full h-44 sm:h-52 object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
                   decoding="async"
                 />
                 <div className="img-overlay" aria-hidden="true" />
               </div>
-              <div className="p-6 sm:p-8 pt-5 sm:pt-6">
-                <p className="text-sm text-gray-700 leading-relaxed font-medium mb-5">
-                  To deliver <span className="font-bold text-primary">high-quality, practical OSH training</span> that develops competent professionals, prevents workplace accidents, strengthens compliance, and promotes a proactive safety culture.
+              <div className="p-6 sm:p-8">
+                <p className="text-sm sm:text-base text-stone-700 leading-relaxed font-normal mb-6">
+                  To deliver <span className="font-semibold text-primary">high-quality, practical OSH training</span> that develops competent professionals, prevents workplace accidents, strengthens compliance, and promotes a proactive safety culture.
                 </p>
                 <div className="space-y-4">
-                  <div className="flex items-start gap-4 group">
-                    <Award className="w-6 h-6 text-primary flex-shrink-0 mt-0.5 group-hover:scale-125 transition-transform" />
+                  <div className="flex items-start gap-3.5 group/item">
+                    <div className="w-8 h-8 rounded-lg bg-stone-100 border border-black/[0.06] flex items-center justify-center text-primary flex-shrink-0 group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                      <Award className="w-4 h-4" />
+                    </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 group-hover:text-primary transition-colors">High-Quality Training</h4>
-                      <p className="text-gray-600 text-sm mt-0.5">Practical, industry-aligned OSH education</p>
+                      <h4 className="font-display font-semibold text-ink text-sm sm:text-base">High-Quality Training</h4>
+                      <p className="text-stone-600 text-xs sm:text-sm mt-0.5">Practical, industry-aligned OSH education</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4 group">
-                    <UserCheck className="w-6 h-6 text-secondary flex-shrink-0 mt-0.5 group-hover:scale-125 transition-transform" />
+                  <div className="flex items-start gap-3.5 group/item">
+                    <div className="w-8 h-8 rounded-lg bg-stone-100 border border-black/[0.06] flex items-center justify-center text-primary flex-shrink-0 group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                      <UserCheck className="w-4 h-4" />
+                    </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 group-hover:text-primary transition-colors">Competent Professionals</h4>
-                      <p className="text-gray-600 text-sm mt-0.5">Develop safety officers, supervisors, inspectors</p>
+                      <h4 className="font-display font-semibold text-ink text-sm sm:text-base">Competent Professionals</h4>
+                      <p className="text-stone-600 text-xs sm:text-sm mt-0.5">Develop safety officers, supervisors, inspectors</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4 group">
-                    <AlertTriangle className="w-6 h-6 text-accent flex-shrink-0 mt-0.5 group-hover:scale-125 transition-transform" />
+                  <div className="flex items-start gap-3.5 group/item">
+                    <div className="w-8 h-8 rounded-lg bg-stone-100 border border-black/[0.06] flex items-center justify-center text-primary flex-shrink-0 group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                      <AlertTriangle className="w-4 h-4" />
+                    </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 group-hover:text-primary transition-colors">Prevent Accidents</h4>
-                      <p className="text-gray-600 text-sm mt-0.5">Reduce workplace accidents and hazards</p>
+                      <h4 className="font-display font-semibold text-ink text-sm sm:text-base">Prevent Accidents</h4>
+                      <p className="text-stone-600 text-xs sm:text-sm mt-0.5">Reduce workplace accidents and hazards</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4 group">
-                    <Shield className="w-6 h-6 text-primary flex-shrink-0 mt-0.5 group-hover:scale-125 transition-transform" />
+                  <div className="flex items-start gap-3.5 group/item">
+                    <div className="w-8 h-8 rounded-lg bg-stone-100 border border-black/[0.06] flex items-center justify-center text-primary flex-shrink-0 group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                      <Shield className="w-4 h-4" />
+                    </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 group-hover:text-primary transition-colors">Strengthen Compliance</h4>
-                      <p className="text-gray-600 text-sm mt-0.5">Regulatory and international best practices</p>
+                      <h4 className="font-display font-semibold text-ink text-sm sm:text-base">Strengthen Compliance</h4>
+                      <p className="text-stone-600 text-xs sm:text-sm mt-0.5">Regulatory and international best practices</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4 group">
-                    <Users className="w-6 h-6 text-secondary flex-shrink-0 mt-0.5 group-hover:scale-125 transition-transform" />
+                  <div className="flex items-start gap-3.5 group/item">
+                    <div className="w-8 h-8 rounded-lg bg-stone-100 border border-black/[0.06] flex items-center justify-center text-primary flex-shrink-0 group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                      <Users className="w-4 h-4" />
+                    </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 group-hover:text-primary transition-colors">Proactive Safety Culture</h4>
-                      <p className="text-gray-600 text-sm mt-0.5">Across construction, industrial and mining sectors</p>
+                      <h4 className="font-display font-semibold text-ink text-sm sm:text-base">Proactive Safety Culture</h4>
+                      <p className="text-stone-600 text-xs sm:text-sm mt-0.5">Across construction, industrial and mining sectors</p>
                     </div>
                   </div>
                 </div>
@@ -488,58 +522,69 @@ export default function Index() {
             </div>
 
             {/* Vision */}
-            <div className="bg-white rounded-[30px] shadow-lg overflow-hidden hover:shadow-2xl transition-all duration-300 hover:scale-105 scroll-reveal reveal-flip delay-1000">
-              <div className="bg-gradient-to-r from-primary to-primary/80 text-white py-8 px-8">
-                <h3 className="section-header text-white">Our Vision</h3>
+            <div className="bg-white rounded-2xl border border-black/[0.08] shadow-sm hover:shadow-xl transition-all duration-300 overflow-hidden group">
+              <div className="bg-[#121815] text-bone py-5 px-6 sm:px-8 flex items-center justify-between border-b border-white/10">
+                <span className="eyebrow eyebrow--light text-brass-lt"><span className="eyebrow__rule" /> Horizon</span>
+                <h3 className="font-display text-xl sm:text-2xl font-semibold text-bone">Our Vision</h3>
               </div>
               <div className="relative">
                 <SiteImage
                   src="/ksohtc-9.webp"
                   alt="KSOSHTC training — our vision"
-                  className="w-full h-36 sm:h-44 object-cover"
+                  className="w-full h-44 sm:h-52 object-cover"
                   sizes="(max-width: 768px) 100vw, 50vw"
                   decoding="async"
                 />
                 <div className="img-overlay" aria-hidden="true" />
               </div>
-              <div className="p-6 sm:p-8 pt-5 sm:pt-6">
-                <p className="text-sm text-gray-700 leading-relaxed font-medium mb-5">
-                  <span className="font-bold text-primary">Long-term contributor</span> to national safety. Capacity building.
+              <div className="p-6 sm:p-8">
+                <p className="text-sm sm:text-base text-stone-700 leading-relaxed font-normal mb-6">
+                  <span className="font-semibold text-primary">Long-term contributor</span> to national safety. Capacity building.
                 </p>
                 <div className="space-y-4">
-                  <div className="flex items-start gap-4 group">
-                    <Crown className="w-6 h-6 text-primary flex-shrink-0 mt-0.5 group-hover:scale-125 transition-transform" />
+                  <div className="flex items-start gap-3.5 group/item">
+                    <div className="w-8 h-8 rounded-lg bg-stone-100 border border-black/[0.06] flex items-center justify-center text-primary flex-shrink-0 group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                      <Crown className="w-4 h-4" />
+                    </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 group-hover:text-primary transition-colors">Excellence</h4>
-                      <p className="text-gray-600 text-sm mt-0.5">Commitment to highest standards in OSH training and education</p>
+                      <h4 className="font-display font-semibold text-ink text-sm sm:text-base">Excellence</h4>
+                      <p className="text-stone-600 text-xs sm:text-sm mt-0.5">Commitment to highest standards in OSH training and education</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4 group">
-                    <Star className="w-6 h-6 text-secondary flex-shrink-0 mt-0.5 group-hover:scale-125 transition-transform" />
+                  <div className="flex items-start gap-3.5 group/item">
+                    <div className="w-8 h-8 rounded-lg bg-stone-100 border border-black/[0.06] flex items-center justify-center text-primary flex-shrink-0 group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                      <Star className="w-4 h-4" />
+                    </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 group-hover:text-primary transition-colors">Accreditation</h4>
-                      <p className="text-gray-600 text-sm mt-0.5">Recognized certification and regulatory compliance</p>
+                      <h4 className="font-display font-semibold text-ink text-sm sm:text-base">Accreditation</h4>
+                      <p className="text-stone-600 text-xs sm:text-sm mt-0.5">Recognized certification and regulatory compliance</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4 group">
-                    <Star className="w-6 h-6 text-accent flex-shrink-0 mt-0.5 group-hover:scale-125 transition-transform" />
+                  <div className="flex items-start gap-3.5 group/item">
+                    <div className="w-8 h-8 rounded-lg bg-stone-100 border border-black/[0.06] flex items-center justify-center text-primary flex-shrink-0 group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                      <Star className="w-4 h-4 text-brass" />
+                    </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 group-hover:text-primary transition-colors">Industry Impact</h4>
-                      <p className="text-gray-600 text-sm mt-0.5">Measurable improvements in workplace safety across Rwanda</p>
+                      <h4 className="font-display font-semibold text-ink text-sm sm:text-base">Industry Impact</h4>
+                      <p className="text-stone-600 text-xs sm:text-sm mt-0.5">Measurable improvements in workplace safety across Rwanda</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4 group">
-                    <Target className="w-6 h-6 text-primary flex-shrink-0 mt-0.5 group-hover:scale-125 transition-transform" />
+                  <div className="flex items-start gap-3.5 group/item">
+                    <div className="w-8 h-8 rounded-lg bg-stone-100 border border-black/[0.06] flex items-center justify-center text-primary flex-shrink-0 group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                      <Target className="w-4 h-4" />
+                    </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 group-hover:text-primary transition-colors">Quality Assurance</h4>
-                      <p className="text-gray-600 text-sm mt-0.5">Continuous improvement of training delivery and outcomes</p>
+                      <h4 className="font-display font-semibold text-ink text-sm sm:text-base">Quality Assurance</h4>
+                      <p className="text-stone-600 text-xs sm:text-sm mt-0.5">Continuous improvement of training delivery and outcomes</p>
                     </div>
                   </div>
-                  <div className="flex items-start gap-4 group">
-                    <Globe className="w-6 h-6 text-secondary flex-shrink-0 mt-0.5 group-hover:scale-125 transition-transform" />
+                  <div className="flex items-start gap-3.5 group/item">
+                    <div className="w-8 h-8 rounded-lg bg-stone-100 border border-black/[0.06] flex items-center justify-center text-primary flex-shrink-0 group-hover/item:bg-primary group-hover/item:text-white transition-colors">
+                      <Globe className="w-4 h-4" />
+                    </div>
                     <div>
-                      <h4 className="font-bold text-gray-800 group-hover:text-primary transition-colors">Regional Leadership</h4>
-                      <p className="text-gray-600 text-sm mt-0.5">Setting the standard for OSH education across the region</p>
+                      <h4 className="font-display font-semibold text-ink text-sm sm:text-base">Regional Leadership</h4>
+                      <p className="text-stone-600 text-xs sm:text-sm mt-0.5">Setting the standard for OSH education across the region</p>
                     </div>
                   </div>
                 </div>
@@ -550,16 +595,17 @@ export default function Index() {
       </section>
 
       {/* Testimonials Section (admin-managed continuous sliding carousel) */}
-      <section id="testimonials" className="py-14 sm:py-18 md:py-24 bg-gray-50 overflow-hidden relative">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center mb-8 sm:mb-12">
+      <section id="testimonials" className="py-16 sm:py-20 md:py-24 bg-[#FCFAF6] overflow-hidden relative border-t border-black/[0.06]">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center mb-10 sm:mb-14">
           <div className="text-center w-full max-w-3xl">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-semibold mb-3">
-              <Sparkles className="w-4 h-4 text-primary" /> Verified Experiences
+            <div className="eyebrow eyebrow--dark justify-center mb-3 sm:mb-4">
+              <span className="eyebrow__rule" />
+              <span>Verified Experiences</span>
             </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-primary mb-3 scroll-reveal reveal-bounce">
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-ink mb-3 text-center">
               What Our Participants Say
             </h2>
-            <p className="text-gray-600 text-base sm:text-lg scroll-reveal text-reveal-fade" style={{ animationDelay: "0.15s" }}>
+            <p className="text-stone-600 text-base sm:text-lg text-center max-w-2xl mx-auto">
               Stories and feedback from safety professionals who trained with us
             </p>
           </div>
@@ -568,18 +614,18 @@ export default function Index() {
         {isLoading ? (
           <div className="flex flex-col items-center justify-center py-12">
             <Loader2 className="w-8 h-8 text-primary animate-spin mb-2" />
-            <p className="text-gray-500 text-sm">Loading participant testimonials…</p>
+            <p className="text-stone-500 text-sm">Loading participant testimonials…</p>
           </div>
         ) : displayTestimonials.length === 0 ? (
-          <p className="text-gray-500 text-center py-8">No testimonials yet. Check back soon.</p>
+          <p className="text-stone-500 text-center py-8">No testimonials yet. Check back soon.</p>
         ) : (
           <div className="relative w-full overflow-hidden pause-marquee group">
             {/* Gradient Edge Masks for smooth fade on sides */}
-            <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-12 sm:w-24 md:w-36 bg-gradient-to-r from-gray-50 to-transparent z-10" />
-            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 sm:w-24 md:w-36 bg-gradient-to-l from-gray-50 to-transparent z-10" />
+            <div className="pointer-events-none absolute left-0 top-0 bottom-0 w-12 sm:w-24 md:w-36 bg-gradient-to-r from-[#FCFAF6] to-transparent z-10" />
+            <div className="pointer-events-none absolute right-0 top-0 bottom-0 w-12 sm:w-24 md:w-36 bg-gradient-to-l from-[#FCFAF6] to-transparent z-10" />
 
             {/* Continuous Marquee Track (Right to Left) */}
-            <div className="animate-marquee-left flex items-stretch gap-4 sm:gap-6 px-4 py-4">
+            <div className="animate-marquee-left flex items-stretch gap-5 sm:gap-6 px-4 py-4">
               {/* Primary Track */}
               {marqueeItems.map((t, idx) => {
                 const PREVIEW_LEN = 120;
@@ -588,10 +634,10 @@ export default function Index() {
                 return (
                   <div
                     key={`track1-${t.id}-${idx}`}
-                    className="w-[280px] xs:w-[320px] sm:w-[380px] md:w-[420px] flex-shrink-0 flex flex-col bg-white rounded-[22px] sm:rounded-[28px] border-2 border-gray-200/90 overflow-hidden shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
+                    className="w-[280px] xs:w-[320px] sm:w-[380px] md:w-[420px] flex-shrink-0 flex flex-col bg-white rounded-2xl border border-black/[0.08] overflow-hidden shadow-sm hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
                   >
                     {/* Hero image filling top space responsively */}
-                    <div className="w-full h-44 xs:h-52 sm:h-60 md:h-64 relative bg-gray-100 overflow-hidden flex-shrink-0">
+                    <div className="w-full h-44 xs:h-52 sm:h-60 md:h-64 relative bg-stone-100 overflow-hidden flex-shrink-0">
                       {t.avatarUrl ? (
                         <SiteImage
                           src={t.avatarUrl}
@@ -602,21 +648,21 @@ export default function Index() {
                           decoding="async"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center text-primary font-bold text-4xl sm:text-5xl">
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center text-primary font-display font-bold text-4xl sm:text-5xl">
                           {t.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                         </div>
                       )}
                     </div>
 
                     {/* Card Body */}
-                    <div className="p-4 sm:p-6 md:p-7 flex flex-col flex-1">
+                    <div className="p-5 sm:p-6 md:p-7 flex flex-col flex-1">
                       <div className="flex flex-col items-center mb-2.5 sm:mb-3">
-                        <h4 className="font-bold text-gray-900 text-base sm:text-lg md:text-xl text-center leading-snug">{t.name}</h4>
-                        <p className="text-primary font-semibold text-xs sm:text-sm uppercase tracking-wider mt-1 text-center">{t.role || "Participant"}</p>
+                        <h4 className="font-display font-semibold text-ink text-base sm:text-lg md:text-xl text-center leading-snug">{t.name}</h4>
+                        <p className="text-primary font-mono font-medium text-xs sm:text-sm uppercase tracking-wider mt-1 text-center">{t.role || "Participant"}</p>
                         {/* Stars */}
                         <div className="flex items-center gap-1 mt-1.5 sm:mt-2">
                           {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`w-4 h-4 sm:w-5 sm:h-5 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
+                            <Star key={i} className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${i < (t.rating ?? 5) ? "fill-brass text-brass" : "fill-stone-200 text-stone-200"}`} />
                           ))}
                         </div>
                       </div>
@@ -625,7 +671,7 @@ export default function Index() {
                       <div className="w-10 sm:w-12 h-0.5 bg-primary/20 rounded mx-auto mb-2.5 sm:mb-3" />
 
                       {/* Truncated Quote */}
-                      <p className="text-gray-600 text-xs sm:text-sm md:text-base leading-relaxed italic text-center flex-1">
+                      <p className="text-stone-600 text-xs sm:text-sm md:text-base leading-relaxed italic text-center flex-1">
                         &ldquo;{preview}&rdquo;
                       </p>
 
@@ -634,7 +680,7 @@ export default function Index() {
                         <button
                           type="button"
                           onClick={() => setSelectedTestimonial(t)}
-                          className="mt-3.5 sm:mt-4 mx-auto inline-flex items-center gap-1.5 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
+                          className="mt-3.5 sm:mt-4 mx-auto inline-flex items-center gap-1.5 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-primary/10 text-primary text-xs font-mono uppercase tracking-wider font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
                         >
                           Read More
                         </button>
@@ -653,10 +699,10 @@ export default function Index() {
                   <div
                     key={`track2-${t.id}-${idx}`}
                     aria-hidden="true"
-                    className="w-[280px] xs:w-[320px] sm:w-[380px] md:w-[420px] flex-shrink-0 flex flex-col bg-white rounded-[22px] sm:rounded-[28px] border-2 border-gray-200/90 overflow-hidden shadow-sm hover:border-primary/50 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
+                    className="w-[280px] xs:w-[320px] sm:w-[380px] md:w-[420px] flex-shrink-0 flex flex-col bg-white rounded-2xl border border-black/[0.08] overflow-hidden shadow-sm hover:border-primary/40 hover:shadow-xl hover:-translate-y-1 transition-all duration-300 select-none"
                   >
                     {/* Hero image filling top space responsively */}
-                    <div className="w-full h-44 xs:h-52 sm:h-60 md:h-64 relative bg-gray-100 overflow-hidden flex-shrink-0">
+                    <div className="w-full h-44 xs:h-52 sm:h-60 md:h-64 relative bg-stone-100 overflow-hidden flex-shrink-0">
                       {t.avatarUrl ? (
                         <SiteImage
                           src={t.avatarUrl}
@@ -667,27 +713,27 @@ export default function Index() {
                           decoding="async"
                         />
                       ) : (
-                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center text-primary font-bold text-4xl sm:text-5xl">
+                        <div className="w-full h-full bg-gradient-to-br from-primary/20 via-primary/10 to-primary/5 flex items-center justify-center text-primary font-display font-bold text-4xl sm:text-5xl">
                           {t.name.split(" ").map((n) => n[0]).slice(0, 2).join("").toUpperCase()}
                         </div>
                       )}
                     </div>
 
                     {/* Card Body */}
-                    <div className="p-4 sm:p-6 md:p-7 flex flex-col flex-1">
+                    <div className="p-5 sm:p-6 md:p-7 flex flex-col flex-1">
                       <div className="flex flex-col items-center mb-2.5 sm:mb-3">
-                        <h4 className="font-bold text-gray-900 text-base sm:text-lg md:text-xl text-center leading-snug">{t.name}</h4>
-                        <p className="text-primary font-semibold text-xs sm:text-sm uppercase tracking-wider mt-1 text-center">{t.role || "Participant"}</p>
+                        <h4 className="font-display font-semibold text-ink text-base sm:text-lg md:text-xl text-center leading-snug">{t.name}</h4>
+                        <p className="text-primary font-mono font-medium text-xs sm:text-sm uppercase tracking-wider mt-1 text-center">{t.role || "Participant"}</p>
                         <div className="flex items-center gap-1 mt-1.5 sm:mt-2">
                           {[...Array(5)].map((_, i) => (
-                            <Star key={i} className={`w-5 h-5 ${i < (t.rating ?? 5) ? "fill-amber-400 text-amber-400" : "fill-gray-200 text-gray-200"}`} />
+                            <Star key={i} className={`w-4 h-4 sm:w-4.5 sm:h-4.5 ${i < (t.rating ?? 5) ? "fill-brass text-brass" : "fill-stone-200 text-stone-200"}`} />
                           ))}
                         </div>
                       </div>
 
                       <div className="w-10 sm:w-12 h-0.5 bg-primary/20 rounded mx-auto mb-2.5 sm:mb-3" />
 
-                      <p className="text-gray-600 text-xs sm:text-sm md:text-base leading-relaxed italic text-center flex-1">
+                      <p className="text-stone-600 text-xs sm:text-sm md:text-base leading-relaxed italic text-center flex-1">
                         &ldquo;{preview}&rdquo;
                       </p>
 
@@ -695,7 +741,7 @@ export default function Index() {
                         <button
                           type="button"
                           onClick={() => setSelectedTestimonial(t)}
-                          className="mt-3.5 sm:mt-4 mx-auto inline-flex items-center gap-1.5 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-primary/10 text-primary text-xs sm:text-sm font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
+                          className="mt-3.5 sm:mt-4 mx-auto inline-flex items-center gap-1.5 px-4 py-1.5 sm:px-5 sm:py-2 rounded-full bg-primary/10 text-primary text-xs font-mono uppercase tracking-wider font-semibold hover:bg-primary hover:text-white transition-all duration-200 cursor-pointer"
                         >
                           Read More
                         </button>
@@ -707,7 +753,7 @@ export default function Index() {
             </div>
 
             {/* Subtle notice below marquee */}
-            <p className="text-center text-xs text-gray-400 mt-3 select-none">
+            <p className="text-center text-xs text-stone-400 mt-4 select-none font-mono">
               Hover over testimonials to pause scrolling
             </p>
           </div>
@@ -816,13 +862,17 @@ export default function Index() {
       )}
 
       {/* FAQ Section */}
-      <section id="faq" className="py-12 sm:py-16 md:py-20 lg:py-24 bg-white">
+      <section id="faq" className="py-16 sm:py-20 md:py-24 bg-white border-t border-black/[0.06]">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col items-center">
-          <div className="text-center mb-10 sm:mb-14 w-full max-w-3xl">
-            <h2 className="text-xl sm:text-2xl font-bold text-primary mb-2 scroll-reveal reveal-fade-scale">Frequently Asked Questions</h2>
-            <p className="text-gray-600 text-xs sm:text-sm scroll-reveal text-reveal-fade" style={{ animationDelay: "0.15s" }}>OSH training and enrollment</p>
+          <div className="text-center mb-12 sm:mb-16 w-full max-w-3xl">
+            <div className="eyebrow eyebrow--dark justify-center mb-3 sm:mb-4">
+              <span className="eyebrow__rule" />
+              <span>Answers &amp; Guidance</span>
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-ink mb-3 text-center">Frequently Asked Questions</h2>
+            <p className="text-stone-600 text-base sm:text-lg text-center max-w-2xl mx-auto">OSH training and enrollment</p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-4 w-full max-w-5xl mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-5 w-full max-w-5xl mx-auto">
             {[
               { q: "What is OSH training?", a: "Occupational Safety and Health (OSH) training prepares professionals to identify hazards, assess risks, and implement safety measures in workplaces. Our programs align with Rwanda Labour Regulations and international best practices." },
               { q: "Who can enroll?", a: "A2 is the minimum. Individuals and corporate clients can enroll. Contact us for details." },
@@ -833,14 +883,13 @@ export default function Index() {
             ].map((faq, idx) => (
               <details
                 key={idx}
-                className="group bg-white rounded-[30px] border-2 border-gray-200 overflow-hidden shadow-sm hover:border-primary/40 hover:shadow-md transition-all duration-300 scroll-reveal reveal-fade-scale"
-                style={{ animationDelay: `${0.2 + idx * 0.06}s` }}
+                className="group bg-[#FCFAF6] rounded-xl border border-black/[0.08] overflow-hidden shadow-xs hover:border-black/20 transition-all duration-300"
               >
-                <summary className="flex items-start sm:items-center justify-between gap-4 px-5 py-4 sm:px-6 sm:py-5 cursor-pointer list-none font-semibold text-gray-800 hover:text-primary transition-colors min-h-[3.5rem]">
-                  <span className="text-left text-sm sm:text-base line-clamp-2 flex-1 pr-2">{faq.q}</span>
-                  <span className="text-primary text-xl sm:text-2xl shrink-0 transition-transform duration-300 group-open:rotate-45 flex items-center">+</span>
+                <summary className="flex items-start sm:items-center justify-between gap-4 px-6 py-5 cursor-pointer list-none font-display font-medium text-stone-900 hover:text-primary transition-colors min-h-[3.75rem]">
+                  <span className="text-left text-sm sm:text-base leading-snug flex-1 pr-2">{faq.q}</span>
+                  <span className="text-primary font-mono text-xl shrink-0 transition-transform duration-300 group-open:rotate-45 flex items-center justify-center w-6 h-6 rounded-full bg-black/[0.04]">+</span>
                 </summary>
-                <p className="px-5 pb-5 sm:px-6 sm:pb-6 pt-0 text-gray-600 text-xs sm:text-sm leading-relaxed border-t border-gray-100 bg-gray-50/50">{faq.a}</p>
+                <p className="px-6 pb-6 pt-1 text-stone-600 text-xs sm:text-sm leading-relaxed border-t border-black/[0.06] bg-white/60">{faq.a}</p>
               </details>
             ))}
           </div>
@@ -848,25 +897,27 @@ export default function Index() {
       </section>
 
       {/* Contact Section — premium styling, depth and form focus */}
-      <section id="contact" className="relative py-16 md:py-28 bg-gradient-to-br from-secondary via-secondary/95 to-secondary/90 text-white overflow-hidden contact-section-bg">
+      <section id="contact" className="relative py-16 sm:py-20 md:py-28 bg-[#121815] text-bone overflow-hidden border-t border-white/[0.08]">
         <div className="absolute inset-0 opacity-10 pointer-events-none">
           <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl animate-float" aria-hidden />
         </div>
-        <div className="contact-section-pattern absolute inset-0 pointer-events-none z-0" aria-hidden />
 
         <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-14 sm:mb-16">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold mb-2 text-primary scroll-reveal reveal-spring">Get In Touch</h2>
-            <span className="inline-block w-12 h-0.5 bg-accent rounded-full mb-4 scroll-reveal text-reveal-fade" style={{ animationDelay: "0.1s" }} aria-hidden />
-            <p className="text-accent/95 text-sm sm:text-base scroll-reveal text-reveal-fade" style={{ animationDelay: "0.15s" }}>Questions? We’re here to help.</p>
+          <div className="text-center mb-12 sm:mb-16">
+            <div className="eyebrow eyebrow--light justify-center mb-3 sm:mb-4">
+              <span className="eyebrow__rule" />
+              <span>Inquiries &amp; Admissions</span>
+            </div>
+            <h2 className="font-display text-3xl sm:text-4xl md:text-5xl font-medium tracking-tight text-bone mb-3 text-center">Get In Touch</h2>
+            <p className="text-stone-300 text-base sm:text-lg text-center max-w-2xl mx-auto">Questions? We’re here to help.</p>
           </div>
 
           {/* One big card: left = contact info, right = form */}
-          <div className="contact-form-panel bg-white rounded-[30px] border border-gray-200 shadow-xl w-full overflow-hidden mb-10">
+          <div className="bg-[#18201C] rounded-2xl border border-white/[0.12] shadow-2xl w-full overflow-hidden mb-12">
             <div className="grid grid-cols-1 lg:grid-cols-2 min-h-0">
               {/* Left half: contact cards stacked */}
-              <div className="flex flex-col justify-center p-6 sm:p-8 md:p-10 bg-gray-50/80 border-b lg:border-b-0 lg:border-r border-gray-200">
-                <h3 className="text-primary font-bold text-lg sm:text-xl mb-4 sm:mb-6">Contact us</h3>
+              <div className="flex flex-col justify-center p-6 sm:p-8 md:p-10 bg-white/[0.02] border-b lg:border-b-0 lg:border-r border-white/10">
+                <h3 className="font-display font-semibold text-bone text-lg sm:text-xl mb-6">Contact us</h3>
                 <div className="space-y-4">
                   {[
                     {
@@ -884,30 +935,32 @@ export default function Index() {
                     {
                       icon: Mail,
                       title: "Email",
-                    content: "ksoshtc@gmail.com",
-                    link: "mailto:ksoshtc@gmail.com",
+                      content: "ksoshtc@gmail.com",
+                      link: "mailto:ksoshtc@gmail.com",
                     },
                   ].map((contact, idx) => {
                     const Icon = contact.icon;
                     const isAddress = contact.content === "Kicukiro, Kigali, Rwanda" && contact.link === "/contact#map";
                     const content = (
                       <>
-                        <Icon className="w-8 h-8 text-primary flex-shrink-0 group-hover:scale-110 transition-transform" />
+                        <div className="w-10 h-10 rounded-xl bg-white/[0.08] border border-white/10 flex items-center justify-center text-brass flex-shrink-0 group-hover:scale-110 transition-transform">
+                          <Icon className="w-5 h-5" />
+                        </div>
                         <div className="min-w-0">
-                          <h4 className="font-bold text-gray-800 group-hover:text-primary transition-colors text-sm sm:text-base">{contact.title}</h4>
-                          <p className="text-gray-600 text-sm mt-0.5">
+                          <h4 className="font-display font-semibold text-bone group-hover:text-brass-lt transition-colors text-sm sm:text-base">{contact.title}</h4>
+                          <p className="text-stone-300 text-sm mt-0.5">
                             {contact.link ? (
                               contact.link.startsWith("http") || contact.link.startsWith("mailto:") ? (
                                 <a
                                   href={contact.link}
-                                  className="text-primary hover:text-accent underline decoration-dotted underline-offset-2"
+                                  className="text-stone-300 hover:text-brass-lt underline decoration-dotted underline-offset-2 transition-colors"
                                   {...(contact.link.startsWith("http") ? { target: "_blank", rel: "noopener noreferrer" } : {})}
                                   onClick={(e) => e.stopPropagation()}
                                 >
                                   {contact.content}
                                 </a>
                               ) : (
-                                <span className="text-primary">{contact.content} — View map</span>
+                                <span className="text-stone-300">{contact.content} — View map</span>
                               )
                             ) : (
                               contact.content
@@ -916,7 +969,7 @@ export default function Index() {
                         </div>
                       </>
                     );
-                    const blockClass = "flex items-start gap-4 p-4 rounded-[20px] hover:bg-white/80 transition-colors group";
+                    const blockClass = "flex items-start gap-4 p-4 rounded-xl hover:bg-white/[0.04] transition-colors group";
                     return (
                       <div key={idx}>
                         {isAddress ? (
@@ -934,7 +987,7 @@ export default function Index() {
 
               {/* Right half: form */}
               <div className="flex flex-col justify-center p-6 sm:p-8 md:p-10">
-                <p className="text-primary font-semibold text-sm sm:text-base mb-4">Send us a message</p>
+                <p className="font-display font-semibold text-bone text-base sm:text-lg mb-5">Send us a message</p>
                 <form className="space-y-4" onSubmit={handleContactSubmit}>
                   <input
                     type="text"
@@ -943,7 +996,7 @@ export default function Index() {
                     value={contactName}
                     onChange={(e) => setContactName(e.target.value)}
                     required
-                    className="contact-input w-full px-5 py-3.5 sm:px-6 sm:py-4 rounded-[30px] bg-gray-50 border-2 border-gray-200 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
+                    className="w-full px-5 py-3.5 sm:px-6 sm:py-4 rounded-xl bg-white/[0.05] border border-white/15 text-white placeholder-stone-400 focus:outline-none focus:border-brass focus:bg-white/[0.08] focus:ring-1 focus:ring-brass/30 transition-all text-sm"
                   />
                   <input
                     type="email"
@@ -952,7 +1005,7 @@ export default function Index() {
                     value={contactEmail}
                     onChange={(e) => setContactEmail(e.target.value)}
                     required
-                    className="contact-input w-full px-5 py-3.5 sm:px-6 sm:py-4 rounded-[30px] bg-gray-50 border-2 border-gray-200 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
+                    className="w-full px-5 py-3.5 sm:px-6 sm:py-4 rounded-xl bg-white/[0.05] border border-white/15 text-white placeholder-stone-400 focus:outline-none focus:border-brass focus:bg-white/[0.08] focus:ring-1 focus:ring-brass/30 transition-all text-sm"
                   />
                   <input
                     type="tel"
@@ -961,7 +1014,7 @@ export default function Index() {
                     value={contactPhone}
                     onChange={(e) => setContactPhone(e.target.value)}
                     required
-                    className="contact-input w-full px-5 py-3.5 sm:px-6 sm:py-4 rounded-[30px] bg-gray-50 border-2 border-gray-200 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20"
+                    className="w-full px-5 py-3.5 sm:px-6 sm:py-4 rounded-xl bg-white/[0.05] border border-white/15 text-white placeholder-stone-400 focus:outline-none focus:border-brass focus:bg-white/[0.08] focus:ring-1 focus:ring-brass/30 transition-all text-sm"
                   />
                   <textarea
                     placeholder="Your Message"
@@ -970,18 +1023,23 @@ export default function Index() {
                     value={contactMessage}
                     onChange={(e) => setContactMessage(e.target.value)}
                     required
-                    className="contact-input w-full px-5 py-3.5 sm:px-6 sm:py-4 rounded-[30px] bg-gray-50 border-2 border-gray-200 text-gray-900 placeholder-gray-500 focus:outline-none focus:border-primary focus:bg-white focus:ring-2 focus:ring-primary/20 resize-none"
+                    className="w-full px-5 py-3.5 sm:px-6 sm:py-4 rounded-xl bg-white/[0.05] border border-white/15 text-white placeholder-stone-400 focus:outline-none focus:border-brass focus:bg-white/[0.08] focus:ring-1 focus:ring-brass/30 transition-all text-sm resize-none"
                   />
-                  {contactError && <p className="text-red-600 text-sm">{contactError}</p>}
+                  {contactError && <p className="text-red-400 text-sm">{contactError}</p>}
                   {contactSuccess && (
-                    <p className="text-green-700 text-sm flex items-center gap-2">
+                    <p className="text-emerald-400 text-sm flex items-center gap-2">
                       <CheckCircle className="w-4 h-4" />
                       Message sent. We will get back to you soon.
                     </p>
                   )}
-                  <button type="submit" disabled={contactLoading} className="contact-btn-primary w-full bg-gradient-to-r from-accent to-accent/90 text-black font-bold py-3.5 sm:py-4 rounded-[30px] hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2">
-                    {contactLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : null}
-                    Send Message
+                  <button
+                    type="submit"
+                    disabled={contactLoading}
+                    className="w-full bg-brass text-ink hover:bg-brass-lt font-display font-semibold uppercase tracking-wider text-xs sm:text-sm py-4 rounded-full transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5 active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed inline-flex items-center justify-center gap-2 group cursor-pointer"
+                  >
+                    {contactLoading ? <Loader2 className="w-4 h-4 animate-spin" /> : null}
+                    <span>Send Message</span>
+                    <ArrowRight className="w-4 h-4 text-ink btn-arrow-icon" />
                   </button>
                 </form>
               </div>
@@ -989,8 +1047,12 @@ export default function Index() {
           </div>
 
           <div className="text-center">
-            <Link to="/login" className="contact-btn-primary inline-block bg-gradient-to-r from-accent to-accent/90 text-black px-8 sm:px-12 py-3 sm:py-4 rounded-[30px] font-bold text-base sm:text-lg hover:scale-[1.02] active:scale-[0.98] transform scroll-reveal reveal-flip delay-2200">
-              ENROLL NOW!
+            <Link
+              to="/login"
+              className="inline-flex items-center justify-center gap-2 bg-brass text-ink hover:bg-brass-lt px-10 sm:px-12 py-4 rounded-full font-display font-semibold uppercase tracking-wider text-xs sm:text-sm transition-all duration-300 shadow-xl hover:shadow-2xl hover:-translate-y-0.5 active:scale-[0.98] group cursor-pointer"
+            >
+              <span>ENROLL NOW!</span>
+              <Target className="w-4 h-4 text-ink btn-arrow-icon" />
             </Link>
           </div>
         </div>

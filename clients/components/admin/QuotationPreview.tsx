@@ -18,6 +18,8 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({ quotation, c
     date,
     quotationNo,
     clientName,
+    clientTin,
+    trainingTitle,
     location,
     numberOfParticipants,
     costPerPerson,
@@ -76,8 +78,11 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({ quotation, c
 
           {/* QUOTATION Title Header (Always single row) */}
           <div className="mb-3 border-b-[3px] border-[#0d522c] pb-1 pt-1">
-            <h1 className="text-xl sm:text-2xl font-black text-[#1b365d] tracking-tight uppercase whitespace-nowrap leading-normal">
+            <h1 className="text-lg sm:text-xl font-black text-[#1b365d] tracking-tight uppercase leading-normal">
               QUOTATION OF {clientName ? clientName.toUpperCase() : "CLIENT"}
+              {trainingTitle && (
+                <span className="text-[#0d522c] font-bold"> — {trainingTitle.toUpperCase()}</span>
+              )}
             </h1>
           </div>
 
@@ -86,16 +91,24 @@ export const QuotationPreview: React.FC<QuotationPreviewProps> = ({ quotation, c
             {/* Left 7 columns: Client info */}
             <div className="col-span-7 border border-gray-300 rounded-md p-2.5 flex flex-col justify-between bg-white">
               <div className="space-y-1.5 text-[10.5px]">
+                <div className="flex items-start">
+                  <span className="font-bold text-gray-700 w-36 uppercase shrink-0">TRAINING TITLE:</span>
+                  <span className="font-bold text-[#0d522c] text-[11px] leading-normal">{trainingTitle || "Occupational Safety & Health Training"}</span>
+                </div>
                 <div className="flex items-center">
-                  <span className="font-bold text-gray-700 w-32 uppercase shrink-0">CLIENT:</span>
+                  <span className="font-bold text-gray-700 w-36 uppercase shrink-0">CLIENT / COMPANY:</span>
                   <span className="font-bold text-gray-900 text-[11px] leading-normal">{clientName || "—"}</span>
                 </div>
                 <div className="flex items-center">
-                  <span className="font-bold text-gray-700 w-32 uppercase shrink-0">LOCATION:</span>
+                  <span className="font-bold text-gray-700 w-36 uppercase shrink-0">COMPANY TIN:</span>
+                  <span className="font-bold text-[#1b365d] text-[11px] leading-normal">{clientTin || "—"}</span>
+                </div>
+                <div className="flex items-center">
+                  <span className="font-bold text-gray-700 w-36 uppercase shrink-0">LOCATION:</span>
                   <span className="font-semibold text-gray-900 text-[11px] leading-normal">{location || "—"}</span>
                 </div>
                 <div className="flex items-center">
-                  <span className="font-bold text-gray-700 w-32 uppercase shrink-0">NUMBER OF PARTICIPANTS:</span>
+                  <span className="font-bold text-gray-700 w-36 uppercase shrink-0">NUMBER OF PARTICIPANTS:</span>
                   <span className="font-semibold text-gray-900 text-[11px] leading-normal">{numberOfParticipants}</span>
                 </div>
               </div>

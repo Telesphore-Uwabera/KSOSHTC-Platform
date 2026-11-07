@@ -339,20 +339,25 @@ export default function TrainingRegistration() {
   };
 
   const inputClass =
-    "w-full px-4 py-3 rounded-xl border border-gray-200 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none";
+    "w-full px-4 py-3 rounded-2xl border border-black/[0.12] bg-bone focus:bg-white focus:border-primary focus:ring-2 focus:ring-primary/10 transition-all outline-none text-sm text-ink";
 
   return (
-    <div className="min-h-screen bg-gray-50/50 flex flex-col font-sans">
+    <div className="min-h-screen bg-[#FCFAF6] flex flex-col font-sans antialiased text-ink">
       <Header />
       <div className="h-28 sm:h-32" aria-hidden="true" />
 
-      <main className="flex-1 py-12 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
-        <div className="bg-white p-8 sm:p-10 rounded-3xl shadow-sm border border-gray-100">
+      <main className="flex-1 py-12 sm:py-16 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
+        <div className="editorial-card p-8 sm:p-12 md:p-14 rounded-[32px]">
           <div className="text-center mb-10">
-            <h1 className="text-3xl sm:text-4xl font-bold text-primary mb-4">
-              Welcome to KSOSHTC Registration
+            <div className="eyebrow eyebrow--dark justify-center mb-3">
+              <span className="text-brass">KSOSHTC</span>
+              <span className="eyebrow__rule" />
+              <span>OFFICIAL REGISTRATION</span>
+            </div>
+            <h1 className="font-display text-3xl sm:text-4xl md:text-5xl font-light text-ink tracking-tight mb-4">
+              Welcome to <span className="font-serif italic text-accent font-normal">KSOSHTC</span> Registration
             </h1>
-            <p className="text-gray-600 max-w-2xl mx-auto">
+            <p className="text-ink/70 max-w-2xl mx-auto font-light text-sm sm:text-base leading-relaxed">
               Welcome to the <strong>Kigali Safety OSH Training Center</strong>. Please fill out
               the form below to register for our comprehensive Occupational Health and Safety
               training courses.
@@ -360,9 +365,11 @@ export default function TrainingRegistration() {
           </div>
 
           {/* Courses list */}
-          <div className="bg-green-50 text-green-900 p-6 rounded-2xl mb-6 border border-green-100">
-            <h3 className="font-semibold text-lg mb-3">Training we offer:</h3>
-            <ol className="list-decimal list-inside space-y-2 ml-2">
+          <div className="bg-bone text-ink p-6 sm:p-8 rounded-2xl mb-8 border border-black/[0.08]">
+            <div className="font-mono text-xs uppercase tracking-widest text-brass font-semibold mb-3">
+              TRAINING WE OFFER:
+            </div>
+            <ol className="list-decimal list-inside space-y-1.5 ml-1 text-sm font-light text-ink/85">
               {COURSES_OFFERED.map((course, idx) => (
                 <li key={idx} className="font-medium">
                   {course}
@@ -372,18 +379,18 @@ export default function TrainingRegistration() {
           </div>
 
           {/* Eligibility & Admission Requirements Notice */}
-          <div className="bg-amber-50/80 border border-amber-200 rounded-2xl p-5 sm:p-6 mb-10 text-amber-950">
+          <div className="bg-amber-50/70 border border-amber-200/80 rounded-2xl p-5 sm:p-6 mb-10 text-amber-950">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
                 <div className="flex items-center gap-2">
-                  <span className="w-8 h-8 rounded-lg bg-amber-200/80 text-amber-900 flex items-center justify-center font-bold">
-                    <GraduationCap className="w-5 h-5" />
+                  <span className="w-8 h-8 rounded-xl bg-amber-200/80 text-amber-900 flex items-center justify-center font-bold">
+                    <GraduationCap className="w-4 h-4" />
                   </span>
-                  <h3 className="font-bold text-sm sm:text-base text-amber-950">
+                  <h3 className="font-display font-medium text-base text-amber-950">
                     Eligibility &amp; Admission Requirements
                   </h3>
                 </div>
-                <p className="text-xs sm:text-sm text-amber-900 leading-relaxed pt-1">
+                <p className="text-xs sm:text-sm text-amber-900 leading-relaxed pt-1 font-light">
                   Applicants must have completed <strong>Advanced Level Secondary Education (A2)</strong> (or equivalent) and agree to mandatory <strong>Personal Protective Equipment (PPE)</strong> requirements for practical site visits.
                 </p>
               </div>
@@ -391,10 +398,10 @@ export default function TrainingRegistration() {
                 to="/admissions"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center justify-center gap-1.5 px-4 py-2.5 rounded-xl text-xs sm:text-sm font-bold bg-amber-600 text-white hover:bg-amber-700 transition-colors whitespace-nowrap shadow-xs shrink-0 self-start sm:self-center"
+                className="inline-flex items-center justify-center gap-1.5 px-5 py-2.5 rounded-full text-xs font-semibold bg-ink text-bone hover:bg-black transition-colors whitespace-nowrap shadow-xs shrink-0 self-start sm:self-center"
               >
-                <span>Read Full Policy</span>
-                <ArrowRight className="w-4 h-4" />
+                <span>Read Policy</span>
+                <ArrowRight className="w-3.5 h-3.5 text-accent" />
               </Link>
             </div>
           </div>
@@ -817,15 +824,20 @@ export default function TrainingRegistration() {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="w-full bg-primary text-white py-4 px-6 rounded-xl font-bold text-lg hover:bg-primary/90 transition-all shadow-md hover:shadow-lg disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-2"
+              className="w-full bg-accent text-[#121815] py-4 px-8 rounded-full font-semibold text-base hover:bg-accent-light transition-all duration-300 shadow-xl hover:shadow-2xl hover:scale-[1.01] active:scale-[0.99] disabled:opacity-70 disabled:cursor-not-allowed flex justify-center items-center gap-3"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="w-6 h-6 animate-spin" />
-                  Submitting Registration...
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  <span>Submitting Registration...</span>
                 </>
               ) : (
-                "Submit"
+                <>
+                  <span>SUBMIT REGISTRATION</span>
+                  <span className="w-6 h-6 rounded-full bg-black/10 flex items-center justify-center">
+                    <ArrowRight className="w-3.5 h-3.5" />
+                  </span>
+                </>
               )}
             </button>
           </form>

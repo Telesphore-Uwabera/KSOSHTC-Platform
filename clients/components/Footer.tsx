@@ -37,51 +37,58 @@ export default function Footer() {
   };
 
   return (
-    <footer className="bg-gray-900 text-gray-300 py-8 sm:py-12 lg:py-16">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 animate-fade-in-up">
+    <footer className="relative bg-white text-gray-900 py-12 sm:py-16 lg:py-20 border-t border-gray-200 overflow-hidden">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         <div className="max-w-4xl md:max-w-5xl lg:max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 sm:gap-10 lg:gap-12 items-start">
           <div className="flex flex-col items-start text-left min-w-0">
-            <Link to="/" className="block">
+            <Link to="/" className="block bg-transparent">
               <SiteImage
-                src="/logo.webp"
+                src="/logo_transparent.webp"
                 alt="KSOSHTC Footer Logo"
                 width={1024}
                 height={331}
                 sizes="(max-width: 768px) 240px, 320px"
-                className="w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80 h-auto object-contain max-w-full transition-all duration-300 hover:scale-105 mb-4 sm:mb-6"
+                className="w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80 h-auto object-contain bg-transparent max-w-full transition-all duration-300 hover:scale-105 mb-4 sm:mb-6"
                 loading="lazy"
                 decoding="async"
               />
             </Link>
-            <p className="text-accent font-semibold text-xs sm:text-sm mb-1 sm:mb-2">Kigali Safety OSH Training Center</p>
-            <p className="text-accent font-medium text-xs sm:text-sm">Safety Today, Prosperity Tomorrow!</p>
+            <p className="text-brass font-semibold text-xs sm:text-sm mb-1 tracking-wide font-display">
+              Kigali Safety OSH Training Center
+            </p>
+            <p className="text-gray-900 font-medium text-xs sm:text-sm">
+              Safety Today, Prosperity Tomorrow!
+            </p>
           </div>
 
           <div className="text-left min-w-0">
-            <h4 className="text-base sm:text-lg font-bold text-white mb-4 sm:mb-6 uppercase tracking-wider">Contact</h4>
-            <div className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
-              <Link to="/contact#map" className="flex items-center gap-3 whitespace-nowrap hover:text-accent transition-colors duration-300">
-                <MapPin className="w-4 h-4 text-accent flex-shrink-0" />
-                <span className="truncate">Kicukiro Center, Kigali, Rwanda</span>
+            <h4 className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-mono text-brass font-bold mb-4 sm:mb-6">
+              <span className="w-4 h-[1px] bg-brass inline-block" />
+              Contact
+            </h4>
+            <div className="space-y-2.5 sm:space-y-3.5 text-xs sm:text-sm text-gray-900">
+              <Link to="/contact#map" className="flex items-center gap-3 whitespace-nowrap hover:text-brass transition-colors duration-300">
+                <MapPin className="w-4 h-4 text-brass flex-shrink-0" />
+                <span className="truncate text-gray-900">Kicukiro Center, Kigali, Rwanda</span>
               </Link>
               <div className="flex items-center gap-3 whitespace-nowrap">
-                <Phone className="w-4 h-4 text-accent flex-shrink-0" />
-                <a href="https://wa.me/250785072512" target="_blank" rel="noopener noreferrer" className="hover:text-accent transition-colors duration-300">
+                <Phone className="w-4 h-4 text-brass flex-shrink-0" />
+                <a href="https://wa.me/250785072512" target="_blank" rel="noopener noreferrer" className="text-gray-900 hover:text-brass transition-colors duration-300">
                   +250 785 072 512
                 </a>
               </div>
               <div className="flex items-center gap-3 whitespace-nowrap">
-                <Mail className="w-4 h-4 text-accent flex-shrink-0" />
+                <Mail className="w-4 h-4 text-brass flex-shrink-0" />
                 <a
                   href="mailto:ksoshtc@gmail.com"
-                  className="hover:text-accent transition-colors duration-300 truncate"
+                  className="text-gray-900 hover:text-brass transition-colors duration-300 truncate"
                   title="ksoshtc@gmail.com"
                 >
                   ksoshtc@gmail.com
                 </a>
               </div>
             </div>
-            <div className="mt-3 sm:mt-4 w-full rounded-lg overflow-hidden border border-gray-600 h-14 sm:h-16 md:h-20">
+            <div className="mt-4 w-full rounded-xl overflow-hidden border border-gray-200 h-16 sm:h-20 shadow-inner">
               <iframe
                 src={FOOTER_MAP_EMBED}
                 width="100%"
@@ -98,16 +105,19 @@ export default function Footer() {
               href={MAP_DIRECTIONS_URL}
               target="_blank"
               rel="noopener noreferrer"
-              className="inline-flex items-center gap-1.5 mt-2 text-xs text-accent hover:underline"
+              className="inline-flex items-center gap-1.5 mt-2.5 text-xs text-brass font-medium hover:underline"
             >
-              <ExternalLink className="w-3 h-3" />
+              <ExternalLink className="w-3 h-3 text-brass" />
               Get directions
             </a>
           </div>
 
           <div className="text-left min-w-0">
-            <h4 className="text-base sm:text-lg font-bold text-white mb-4 sm:mb-6 uppercase tracking-wider">Quick Links</h4>
-            <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm">
+            <h4 className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-mono text-brass font-bold mb-4 sm:mb-6">
+              <span className="w-4 h-[1px] bg-brass inline-block" />
+              Quick Links
+            </h4>
+            <ul className="space-y-2.5 sm:space-y-3 text-xs sm:text-sm text-gray-900">
               {[
                 { to: "/", label: "Home", icon: Home },
                 { to: "/about", label: "About Us", icon: Info },
@@ -117,9 +127,9 @@ export default function Footer() {
                 { to: "/contact", label: "Contact", icon: MessageCircle },
               ].map(({ to, label, icon: Icon }) => (
                 <li key={to}>
-                  <Link to={to} className="hover:text-accent transition-colors duration-300 flex items-center gap-2">
-                    <Icon className="w-4 h-4 text-accent flex-shrink-0" />
-                    {label}
+                  <Link to={to} className="text-gray-900 hover:text-brass transition-colors duration-300 flex items-center gap-2.5 group">
+                    <Icon className="w-4 h-4 text-brass flex-shrink-0" />
+                    <span className="text-gray-900 group-hover:text-brass transition-colors">{label}</span>
                   </Link>
                 </li>
               ))}
@@ -127,8 +137,11 @@ export default function Footer() {
           </div>
 
           <div className="text-left min-w-0">
-            <h4 className="text-base sm:text-lg font-bold text-white mb-4 sm:mb-6 uppercase tracking-wider">Newsletter</h4>
-            <p className="text-xs sm:text-sm text-gray-400 mb-4">
+            <h4 className="flex items-center gap-2 text-xs uppercase tracking-[0.2em] font-mono text-brass font-bold mb-4 sm:mb-6">
+              <span className="w-4 h-[1px] bg-brass inline-block" />
+              Newsletter
+            </h4>
+            <p className="text-xs sm:text-sm text-gray-900 mb-4 leading-relaxed font-light">
               Subscribe to our newsletter to receive updates on safety training, programs, and industry news.
             </p>
             <form onSubmit={handleSubscribe} className="space-y-3">
@@ -140,42 +153,45 @@ export default function Footer() {
                   placeholder="Your email address"
                   required
                   disabled={subscribing}
-                  className="w-full bg-gray-800 border border-gray-700 text-gray-200 text-sm rounded-lg px-4 py-3 focus:outline-none focus:border-accent focus:ring-1 focus:ring-accent transition-colors disabled:opacity-50 pr-12"
+                  className="w-full bg-gray-50 border border-gray-200 text-gray-900 placeholder:text-gray-400 text-sm rounded-full px-5 py-3 focus:outline-none focus:border-brass focus:ring-1 focus:ring-brass transition-all disabled:opacity-50 pr-12"
                 />
                 <button
                   type="submit"
                   disabled={subscribing}
-                  className="absolute right-1 top-1 bottom-1 px-3 bg-primary hover:bg-primary/90 text-white rounded-md flex items-center justify-center transition-colors disabled:opacity-50"
+                  className="absolute right-1.5 top-1.5 bottom-1.5 px-3.5 bg-accent hover:bg-brass text-[#121815] rounded-full flex items-center justify-center transition-all duration-300 disabled:opacity-50 shadow-xs"
                   aria-label="Subscribe"
                 >
-                  {subscribing ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
+                  {subscribing ? <Loader2 className="w-4 h-4 animate-spin text-[#121815]" /> : <Send className="w-4 h-4 text-[#121815]" />}
                 </button>
               </div>
             </form>
           </div>
         </div>
 
-        <div className="border-t border-gray-700 pt-6 sm:pt-8 mt-8 sm:mt-12">
+        <div className="border-t border-gray-200 pt-6 sm:pt-8 mt-10 sm:mt-14">
           <div className="flex flex-col sm:flex-row justify-between items-center gap-4 sm:gap-6">
-            <p className="text-xs sm:text-sm text-gray-400 text-center sm:text-left">
+            <p className="text-xs text-gray-900 text-center sm:text-left font-mono">
               © {new Date().getFullYear()} Kigali Safety OSH Training Center. All rights reserved.
             </p>
-            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-6 text-xs sm:text-sm text-gray-400">
-              <Link to="/privacy" className="hover:text-accent transition-colors duration-300">Privacy Policy</Link>
-              <Link to="/terms" className="hover:text-accent transition-colors duration-300">Terms &amp; Conditions</Link>
-              <Link to="/cookies" className="hover:text-accent transition-colors duration-300">Cookie Policy</Link>
+            <div className="flex flex-wrap items-center justify-center gap-3 sm:gap-4 md:gap-6 text-xs text-gray-900">
+              <Link to="/privacy" className="text-gray-900 hover:text-brass transition-colors duration-300">Privacy Policy</Link>
+              <Link to="/terms" className="text-gray-900 hover:text-brass transition-colors duration-300">Terms &amp; Conditions</Link>
+              <Link to="/cookies" className="text-gray-900 hover:text-brass transition-colors duration-300">Cookie Policy</Link>
               <a
                 href="https://uwaberatelesphore.netlify.app/"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1.5 border border-green-500/70 bg-transparent px-2.5 py-1.5 rounded-none hover:bg-green-500/10 hover:text-accent transition-colors duration-300"
+                className="inline-flex items-center gap-1.5 border border-gray-200 text-gray-900 bg-gray-50 hover:bg-gray-100 hover:border-gray-300 px-3.5 py-1.5 rounded-full transition-colors duration-300"
               >
-                <Code2 className="w-4 h-4" />
-                Contact Developer
+                <Code2 className="w-3.5 h-3.5 text-brass" />
+                <span className="text-gray-900">Contact Developer</span>
               </a>
             </div>
           </div>
         </div>
+      </div>
+      <div className="hidden lg:block absolute right-8 -bottom-6 font-display font-black text-[96px] text-black/[0.03] select-none pointer-events-none tracking-tight">
+        KSOSHTC
       </div>
     </footer>
   );
