@@ -45,10 +45,10 @@ export default function Footer() {
               <SiteImage
                 src="/logo.webp"
                 alt="KSOSHTC Footer Logo"
-                width={512}
-                height={512}
-                sizes="(max-width: 768px) 128px, 176px"
-                className="w-24 h-24 sm:w-32 sm:h-32 md:w-36 md:h-36 lg:w-40 lg:h-40 xl:w-44 xl:h-44 object-contain max-w-full transition-all duration-300 hover:scale-110 mb-4 sm:mb-6"
+                width={1024}
+                height={331}
+                sizes="(max-width: 768px) 240px, 320px"
+                className="w-48 sm:w-56 md:w-64 lg:w-72 xl:w-80 h-auto object-contain max-w-full transition-all duration-300 hover:scale-105 mb-4 sm:mb-6"
                 loading="lazy"
                 decoding="async"
               />

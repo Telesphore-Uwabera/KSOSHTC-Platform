@@ -106,10 +106,14 @@ export default function Header() {
                 <SiteImage
                   src="/logo.webp"
                   alt="KSOSHTC Logo"
-                  width={512}
-                  height={512}
-                  sizes="(max-width: 1024px) 96px, 160px"
-                  className={`object-contain max-w-full h-auto transition-all duration-300 group-hover:rotate-3 ${compact ? "w-12 h-12 lg:w-16 lg:h-16" : "w-20 h-20 lg:w-28 lg:h-28 xl:w-32 xl:h-32"}`}
+                  width={1024}
+                  height={331}
+                  sizes="(max-width: 1024px) 180px, 320px"
+                  className={`object-contain max-w-full h-auto transition-all duration-300 group-hover:rotate-1 ${
+                    compact
+                      ? "h-11 sm:h-13 lg:h-14 xl:h-16 w-auto max-w-[170px] lg:max-w-[220px] xl:max-w-[260px]"
+                      : "h-14 sm:h-18 lg:h-20 xl:h-22 w-auto max-w-[210px] lg:max-w-[280px] xl:max-w-[320px]"
+                  }`}
                   loading="eager"
                   decoding="async"
                 />
@@ -225,13 +229,13 @@ export default function Header() {
             <SiteImage
               src="/logo.webp"
               alt="KSOSHTC Logo"
-              width={512}
-              height={512}
-              sizes="96px"
-              className={`object-contain max-w-full h-auto transition-all duration-300 group-hover:rotate-3 ${
+              width={1024}
+              height={331}
+              sizes="(max-width: 640px) 130px, 180px"
+              className={`object-contain max-w-full h-auto transition-all duration-300 group-hover:rotate-1 ${
                 compact
-                  ? "w-11 h-11 sm:w-14 sm:h-14 md:w-16 md:h-16"
-                  : "w-14 h-14 sm:w-18 sm:h-18 md:w-20 md:h-20"
+                  ? "h-9 sm:h-11 md:h-13 w-auto max-w-[110px] sm:max-w-[150px] md:max-w-[180px]"
+                  : "h-11 sm:h-14 md:h-16 w-auto max-w-[130px] sm:max-w-[180px] md:max-w-[220px]"
               }`}
               loading="eager"
               decoding="async"
